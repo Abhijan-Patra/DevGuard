@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10"]
+clipboard = ["pyobjc-framework-Cocoa>=10,<13; sys_platform == 'darwin'"]
 
 [project.scripts]
 devguard = "devguard.__main__:main"

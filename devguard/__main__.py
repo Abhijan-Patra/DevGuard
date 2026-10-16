@@ -43,7 +43,7 @@ def main():
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args()
     settings = Settings.from_environment(session_token())
-    print("DevGuard: http://127.0.0.1:%s (foundation only; capture disabled)" % args.port)
+    print("DevGuard: http://127.0.0.1:%s (clipboard capture starts disabled)" % args.port)
     print("Operator token stays local in .devguard/session-token unless configured by environment.")
     uvicorn.run(create_app(settings), host="127.0.0.1", port=args.port, access_log=False)
 

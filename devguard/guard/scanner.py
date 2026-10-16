@@ -1,0 +1,91 @@
+"""Bounded local credential detectors. Raw findings never leave this module."""
+
+import asyncio
+from dataclasses import dataclass, field
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import tempfile
+
+from devguard.schemas.guard import Category, Span
+
+
+@dataclass
+class ScanResult:
+    spans: list[Span]
+    complete: bool
+
+
+# Generic security patterns, not demo strings or fixture IDs. Gitleaks supplies
+# its independently maintained provider rules in addition to these baselines.
+PATTERNS = (
+    (re.compile(r"-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z]+ )?PRIVATE KEY-----"), 0),
+    (re.compile(r"(?i)\b(?:api[_-]?key|access[_-]?token|password|client[_-]?secret)\s*[:=]\s*[\"']?([^\s\"';,}]{8,})"), 1),
+    (re.compile(r"(?i)\bBearer\s+([A-Za-z0-9._~+/-]{12,}=*)"), 1),
+    (re.compile(r"(?i)\b[a-z][a-z0-9+.-]*://[^\s/:]+:([^\s/@]+)@"), 1),
+)
+EMAIL = re.compile(r"(?<![\w.+-])[\w.+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?![\w.-])")
+
+
+def baseline_spans(text: str):
+    spans = [Span(start=m.start(group), end=m.end(group), category=Category.CREDENTIAL)
+             for pattern, group in PATTERNS for m in pattern.finditer(text)
+             if not re.fullmatch(r"\[(?:CREDENTIAL|REDACTED)_\d+\]", m.group(group))]
+    spans.extend(Span(start=m.start(), end=m.end(), category=Category.PERSONAL_DATA)
+                 for m in EMAIL.finditer(text))
+    return spans
+
+
+@dataclass
+class CredentialScanner:
+    binary: str | None = field(default=None)
+
+    def __post_init__(self):
+        if self.binary is None:
+            local = Path(".devguard/tools/gitleaks")
+            self.binary = str(local.resolve()) if local.is_file() else shutil.which("gitleaks")
+
+    @property
+    def available(self):
+        return self.binary is not None and os.access(self.binary, os.X_OK)
+
+    async def scan(self, text: str):
+        spans = baseline_spans(text)
+        if not self.available:
+            return ScanResult(spans, complete=False)
+        process = None
+        try:
+            # Empty, trusted cwd/config environment prevents a selected repo's
+            # allowlist/config from downgrading the embedded credential rules.
+            with tempfile.TemporaryDirectory(prefix="devguard-scan-") as directory:
+                process = await asyncio.create_subprocess_exec(
+                    self.binary, "stdin", "--no-banner", "--log-level", "error",
+                    "--report-format", "json", "--report-path", "-",
+                    "--exit-code", "0", "--ignore-gitleaks-allow",
+                    stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.DEVNULL, cwd=directory,
+                    env={"PATH": os.defpath, "HOME": "/nonexistent"},
+                )
+                stdout, _ = await asyncio.wait_for(process.communicate(text.encode()), timeout=5)
+            if process.returncode or len(stdout) > 1024 * 1024:
+                return ScanResult(spans, complete=False)
+            findings = json.loads(stdout or b"[]")
+            if not isinstance(findings, list):
+                return ScanResult(spans, complete=False)
+            for finding in findings:
+                secret = finding.get("Secret")
+                if not isinstance(secret, str) or not secret or secret not in text:
+                    return ScanResult(spans, complete=False)
+                offset = 0
+                while (start := text.find(secret, offset)) >= 0:
+                    spans.append(Span(start=start, end=start + len(secret), category=Category.CREDENTIAL))
+                    offset = start + len(secret)
+            return ScanResult(spans, complete=True)
+        except (OSError, asyncio.TimeoutError, ValueError, AttributeError):
+            return ScanResult(spans, complete=False)
+        finally:
+            if process is not None and process.returncode is None:
+                process.kill()
+                await process.wait()

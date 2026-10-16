@@ -2,7 +2,7 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: implementation has started with a local readiness API and Ollama adapter. Privacy enforcement, native clipboard capture and backend repair are not implemented yet. Model download and inference verification are still pending; no privacy or repair results have been established.
+Status: the Mac 1 branch implements authenticated privacy APIs, Gitleaks scanning, exact-span redaction, a version-bound delivery controller, protected-file utilities and an opt-in macOS text clipboard service. The current server keeps capture OFF. Real Gemma inference and coding-client delivery remain unverified, and backend repair is still Mac 2 work. See the [implementation handoff](docs/MAC_1_IMPLEMENTATION.md) for actual checks and gaps.
 
 DevGuard inspects supported prompts, file access, tool results and copied text; it also investigates reproducible backend failures and prepares independently tested patches in a disposable workspace. Clipboard capture is a required, opt-in feature. Bug diagnosis uses source, structured logs, diffs, named API probes and tests; it does not depend on screenshots or screen recordings.
 
@@ -10,7 +10,7 @@ DevGuard inspects supported prompts, file access, tool results and copied text; 
 
 - **One model:** Gemma 4 E4B through Ollama, using the explicit local Q4 tag `gemma4:e4b-it-q4_K_M`. Different task prompts share one model and inference queue.
 - **Priority:** privacy and clipboard workflow first; backend repair next. Both are part of the product, with explicit milestones.
-- **Backend target:** Python 3.11+, FastAPI, Pydantic, SQLite, Gitleaks, watchdog, psutil, pytest/HTTPX, Ruff and restricted Docker jobs. Only the API/Ollama foundation is implemented so far.
+- **Backend target:** Python 3.11+, FastAPI, Pydantic, SQLite, Gitleaks, watchdog, psutil, pytest/HTTPX, Ruff and restricted Docker jobs. Repair monitoring/sandbox dependencies are not installed by the Mac 1 implementation.
 - **Dashboard:** Streamlit, initially using labelled fixtures. It displays backend decisions and never owns security decisions.
 - **Tracks:** target Best Use of Gemma 4; maintain public open-source code for the open-source AI track. Confirm multiple-category and local-model eligibility with the organiser.
 - **Licence:** MIT for this repository's original material. Model weights and dependencies retain their own licences.
@@ -39,6 +39,7 @@ Both Mac owners own all backend, model, enforcement and repair logic. Windows wo
 - [Clipboard design](docs/CLIPBOARD.md)
 - [Privacy and execution policy](docs/SECURITY_POLICY.md)
 - [API and event contract](docs/API_CONTRACT.md)
+- [Mac 2 integration signatures](docs/MAC_2_INTEGRATION.md)
 - [Integration coverage](docs/COVERAGE.md)
 - [Evaluation](docs/EVALUATION.md)
 - [Demo runbook](docs/DEMO_RUNBOOK.md)
@@ -51,4 +52,4 @@ Both Mac owners own all backend, model, enforcement and repair logic. Windows wo
 
 Observing a clipboard or saved file is detection. Preventing a supported request requires a synchronous gate before delivery. Clipboard capture does not intercept every paste, and a standalone MCP server does not control an assistant's other tools. See coverage before making claims.
 
-The [getting-started guide](docs/GETTING_STARTED.md) contains the actual foundation startup and model smoke-test commands. The first privacy milestone remains an actual guarded request; readiness endpoints alone do not protect content.
+The [getting-started guide](docs/GETTING_STARTED.md) contains startup, clipboard controls and model smoke-test commands. Requests needing unavailable contextual analysis stay held. No real coding-client receiver is enrolled by default.

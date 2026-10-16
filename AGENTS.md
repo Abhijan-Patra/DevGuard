@@ -2,7 +2,7 @@
 
 ## Current scope
 
-This repository began as a planning/handoff package. A first authenticated readiness API and local Ollama adapter now exist; privacy enforcement, native clipboard capture and repair remain unimplemented. README and docs/FINAL_PLAN.md are the product direction. Earlier external Qwen-first/screen-capture proposals are superseded.
+This repository began as a planning/handoff package. The Mac 1 branch now has privacy APIs, Gitleaks, validated redaction/release controls, protected-file utilities and an opt-in macOS text clipboard service. Capture is OFF until explicit local consent. Real Gemma classification, client delivery and native capture end-to-end behaviour remain unverified; repair is still Mac 2 work. Read docs/MAC_1_IMPLEMENTATION.md for actual validation. Earlier external Qwen-first/screen-capture proposals are superseded.
 
 ## Fixed decisions
 

@@ -1,4 +1,4 @@
-# Initial tested Python 3.11 environment; install this then pip install --no-deps -e .
+# Tested Python 3.11 environment; install this then pip install --no-deps -e .
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.15.1
@@ -16,6 +16,8 @@ pluggy==1.7.0
 pydantic==2.14.1
 pydantic_core==2.50.1
 Pygments==2.21.0
+pyobjc-core==12.2.2; sys_platform == "darwin"
+pyobjc-framework-Cocoa==12.2.2; sys_platform == "darwin"
 pytest==9.1.1
 starlette==1.8.0
 typing-inspection==0.4.4

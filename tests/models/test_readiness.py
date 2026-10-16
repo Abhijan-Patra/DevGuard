@@ -28,7 +28,7 @@ def test_auth_and_missing_model_are_not_reported_as_ready():
         assert result["runtime"]["model"] == MODEL
         assert result["runtime"]["model_digest"] is None
         assert result["clipboard"]["enabled"] is False
-        assert result["guard_implemented"] is False
+        assert result["guard_implemented"] is True
 
 
 @pytest.mark.parametrize("url", [

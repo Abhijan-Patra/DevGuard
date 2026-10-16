@@ -1,52 +1,77 @@
-# Getting started: first Mac backend foundation
+# Getting started: Mac 1 guard and clipboard service
 
-Ollama is already installed on the first Mac; no reinstall is required. Its loopback API responds as version 0.40.4. The selected model download has started but inference is not verified yet.
+Ollama is already installed on the first Mac. Gemma downloads separately; implementation and control tests do not depend on waiting for it. Runtime endpoints hold requests when contextual analysis is unavailable.
 
-## Selected model
+## Install and run
+
+Python 3.11 is available on the first Mac. The backend supports Python 3.11 or later:
+
+```sh
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -e '.[dev,clipboard]'
+brew install gitleaks
+.venv/bin/python -m pytest -q
+.venv/bin/python -m devguard
+```
+
+The clipboard extra installs the macOS bridge only on macOS. Gitleaks is an external executable. For the captured tested package versions, install `requirements.lock.txt` then install the editable project with `--no-deps`; PyObjC pins are macOS-only. Windows UI members need neither native capture nor the model.
+
+The server binds to `127.0.0.1:8765`. The CLI creates `.devguard/session-token` with private permissions if no environment token is supplied. It prints the path, never the token. Audit metadata currently lives in bounded in-memory SQLite. The capture service always starts OFF.
+
+## Explicit clipboard controls
+
+Status checks do not read clipboard text:
+
+```sh
+.venv/bin/python -m devguard.clipboard.cli status
+```
+
+When the local operator chooses to inspect future copied text, explicitly enable:
+
+```sh
+.venv/bin/python -m devguard.clipboard.cli enable --consent --task "Diagnose the login exception"
+```
+
+The existing clipboard at enable time is not read. Future text changes run fast detectors and, where needed, local contextual analysis. Binary/oversized/empty copies are skipped visibly. Missing or invalid analysis stays REVIEW with no cleaned-copy release. Capture does not intercept every unrelated app paste.
+
+Only after an actual completed inspection offers a candidate:
+
+```sh
+.venv/bin/python -m devguard.clipboard.cli copy-cleaned
+```
+
+This checks the inspected version and native change counter, writes explicitly and suppresses self-trigger loops. NSPasteboard cannot guarantee a global atomic write across all apps; a lost/raced write is not retried automatically.
+
+Disable and clear transient state:
+
+```sh
+.venv/bin/python -m devguard.clipboard.cli disable
+```
+
+The control CLI never prints raw clipboard text. Native capture/copy has not been exercised against the user's clipboard during development; only import/availability and synthetic-adapter tests have run.
+
+## Model download and later smoke test
+
+The selected package remains Gemma 4 E4B with explicit Q4 quantisation:
 
 ```sh
 ollama pull gemma4:e4b-it-q4_K_M
 ```
 
-This is the selected Gemma 4 E4B with explicit Q4 quantisation. Ollama lists about 6.6 GB for this package; the current machine initially selected a larger roughly 9.5 GB MLX package from the generic E4B tag, so that initial attempt was stopped. Do not run both downloads for this setup.
+The first Mac's download is already running. The generic E4B tag initially chose a larger backend-dependent package, so that attempt was stopped. Existing unrelated models remain untouched. No paid cloud service is needed.
 
-The first Mac's download is already running. Network speed determines completion; the backend can be developed and its boundary tests run meanwhile. Existing unrelated models are left untouched. No paid cloud service is needed.
-
-## Python backend
-
-Python 3.11 is available on the first Mac, and this foundation supports Python 3.11 or later. Use an isolated environment:
-
-```sh
-python3.11 -m venv .venv
-.venv/bin/python -m pip install -e '.[dev]'
-.venv/bin/python -m pytest -q
-.venv/bin/python -m devguard
-```
-
-The server binds only to `127.0.0.1:8765`. The local CLI creates `.devguard/session-token` with private permissions if no environment token is supplied. It prints the path, never the token. No clipboard capture is enabled by startup.
-
-Implemented foundation routes:
-
-- `GET /health` and `GET /api/v1/health`: service readiness and whether the exact selected tag is installed.
-- `GET /api/v1/status`: authenticated runtime and incomplete-feature status.
-- `GET /api/v1/coverage`: authenticated capability statuses; privacy/capture/repair remain UNIMPLEMENTED.
-
-`service_ready: true` does not mean the model, guard or repair pipeline works. `model_ready` here establishes installed-tag presence only; the smoke test establishes an inference/tool roundtrip separately.
-
-Do not send private material to this foundation expecting protection. Guard and delivery routes are not implemented yet. The Ollama client is internal-only and accepts loopback HTTP endpoints, disables environment proxies and follows no redirects. The CLI currently provides only an operator token; scoped client-adapter credentials are future implementation work, so no adapter is claimed supported.
-
-## After the model download finishes
+After download completes, the real trial command is:
 
 ```sh
 .venv/bin/python -m devguard.models.smoke
 ```
 
-This sends a synthetic arithmetic request to the real selected model, validates the model's native tool call, executes a bounded multiplication function and checks that the returned answer uses the real result. It reports only the result, timing and runtime metadata, never hidden reasoning.
+It validates a native model tool call, executes a bounded multiplication function and checks the model uses the real result. Exit 0 is success; exit 2 means server/model unavailable; exit 1 is a failed real trial. This is not a privacy benchmark or repair proof, and no model success is fabricated while downloading.
 
-Exit 0 is a successful tool roundtrip; exit 2 means the server or selected model is unavailable (the output distinguishes them); exit 1 means the real trial failed. This is not a privacy benchmark or backend repair proof. Do not label mock/unit tests as real inference success.
+## Interfaces and scope
 
-## Next implementation milestone
+See [API contract](API_CONTRACT.md) and [Mac 1 implementation handoff](MAC_1_IMPLEMENTATION.md). Operator tokens can control local capture; an optional distinct `DEVGUARD_ADAPTER_TOKEN` can evaluate/deliver its own requests only. Do not copy operator credentials into model context or a coding-client hook.
 
-Mac 1 adds guard schemas, policy, validated redaction and the supported delivery gate, followed by the required optimised clipboard capture. Mac 2 owns repair/client adapters independently. Windows tasks can proceed against the shared contract with labelled fixtures.
+`local-preview` has no outgoing receiver. Real client delivery requires trusted code enrolment by Mac 2, plus that adapter's actual end-to-end coverage tests. Private inputs must not be sent through an unrelated unguarded tool while relying on this service for protection.
 
-The application does not use screenshots or recordings as diagnostic evidence. Clipboard text capture remains required but is currently disabled/unimplemented.
+Backend repair remains Mac 2 work and uses source/diffs/logs/API probes/tests, with no screenshot or recording dependency. Clipboard capture is retained as a required feature.

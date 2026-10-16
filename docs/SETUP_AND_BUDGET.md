@@ -1,6 +1,6 @@
 # Setup and resource budget
 
-This documentation package does not install dependencies or provide application code. Mac owners add real application start/test commands after implementation and verification. Do not fabricate commands for nonexistent entry points.
+The Mac 1 branch now includes executable guard/clipboard controls; follow [GETTING_STARTED.md](GETTING_STARTED.md) for the actual startup commands and [MAC_1_IMPLEMENTATION.md](MAC_1_IMPLEMENTATION.md) for measured status. Repair and coding-client integration remain separate work.
 
 ## All members
 
