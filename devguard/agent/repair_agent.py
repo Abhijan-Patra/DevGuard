@@ -103,6 +103,7 @@ def investigate(
                     "task": "Investigate the failing named backend check and propose a correction.",
                     "test_name": test_name,
                     "allowed_files": list(spec.source_files),
+                    "writable_files": list(spec.writable_files),
                     "baseline": guard.sanitize(
                         baseline_output, purpose="test_evidence"
                     ),
