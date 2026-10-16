@@ -61,7 +61,7 @@ DevGuard deliberately avoids visual screen monitoring, video understanding, and 
 | **Secret Scanning** | Gitleaks + Gemma Contextual Engine | High-entropy regex scanning paired with semantic confidential prose detection |
 | **Sandbox Isolation** | Docker containers / Disposable worktrees | Isolated pytest execution; immutable trusted test suites |
 | **Operator UI** | Streamlit | Responsive dashboard; strictly presentation client; zero security decisions in UI |
-| **Audit Storage** | Bounded in-memory SQLite | Zero raw secrets stored on disk, in logs, or in Git |
+| **Audit Storage** | Private, permission-bounded SQLite | Durable `.devguard/audit.sqlite3` (mode 0600, max 5,000 events); zero raw secrets stored on disk, in logs, or in Git |
 
 ---
 
@@ -99,11 +99,19 @@ In accordance with our commitment to honest open-source documentation, we explic
 - Ollama installed with Gemma 4: `ollama pull gemma4:e4b-it-q4_K_M`
 - Optional: Docker (for isolated repair sandboxes)
 
-### 2. Install & Start Backend
+### 2. Install & Start Backend (Choose Live or Mock Mode)
+
+**Option A: Real Backend (requires local Ollama & Gemma 4):**
 ```powershell
 python -m pip install -r requirements.lock.txt
 python -m devguard
 # Default port: http://127.0.0.1:8765/api/v1 (session token generated in .devguard/session-token)
+```
+
+**Option B: Offline Mock Server (zero external dependencies for testing Live Mode):**
+```powershell
+python demo/mock_live_server.py
+# Binds loopback http://127.0.0.1:8765/api/v1 with mock Gemma & repair endpoints
 ```
 
 ### 3. Launch Operator Dashboard
@@ -115,7 +123,7 @@ python -m streamlit run devguard/ui/app.py
 
 ### 4. Run Verification Tests
 ```powershell
-# Run the complete test suite (132 backend/repair tests + 20 UI/QA tests)
+# Run the complete test suite (143 backend, repair, and UI/QA tests)
 python -m pytest tests/ -v
 ```
 
