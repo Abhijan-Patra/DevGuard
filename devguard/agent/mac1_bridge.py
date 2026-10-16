@@ -1,0 +1,73 @@
+"""Use Mac 1's actual async OllamaClient, not a second HTTP client/model server.
+
+Aligned with codex/mac1-guard commit 3b50bd9. Construct on the running app loop,
+then invoke from the repair worker thread. Privacy remains a separate required port.
+"""
+
+import asyncio
+from concurrent.futures import TimeoutError as FutureTimeout
+
+from devguard.repair.contracts import SELECTED_MODEL, RepairError
+
+
+class Mac1ModelBridge:
+    def __init__(
+        self,
+        client,
+        loop: asyncio.AbstractEventLoop,
+        runtime: dict,
+        timeout: float = 130,
+    ):
+        if (
+            not runtime.get("model_ready")
+            or runtime.get("model") != SELECTED_MODEL
+            or not runtime.get("model_digest")
+        ):
+            raise RepairError("MODEL_NOT_PINNED")
+        self.client, self.loop, self.timeout = client, loop, timeout
+        self._metadata = {"name": SELECTED_MODEL, "digest": runtime["model_digest"]}
+
+    @property
+    def metadata(self) -> dict[str, str]:
+        return dict(self._metadata)
+
+    def next_action(self, messages: list[dict[str, str]], tools: list[dict]) -> dict:
+        try:
+            if asyncio.get_running_loop() is self.loop:
+                raise RepairError("MODEL_CALL_REQUIRES_WORKER_THREAD")
+        except RuntimeError:
+            pass
+        if not self.loop.is_running():
+            raise RepairError("MODEL_LOOP_UNAVAILABLE")
+
+        async def call():
+            runtime = await self.client.inspect()
+            if (
+                not runtime.get("model_ready")
+                or runtime.get("model") != SELECTED_MODEL
+                or runtime.get("model_digest") != self._metadata["digest"]
+            ):
+                raise RepairError("MODEL_CHANGED")
+            response = await self.client.chat(messages, tools=tools)
+            if response.get("done_reason") == "length":
+                raise RepairError("INVALID_MODEL_ACTION")
+            calls = response.get("message", {}).get("tool_calls", [])
+            if not isinstance(calls, list) or len(calls) != 1:
+                raise RepairError("INVALID_MODEL_ACTION")
+            function = calls[0].get("function", {})
+            if not isinstance(function, dict) or not isinstance(
+                function.get("arguments"), dict
+            ):
+                raise RepairError("INVALID_MODEL_ACTION")
+            return {"tool": function.get("name"), "arguments": function["arguments"]}
+
+        future = asyncio.run_coroutine_threadsafe(call(), self.loop)
+        try:
+            return future.result(timeout=self.timeout)
+        except FutureTimeout:
+            future.cancel()
+            raise RepairError("MODEL_TIMEOUT") from None
+        except RepairError:
+            raise
+        except Exception:
+            raise RepairError("MODEL_UNAVAILABLE") from None
