@@ -112,6 +112,6 @@ Validation on this continuation branch: `python -m pytest -q -p no:cacheprovider
 
 ## Combined Mac 1 follow-up
 
-The `codex/mac1-windows1-finish` handoff passes **198** combined tests and a real local API/Gemma/dashboard smoke. All five live views rendered; only inspected sanitized bytes reached the enrolled local reference receiver, replay was held, capture remained OFF and no patch was applied. LIVE mode now refuses incompatible status envelopes before rendering text/action controls. The standalone mock demo server is not accepted as actual execution; use labelled Fixture Mode for rehearsal. [Exact evidence and reproduction](MAC_1_WINDOWS_1_COMPLETION.md).
+The `codex/mac1-windows1-finish` handoff passes **199** combined tests and a real local API/Gemma/dashboard smoke. All five live views rendered; only inspected sanitized bytes reached the enrolled local reference receiver, replay was held, capture remained OFF and no patch was applied. LIVE mode now refuses incompatible status envelopes before rendering text/action controls. The standalone mock demo server is not accepted as actual execution; use labelled Fixture Mode for rehearsal. [Exact evidence and reproduction](MAC_1_WINDOWS_1_COMPLETION.md).
 
 The chat “Choose an open source model” is continuing modern dashboard presentation from this tested behavior after user-authorized coordination. Preserve its local edits and the receipt/stale/model-pin/consent boundaries when integrating.

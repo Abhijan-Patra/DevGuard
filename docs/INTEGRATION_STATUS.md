@@ -1,6 +1,6 @@
 # Integrated backend and dashboard status
 
-16 October 2026. Current combined Mac 1/dashboard handoff: `codex/mac1-windows1-finish`, including PR #13, PR #14 and main through PR #12. See [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md) for digest enforcement, native clipboard checks and the real live-dashboard trial. The [earlier guard/readiness handoff](MAC_1_READINESS_HANDOFF.md) records the startup changes and Mac 2 repair coordination.
+16 October 2026. Current combined Mac 1/dashboard handoff: `codex/mac1-windows1-finish`, including PR #13, PR #14 and main through the QA/freeze merge `bdc58ab`. See [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md) for digest enforcement, native clipboard checks and the real live-dashboard trial. The [earlier guard/readiness handoff](MAC_1_READINESS_HANDOFF.md) records the startup changes and Mac 2 repair coordination.
 
 ## Implemented together
 
@@ -14,7 +14,7 @@
 
 ## Checks
 
-The combined suite passes **198 tests**, with one upstream TestClient deprecation warning. `pip check` reports no broken dependencies. Streamlit 1.66.0 is installed in the local virtualenv; optional UI versions are captured in `requirements-ui.lock.txt`.
+The combined suite passes **199 tests**, with one upstream TestClient deprecation warning. `pip check` reports no broken dependencies. Streamlit 1.66.0 is installed in the local virtualenv; optional UI versions are captured in `requirements-ui.lock.txt`.
 
 A live API check returned REVIEW/CREDENTIAL/MODEL_UNAVAILABLE with no preview for declared synthetic input; the value was absent from audit responses. The live server reported durable audit storage, capture OFF and repair NOT_CONFIGURED; its database is mode 0600 and the dashboard health endpoint returned 200. The synthetic event remained present after a real backend process restart, with capture still OFF.
 

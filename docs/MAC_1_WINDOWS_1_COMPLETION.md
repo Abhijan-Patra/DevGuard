@@ -1,6 +1,6 @@
 # Mac 1 and Windows 1 completion evidence — 16 October 2026
 
-Integration branch: `codex/mac1-windows1-finish`. Combines dashboard PR #13 and Mac 1 PR #14 with main through PR #12. Mac 2 owns its repair trial and QA/demo work; none of those implementation files were changed here. The separate chat “Choose an open source model” is continuing the modern dashboard presentation after coordination authorized by Abhijan. This handoff supplies tested behavior and runtime evidence for that work.
+Integration branch: `codex/mac1-windows1-finish`. Combines dashboard PR #13 and Mac 1 PR #14 with main through the QA/freeze merge `bdc58ab`. Mac 2 owns its repair trial and QA/demo work; none of those implementation files were changed here. The separate chat “Choose an open source model” is continuing the modern dashboard presentation after coordination authorized by Abhijan. This handoff supplies tested behavior and runtime evidence for that work.
 
 ## Completed changes
 
@@ -12,7 +12,7 @@ Integration branch: `codex/mac1-windows1-finish`. Combines dashboard PR #13 and 
 
 ## Measured verification
 
-**198 automated tests passed**; one existing Starlette/HTTPX TestClient deprecation warning. `pip check`: no broken requirements. Tests use synthetic model/verifier ports; their count is not a real-model accuracy measurement.
+**199 automated tests passed**; one existing Starlette/HTTPX TestClient deprecation warning. `pip check`: no broken requirements. Tests use synthetic model/verifier ports; their count is not a real-model accuracy measurement.
 
 Runtime: Apple M4 / 16 GiB (hardware from the existing Mac 1 handoff); macOS 26.6.2, Python 3.11.14, PyObjC Cocoa 12.2.2, Ollama 0.40.4. Current model metadata and both actual inference checks matched digest `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c` for `gemma4:e4b-it-q4_K_M`.
 
