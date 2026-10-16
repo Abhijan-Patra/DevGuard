@@ -91,7 +91,7 @@ def generate_qa_summary(scenarios):
     return summary_text
 
 
-def check_live_health(base_url="http://127.0.0.1:8000/api/v1"):
+def check_live_health(base_url="http://127.0.0.1:8765/api/v1"):
     url = f"{base_url.rstrip('/')}/health"
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "DevGuard-QA-Runner"})
@@ -107,7 +107,7 @@ def main():
     parser.add_argument("--summary", action="store_true", help="Print summary of all test scenarios")
     parser.add_argument("--generate-report", action="store_true", help="Generate evals/QA_SUMMARY.md")
     parser.add_argument("--check-live", action="store_true", help="Check local backend health")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000/api/v1", help="DevGuard API Base URL")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8765/api/v1", help="DevGuard API Base URL")
     args = parser.parse_args()
 
     scenarios = load_all_scenarios()
