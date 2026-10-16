@@ -9,6 +9,7 @@ from typing import Any, Dict
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError, StaleContentError
 from devguard.ui.components.banner import render_windows_capture_notice
+from devguard.ui.design import heading
 
 
 STATE_BADGES = {
@@ -23,8 +24,7 @@ STATE_BADGES = {
 
 
 def render_clipboard_view(client: BaseDevGuardClient) -> None:
-    st.header("📋 Text Clipboard Guard")
-    st.caption("Opt-in background text clipboard inspection and safe cleaned-copy controls.")
+    heading('Text clipboard','Inspect future text copies with your consent. Copy cleaned text only when its inspection is ready.','DEVGUARD / CLIPBOARD')
 
     render_windows_capture_notice()
 
@@ -69,10 +69,11 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
             )
             col_en, col_dis = st.columns(2)
             with col_en:
+                task=st.text_input('Clipboard task context',placeholder='For example: diagnose the login error',help='An optional task helps identify unrelated context. It is evaluated locally.')
                 consent = st.checkbox("I am on the capture Mac and consent to inspect future text copies")
                 if st.button("Enable on This Mac", disabled=not consent, use_container_width=True):
                     try:
-                        response = client.enable_clipboard(host_id=enrolled_host, consent=consent)
+                        response = client.enable_clipboard(host_id=enrolled_host, task=task or None,consent=consent)
                         if response.get("enabled") is not True:
                             raise DevGuardError("Capture was not enabled", code="CAPTURE_NOT_ENABLED")
                         st.success("Capture enabled for future copies on this Mac.")
