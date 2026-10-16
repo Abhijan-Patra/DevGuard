@@ -1,6 +1,6 @@
 """Use Mac 1's actual async OllamaClient, not a second HTTP client/model server.
 
-Aligned with codex/mac1-guard commit 3b50bd9. Construct on the running app loop,
+Aligned with codex/mac1-guard commit 2f28880. Construct on the running app loop,
 then invoke from the repair worker thread. Privacy remains a separate required port.
 """
 
@@ -71,3 +71,39 @@ class Mac1ModelBridge:
             raise
         except Exception:
             raise RepairError("MODEL_UNAVAILABLE") from None
+
+
+class DeferredMac1ModelBridge:
+    """Keep the privacy server startable before weights finish downloading."""
+
+    def __init__(self, client, loop: asyncio.AbstractEventLoop):
+        self.client, self.loop = client, loop
+        self._bridge = None
+
+    def _get(self) -> Mac1ModelBridge:
+        if self._bridge is None:
+            try:
+                if asyncio.get_running_loop() is self.loop:
+                    raise RepairError("MODEL_CALL_REQUIRES_WORKER_THREAD")
+            except RuntimeError:
+                pass
+            if not self.loop.is_running():
+                raise RepairError("MODEL_LOOP_UNAVAILABLE")
+            coroutine = self.client.inspect()
+            future = asyncio.run_coroutine_threadsafe(coroutine, self.loop)
+            try:
+                runtime = future.result(timeout=10)
+            except FutureTimeout:
+                future.cancel()
+                raise RepairError("MODEL_TIMEOUT") from None
+            except Exception:
+                raise RepairError("MODEL_UNAVAILABLE") from None
+            self._bridge = Mac1ModelBridge(self.client, self.loop, runtime)
+        return self._bridge
+
+    @property
+    def metadata(self) -> dict[str, str]:
+        return self._get().metadata
+
+    def next_action(self, messages, tools):
+        return self._get().next_action(messages, tools)

@@ -50,6 +50,8 @@ def response_error(error: RepairError) -> JSONResponse:
             "DOCKER_UNAVAILABLE",
             "MODEL_NOT_PINNED",
             "CAPACITY_EXHAUSTED",
+            "INTEGRATION_NOT_READY",
+            "WORKER_CLOSED",
         }
         else 413
         if code == "REQUEST_TOO_LARGE"
@@ -155,7 +157,7 @@ def create_repair_router(service: RepairService, require_operator) -> APIRouter:
     @router.post("/scheduler/enter-idle")
     async def enter_idle(request: Request):
         def action(body):
-            service.scheduler.enter_idle()
+            service.enter_idle()
             return {"paused": False, "trigger": "manual"}
 
         return await with_body(request, Body, action)
