@@ -119,7 +119,10 @@ def main() -> None:
             st.markdown(f"**Status:** `{health_info.get('status', 'unknown')}`")
             st.markdown(f"**Model:** `{health_info.get('model_name') or MODEL}`")
             st.caption(f"Digest: `{(health_info.get('model_digest') or 'unpinned')[:20]}`")
-        except Exception:
+        except DevGuardError as error:
+            if not client.is_fixture_mode():
+                st.error(f"Live backend unavailable [{error.code}]: {error}")
+                st.stop()
             st.caption("Readiness check unavailable")
 
         st.markdown("---")

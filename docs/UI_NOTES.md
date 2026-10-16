@@ -108,3 +108,10 @@ Cleaned-copy success requires `copied: true` and displays the returned clipboard
 Verification uses Streamlit's element tree and synthetic API responses, plus the real FastAPI route/client tests with injected inspectors. No screenshots, native clipboard reads, real model calls or original-source patch application are used in these dashboard checks. This does not establish installed-client interception or real model repair.
 
 Validation on this continuation branch: `python -m pytest -q -p no:cacheprovider tests/ui` passed **33 tests** (one upstream TestClient deprecation warning). All **63** local links across the seven changed documentation files resolve; `git diff --check` passes.
+
+
+## Combined Mac 1 follow-up
+
+The `codex/mac1-windows1-finish` handoff passes **198** combined tests and a real local API/Gemma/dashboard smoke. All five live views rendered; only inspected sanitized bytes reached the enrolled local reference receiver, replay was held, capture remained OFF and no patch was applied. LIVE mode now refuses incompatible status envelopes before rendering text/action controls. The standalone mock demo server is not accepted as actual execution; use labelled Fixture Mode for rehearsal. [Exact evidence and reproduction](MAC_1_WINDOWS_1_COMPLETION.md).
+
+The chat “Choose an open source model” is continuing modern dashboard presentation from this tested behavior after user-authorized coordination. Preserve its local edits and the receipt/stale/model-pin/consent boundaries when integrating.

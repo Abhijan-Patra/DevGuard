@@ -149,7 +149,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             {"capability": name,
              "status": "PARTIAL" if name in {"privacy_gate", "clipboard_capture", "backend_repair"} else "UNIMPLEMENTED",
              "limitations": {
-                 "privacy_gate": "Real Gemma classification and actual client delivery remain unverified.",
+                 "privacy_gate": "Limited real Gemma/local-reference checks passed; installed-client delivery and general accuracy remain unverified.",
                  "clipboard_capture": "Opt-in macOS text only; starts OFF; native live trial pending.",
                  "backend_repair": "Routes wired; trusted configuration, pinned model/image and Docker engine required; starts paused.",
                  "codex_adapter": "Hook code exists; installed-client interception is unverified.",

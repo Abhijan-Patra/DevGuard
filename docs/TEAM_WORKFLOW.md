@@ -53,3 +53,7 @@ Use remaining time rather than assuming the original eight-hour proposal still a
 ## Each member's first action
 
 Clone `https://github.com/Abhijan-Patra/DevGuard.git`, read `AGENTS.md`, this document, the API contract and your task file. Branch from the latest `main`. The task file includes a paste-ready assistant prompt. Build only your owned slice and surface dependencies early.
+
+## Combined handoff
+
+Mac 1/dashboard continuation is packaged on `codex/mac1-windows1-finish`; [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md) records the actual native clipboard and live UI checks. With Abhijan's authorization, “Choose an open source model” continues modern dashboard presentation from this handoff. Do not run duplicate system clipboard trials or overwrite another chat's active checkout. Mac 2's QA/demo and repair trials remain separate.

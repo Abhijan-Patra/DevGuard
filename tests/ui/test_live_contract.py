@@ -46,3 +46,15 @@ def test_live_client_uses_real_shapes_and_unavailable_model_is_held():
 def test_live_client_rejects_unenrolled_destinations(url):
     with pytest.raises(DevGuardError):
         HttpDevGuardClient(url,token=TOKEN)
+
+
+@pytest.mark.parametrize('status', [
+    [], {}, {'worker_id': 'mock-worker', 'model_state': 'READY'},
+    {'phase': 'GUARD_AND_CLIPBOARD_IMPLEMENTATION', 'runtime': {'model': MODEL}},
+])
+def test_noncontract_rehearsal_servers_are_not_accepted_as_live_backend(status):
+    with httpx.Client(transport=httpx.MockTransport(lambda r: httpx.Response(200, json=status))) as session:
+        client = HttpDevGuardClient(token=TOKEN, session=session)
+        with pytest.raises(DevGuardError) as error:
+            client.get_health()
+        assert error.value.code == 'LIVE_BACKEND_UNVERIFIED'

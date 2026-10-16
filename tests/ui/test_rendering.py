@@ -171,3 +171,18 @@ def test_capture_disable_requires_backend_acknowledgement(monkeypatch):
     assert not app.exception
     assert not any(item.value == 'Capture disabled.' for item in app.info)
     assert any('CAPTURE_NOT_DISABLED' in item.value for item in app.error)
+
+
+def test_unverified_live_backend_stops_before_input_or_action_controls(monkeypatch):
+    client = ui_client.FixtureDevGuardClient()
+    monkeypatch.setattr(client, 'is_fixture_mode', lambda: False)
+    def unavailable():
+        raise ui_client.DevGuardError('Use fixture mode', code='LIVE_BACKEND_UNVERIFIED')
+    monkeypatch.setattr(client, 'get_health', unavailable)
+    monkeypatch.setattr(ui_client, 'HttpDevGuardClient', lambda **kwargs: client)
+    app = AppTest.from_file(APP, default_timeout=15).run()
+    app.sidebar.radio[0].set_value('Live Mode (FastAPI Backend)').run()
+    assert not app.exception
+    assert any('LIVE_BACKEND_UNVERIFIED' in item.value for item in app.error)
+    assert not any('Evaluate with DevGuard' in button.label for button in app.button)
+    assert not app.text_area

@@ -1,6 +1,6 @@
 # Integrated backend and dashboard status
 
-16 October 2026. Current Mac 1 handoff: `codex/mac1-guard-readiness`, based on main including Mac 2 PR #10. See [guard/readiness handoff](MAC_1_READINESS_HANDOFF.md) for the exact changes, measured local Gemma checks and Mac 2 trial coordination.
+16 October 2026. Current combined Mac 1/dashboard handoff: `codex/mac1-windows1-finish`, including PR #13, PR #14 and main through PR #12. See [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md) for digest enforcement, native clipboard checks and the real live-dashboard trial. The [earlier guard/readiness handoff](MAC_1_READINESS_HANDOFF.md) records the startup changes and Mac 2 repair coordination.
 
 ## Implemented together
 
@@ -14,7 +14,7 @@
 
 ## Checks
 
-The combined suite passes **171 tests**, with one upstream TestClient deprecation warning. `pip check` reports no broken dependencies. Streamlit 1.66.0 is installed in the local virtualenv; optional UI versions are captured in `requirements-ui.lock.txt`.
+The combined suite passes **198 tests**, with one upstream TestClient deprecation warning. `pip check` reports no broken dependencies. Streamlit 1.66.0 is installed in the local virtualenv; optional UI versions are captured in `requirements-ui.lock.txt`.
 
 A live API check returned REVIEW/CREDENTIAL/MODEL_UNAVAILABLE with no preview for declared synthetic input; the value was absent from audit responses. The live server reported durable audit storage, capture OFF and repair NOT_CONFIGURED; its database is mode 0600 and the dashboard health endpoint returned 200. The synthetic event remained present after a real backend process restart, with capture still OFF.
 
@@ -49,4 +49,6 @@ For pinned versions, install `requirements.lock.txt` then optional `requirements
 4. If startup was held while prerequisites were unavailable, the authenticated `POST /api/v1/repair/initialize` retries the same trusted configuration. It cannot accept a new root/image through HTTP.
 5. Create a named cart incident, queue it and explicitly call the manual idle route. Inspect the real baseline, native model actions, independent verification and reviewed diff. Apply requires explicit approval and both inspected hashes.
 
-The local Docker engine and prepared image are available. Real Gemma/reference-receiver checks passed on four synthetic examples. A separate local repair experiment passed; Mac 2 is completing the final exact repair/demo evidence as described in the handoff. Native clipboard read/write and installed-client interception remain pending. Saved-file monitor code exists but is not yet supervised by this app; this build uses explicit named incident/idle actions. No production deployment or recovery claim is made.
+The local Docker engine and prepared image are available. Real Gemma/reference-receiver checks passed on four synthetic examples. A separate local repair experiment passed; Mac 2 is completing the final exact repair/demo evidence as described in the handoff. Controlled synthetic native clipboard read/write passed on both a private named board and the system board after explicit consent; capture is now OFF. Installed-client interception remains pending. Saved-file monitor code exists but is not yet supervised by this app; this build uses explicit named incident/idle actions. No production deployment or recovery claim is made.
+
+The shared model client now checks the pinned package digest after queue admission and before inference. The dashboard requires the actual live status envelope and stops on incompatible mock servers; use labelled Fixture Mode for rehearsal. The real live-dashboard check used the actual local API and Gemma with an in-process reference receiver, not the standalone mock server. See the completion evidence for exact scope and timings.
