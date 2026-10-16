@@ -2,11 +2,11 @@
 
 ## Current scope
 
-This repository begins as a planning/handoff package. Do not imply the application exists until code is implemented and checked. README and docs/FINAL_PLAN.md are the current product direction. Earlier external Qwen-first/screen-capture proposals are superseded.
+This repository began as a planning/handoff package. The Mac 1 branch now has privacy APIs, Gitleaks, validated redaction/release controls, protected-file utilities and an opt-in macOS text clipboard service. Capture is OFF until explicit local consent. Real Gemma classification, client delivery and native capture end-to-end behaviour remain unverified; repair is still Mac 2 work. Read docs/MAC_1_IMPLEMENTATION.md for actual validation. Earlier external Qwen-first/screen-capture proposals are superseded.
 
 ## Fixed decisions
 
-- One runtime model: local Gemma 4 E4B through Ollama (`gemma4:e4b`), validated in a real trial and pinned by digest/settings.
+- One runtime model: local Gemma 4 E4B through Ollama, using explicit Q4 tag `gemma4:e4b-it-q4_K_M`; validate in a real trial and pin digest/settings after download.
 - Privacy protection and optimised opt-in text clipboard capture are required. Clipboard capture must not be removed when excluding visual bug diagnosis.
 - Backend investigation uses source, diffs, selected structured logs, named API probes and independent tests. No screenshot, screen-recording or keyboard-monitoring dependencies.
 - Rules enforce policy; the model proposes classifications/actions. No fixture-specific secret answers, scripted successful repairs or fabricated results.

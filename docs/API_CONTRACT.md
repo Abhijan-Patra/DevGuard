@@ -1,8 +1,10 @@
 # Shared API and event contract v1
 
-Owner: Mac 1. Mac 2 and both Windows owners implement against this document. This is a proposed interface, not an existing server. Mac 1 generates the executable Pydantic/OpenAPI schema before coding consumers; change the version when incompatible fields change.
+Owner: Mac 1. Mac 2 and both Windows owners implement against this document. Guard, event and clipboard routes now exist on the Mac 1 branch. Project registration, saved-file scan and repair routes remain proposed. The implemented Pydantic schemas live in `devguard/schemas/guard.py`; executable usage and limitations are in [MAC_1_IMPLEMENTATION.md](MAC_1_IMPLEMENTATION.md). Change the version for incompatible fields.
 
 ## Conventions
+
+The implemented `/status` also includes `inference_queue`: `active`, `foreground_waiting`, `background_waiting`, `capacity` and `closed`. These contain counts/flags only. Foreground privacy overtakes waiting repair calls; active inference is not preempted. This scheduling status is not model-readiness or completed-protection evidence.
 
 Base prefix `/api/v1`; JSON; IDs are opaque strings; UTC ISO-8601 timestamps. Backend uses relative safe display paths. Requests with text are sensitive and must not be logged. All endpoints except `/health` require a scoped `Authorization: Bearer <session-token>` header; tokens never appear in URLs, fixtures or Git. Streamlit holds its token server-side. Model tools cannot call operator APIs.
 
@@ -100,3 +102,12 @@ Each has `capability`, `client`, `client_version`, `status`, `verified_at`, `evi
 ## Fixture rule
 
 Windows 1 builds views from examples and synthetic events under a persistent FIXTURE MODE banner. Windows 2 supplies fixture content matching this schema. Fixture content is presentation data, never a runtime classification lookup or proof of delivery/repair. Mac 1 reviews schema changes and Mac 2 validates backend acceptance cases.
+
+## Current implementation details
+
+- `local-preview` is the only default destination. It returns no outgoing delivery; `/deliver` holds unless trusted server code enrols a receiver. There is no API to register arbitrary URLs.
+- Optional `DEVGUARD_ADAPTER_TOKEN` is distinct from the operator token and can evaluate/deliver only its own request IDs. It cannot inspect operator findings or change capture state. Native actions also require a loopback operator request.
+- Validation errors omit original values; oversized HTTP bodies return 413. The source text limit is 32 KiB, while the first contextual inspector holds serialised task/text input above 2 KiB rather than silently truncating it.
+- Audit events currently use bounded in-memory SQLite; they reset with the process. They contain redacted metadata only. Findings are transient in-memory decisions, not a persistent project tracker; project filtering is not implemented yet.
+- Native capture starts OFF and observes future copies after consent. It does not inspect the clipboard that was already present at enable time.
+- Delivery/owner/replay logic has synthetic boundary tests; real model decisions and a real coding-client receiver remain unverified. Do not infer those from a successful backend response.

@@ -1,6 +1,6 @@
 # Setup and resource budget
 
-This documentation package does not install dependencies or provide application code. Mac owners add real application start/test commands after implementation and verification. Do not fabricate commands for nonexistent entry points.
+The Mac 1 branch now includes executable guard/clipboard controls; follow [GETTING_STARTED.md](GETTING_STARTED.md) for the actual startup commands and [MAC_1_IMPLEMENTATION.md](MAC_1_IMPLEMENTATION.md) for measured status. Repair and coding-client integration remain separate work.
 
 ## All members
 
@@ -14,12 +14,12 @@ Model trial commands, after Ollama is installed and its server is running:
 
 ```sh
 ollama --version
-ollama pull gemma4:e4b
-ollama show gemma4:e4b
-ollama run gemma4:e4b
+ollama pull gemma4:e4b-it-q4_K_M
+ollama show gemma4:e4b-it-q4_K_M
+ollama run gemma4:e4b-it-q4_K_M
 ```
 
-Record actual model digest/backend and settings. Package tags may change. The read-only planning check found client version 0.40.4 with no running server; this does not establish installed weights, compatibility or performance. Do not promise that startup is already complete.
+Record actual model digest/backend and settings. Package tags may change. The first setup check now confirms the client/server at 0.40.4 with the selected Q4 model downloading. Installed weights and inference performance are still pending. Do not promise that startup is already complete.
 
 For clipboard integration, evaluate a compatible macOS native bridge for NSPasteboard, with consent and permission failure handling. Keep capture platform code separate from classification so the service can be tested with synthetic text.
 
