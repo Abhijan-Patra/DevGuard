@@ -1,0 +1,47 @@
+# Local credentials and private runtime inputs
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.secrets/
+.devguard/
+clipboard-history/
+private-inputs/
+
+# Runtime data, models and disposable workspaces
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.log
+*.gguf
+*.safetensors
+models-cache/
+snapshots/
+sandboxes/
+runtime-artifacts/
+
+# Python/tool caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# OS/editor/build output
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+node_modules/
+dist/
+build/
+
+# Earlier local proposal retained for reference, superseded by docs/FINAL_PLAN.md
+/DevGuard-build-plan.md
