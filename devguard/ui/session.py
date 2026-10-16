@@ -7,9 +7,13 @@ from devguard.ui.client import DevGuardError
 
 
 def load_local_token(base_url):
-    url=urlsplit(base_url)
+    try:
+        url=urlsplit(base_url)
+        port=url.port
+    except (TypeError,ValueError):
+        raise DevGuardError('Local enrolment requires a valid default DevGuard URL.',code='LOCAL_ENROLMENT_REQUIRED') from None
     if (url.scheme!='http' or url.hostname not in {'127.0.0.1','localhost'}
-            or url.port!=8765 or url.path.rstrip('/')!='/api/v1'
+            or port!=8765 or url.path.rstrip('/')!='/api/v1'
             or url.username or url.password or url.query or url.fragment):
         raise DevGuardError('Local enrolment requires the default DevGuard endpoint on this Mac.',code='LOCAL_ENROLMENT_REQUIRED')
     path=Path(__file__).resolve().parents[2]/'.devguard/session-token'

@@ -344,7 +344,11 @@ class HttpDevGuardClient(BaseDevGuardClient):
     """Local display client; actions retain backend version/scope/approval checks."""
 
     def __init__(self, base_url: str = "http://127.0.0.1:8765/api/v1", token: Optional[str] = None, *, session=None) -> None:
-        url = urlsplit(base_url)
+        try:
+            url = urlsplit(base_url)
+            url.port  # Validate malformed/out-of-range ports without echoing input.
+        except (TypeError,ValueError):
+            raise BackendConnectionError('Use a valid enrolled loopback DevGuard API URL') from None
         if (url.scheme != "http" or url.hostname not in {"127.0.0.1", "localhost", "::1"}
                 or url.username or url.password or url.query or url.fragment
                 or url.path.rstrip("/") != "/api/v1"):
@@ -382,7 +386,9 @@ class HttpDevGuardClient(BaseDevGuardClient):
                     raise ServiceUnavailableError()
                 raise DevGuardError("Action held by the local backend", code=code,
                                     status_code=response.status_code)
-            return response.json() if response.content else {}
+            result=response.json() if response.content else {}
+            if not isinstance(result,dict):raise ValueError('Invalid envelope')
+            return result
         except DevGuardError:
             raise
         except httpx.HTTPError:
@@ -398,7 +404,11 @@ class HttpDevGuardClient(BaseDevGuardClient):
                 "model_name": runtime.get("model"), "model_digest": runtime.get("model_digest")}
 
     def get_status(self) -> Dict[str, Any]:
-        status = self._request("GET", "/status")
+        try:
+            status = self._request("GET", "/status")
+        except DevGuardError as error:
+            if error.code!='INVALID_RESPONSE':raise
+            raise DevGuardError('Live mode requires the actual DevGuard status contract; use Fixture Mode for rehearsal',code='LIVE_BACKEND_UNVERIFIED') from None
         runtime = status.get("runtime") if isinstance(status, dict) else None
         if (not isinstance(status, dict) or status.get("phase") != "GUARD_AND_CLIPBOARD_IMPLEMENTATION"
                 or not isinstance(runtime, dict)

@@ -9,7 +9,7 @@ from typing import Any, Dict
 from uuid import uuid4
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError, StaleContentError
-from devguard.ui.design import heading,card
+from devguard.ui.design import heading
 
 
 RUN_STATE_COLORS = {
@@ -49,6 +49,8 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
         "Select Incident to Inspect",
         options=range(len(incidents)),
         format_func=lambda i: incident_titles[i],
+        index=next((i for i,item in enumerate(incidents)
+                    if item.get('incident_id')==st.session_state.get('repair_selected_incident')),0),
     )
     incident = incidents[selected_idx]
     if st.button('Investigate selected incident',use_container_width=False):
@@ -224,9 +226,11 @@ def _render_worker_controls(client,readiness):
         if submit:
             try:
                 incident=client.create_incident(project,signal)
+                if not incident.get('incident_id'):raise DevGuardError('Incident was not acknowledged',code='INCIDENT_NOT_CREATED')
                 result=client.investigate_incident(incident['incident_id'])
                 if not result.get('run_id'):raise DevGuardError('Run was not acknowledged',code='RUN_NOT_QUEUED')
                 st.session_state['repair_notice']='Investigation queued. Enter idle to allow background work.'
+                st.session_state['repair_selected_incident']=incident['incident_id']
                 st.rerun()
             except DevGuardError as error:st.error(f'{error.code}: {error}')
     return True

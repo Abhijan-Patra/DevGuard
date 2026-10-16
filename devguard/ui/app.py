@@ -1,6 +1,5 @@
 """DevGuard local operator workspace; presentation never substitutes backend decisions."""
 import streamlit as st
-from devguard.config import MODEL
 from devguard.ui.client import BaseDevGuardClient,DevGuardError,FixtureDevGuardClient,HttpDevGuardClient
 from devguard.ui.components.banner import render_fixture_banner
 from devguard.ui.components.clipboard_view import render_clipboard_view
@@ -27,8 +26,31 @@ def get_client() -> BaseDevGuardClient:
 
 
 def _clear_results():
-    for key in ('last_eval_result','last_eval_binding','delivery_receipt','audit_pages','audit_cursor'):
+    for key in ('last_eval_result','last_eval_binding','delivery_receipt','audit_pages','audit_cursor','repair_selected_incident','repair_notice'):
         st.session_state.pop(key,None)
+
+
+def _connect_local():
+    # Button callbacks run before widget construction, so clearing a prior
+    # password value cannot be undone by Streamlit's existing widget state.
+    try:
+        url=st.session_state.get('_backend_url_input',st.session_state.backend_url)
+        st.session_state.local_operator_token=load_local_token(url)
+        st.session_state.backend_url=url
+        st.session_state.session_token=''
+        st.session_state._operator_token_input=''
+        get_client().get_status()
+        st.session_state.connection_notice='Connected locally. Token stays on the server.'
+    except DevGuardError as error:
+        st.session_state.pop('local_operator_token',None)
+        st.session_state.connection_error=f'{error.code}: {error}'
+
+
+def _disconnect():
+    st.session_state.pop('local_operator_token',None)
+    st.session_state.session_token=''
+    st.session_state._operator_token_input=''
+    _clear_results()
 
 
 def main():
@@ -42,19 +64,18 @@ def main():
         if mode==LIVE:
             with st.expander('Connection settings',expanded=not bool(st.session_state.get('session_token') or st.session_state.get('local_operator_token'))):
                 previous_url=st.session_state.get('backend_url','http://127.0.0.1:8765/api/v1')
-                base_url=st.text_input('Base URL',value=previous_url)
-                if base_url!=previous_url:st.session_state.pop('local_operator_token',None)
+                if '_backend_url_input' not in st.session_state:st.session_state._backend_url_input=previous_url
+                base_url=st.text_input('Base URL',key='_backend_url_input')
+                if base_url!=previous_url:
+                    st.session_state.pop('local_operator_token',None)
+                    st.session_state.session_token=''
+                    st.session_state._operator_token_input=''
                 st.session_state.backend_url=base_url
-                manual=st.text_input('Operator Session Token',type='password',value=st.session_state.get('session_token',''),help='Manual enrolment. Never share this token in chat or commit it.')
+                if '_operator_token_input' not in st.session_state:
+                    st.session_state._operator_token_input=st.session_state.get('session_token','')
+                manual=st.text_input('Operator Session Token',type='password',key='_operator_token_input',help='Manual enrolment. Never share this token in chat or commit it.')
                 st.session_state.session_token=manual
-                if st.button('Connect on this Mac',use_container_width=True):
-                    try:
-                        st.session_state.local_operator_token=load_local_token(base_url)
-                        get_client().get_status()
-                        st.success('Connected locally. Token stays on the server.')
-                    except DevGuardError as error:
-                        st.session_state.pop('local_operator_token',None)
-                        st.error(f'{error.code}: {error}')
+                st.button('Connect on this Mac',use_container_width=True,on_click=_connect_local)
                 st.caption('Local connection reads the private session file only after you click. It does not enable clipboard capture.')
                 if st.button('Test connection',use_container_width=True):
                     try:
@@ -62,6 +83,12 @@ def main():
                         st.success('Authenticated API connection established.')
                         if not health.get('model_ready'):st.warning('Gemma unavailable; contextual checks remain held.')
                     except DevGuardError as error:st.error(f'{error.code}: {error}')
+                if st.session_state.get('local_operator_token') or st.session_state.get('session_token'):
+                    st.button('Disconnect',use_container_width=True,on_click=_disconnect)
+            if st.session_state.get('connection_notice'):
+                st.success(st.session_state.pop('connection_notice'))
+            if st.session_state.get('connection_error'):
+                st.error(st.session_state.pop('connection_error'))
         identity=(mode,st.session_state.get('backend_url'),st.session_state.get('session_token'),st.session_state.get('local_operator_token'))
         if st.session_state.get('_connection_identity')!=identity:
             _clear_results()

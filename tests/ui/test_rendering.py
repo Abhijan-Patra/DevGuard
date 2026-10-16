@@ -26,7 +26,7 @@ def test_all_fixture_views_render_and_actions_keep_fixture_state():
         app.sidebar.radio[1].set_value(view).run()
         assert not app.exception
     app.sidebar.radio[1].set_value('📋 Text Clipboard').run()
-    app.button[0].click().run()
+    _button(app,'Disable Clipboard').click().run()
     assert not app.exception
 
 
@@ -43,6 +43,7 @@ def test_live_mode_never_loads_fixture_results_and_displays_held_evaluation(monk
         app.session_state['session_token']=TOKEN
         app.sidebar.radio[0].set_value('Live Mode (FastAPI Backend)').run()
         assert not app.exception
+        app.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
         assert not app.metric
         assert any('No evaluation' in item.value for item in app.info)
         for view in VIEWS:
@@ -75,6 +76,8 @@ def test_failed_replacement_evaluation_clears_previous_release_card(monkeypatch)
     monkeypatch.setattr(ui_client, 'HttpDevGuardClient', lambda **kwargs: client)
     app = AppTest.from_file(APP, default_timeout=15).run()
     app.sidebar.radio[0].set_value('Live Mode (FastAPI Backend)').run()
+    app.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
+    next(item for item in app.text_input if item.label=='Configured Destination').set_value('configured-coding-client')
     # Use synthetic responses to exercise display state, not model accuracy.
     _button(app, 'Evaluate with DevGuard').click().run()
     assert any('Authorize Delivery' in button.label for button in app.button)
@@ -100,6 +103,7 @@ def test_incomplete_or_local_only_evaluations_offer_no_release(status, decision)
     from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
 
     app = AppTest.from_file(APP, default_timeout=15).run()
+    app.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
     result = deepcopy(SYNTHETIC_PRIVACY_EVALUATION)
     result['decision'] = decision
     if status is None:
@@ -116,10 +120,13 @@ def test_fixture_delivery_does_not_leak_into_new_dashboard_session():
     from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
 
     app = AppTest.from_file(APP, default_timeout=15).run()
+    app.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
     _button(app, 'Authorize Delivery').click().run()
     assert app.session_state['last_eval_result']['delivered'] is True
+    assert app.session_state['last_eval_result']['receipt_id'].startswith('receipt-')
     assert SYNTHETIC_PRIVACY_EVALUATION['delivered'] is False
     fresh = AppTest.from_file(APP, default_timeout=15).run()
+    fresh.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
     assert not fresh.exception
     assert any('Authorize Delivery' in button.label for button in fresh.button)
 

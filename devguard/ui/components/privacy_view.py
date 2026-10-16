@@ -11,6 +11,7 @@ from typing import Any, Dict
 from copy import deepcopy
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError
+from devguard.ui.design import heading
 
 
 DECISION_COLORS = {
@@ -23,8 +24,7 @@ DECISION_COLORS = {
 
 
 def render_privacy_view(client: BaseDevGuardClient) -> None:
-    st.header("🛡️ Privacy Gate & Evaluation")
-    st.caption("Inspect and evaluate outgoing prompts, tool results, and file reads before external release.")
+    heading('Share only the context you need.','Inspect prompts, source excerpts and tool results with local Gemma. Review the decision before supported delivery.','DEVGUARD / PRIVACY GATE')
 
     col1, col2 = st.columns([1, 1])
 
@@ -54,7 +54,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
         preset = scenario_map.get(selected_label, {})
         default_task = preset.get("task", "Diagnose authentication exception in login handler")
         default_surface = preset.get("surface", "explicit_prompt")
-        default_dest = preset.get("destination_id", "local-preview")
+        default_dest = "local-preview"  # Examples inspect locally; real delivery needs an enrolled receiver.
         default_text = preset.get(
             "synthetic_input",
             "ValueError at auth/login.py:42: Auth failed for user customer_alpha@example.invalid with token ghp_ABC123secretKEY456",
@@ -116,6 +116,16 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
         else:
             st.info("No evaluation performed yet. Submit text on the left to see gate decision.")
 
+    with st.expander('Recent active findings · transient inspections'):
+        try:
+            findings=client.get_findings()
+            if not findings:st.caption('No active findings. Completed inspections expire; raw input is not a stored history.')
+            else:
+                st.dataframe([{'Request':f.get('request_id'),'Decision':f.get('decision'),
+                    'Reasons':', '.join(f.get('reason_codes',[])),'Version':f.get('content_version'),
+                    'Status':f.get('status')} for f in findings],hide_index=True,use_container_width=True)
+        except DevGuardError as error:st.caption('Findings unavailable: '+error.code)
+
 
 def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -> None:
     decision = eval_result.get("decision", "REVIEW")
@@ -156,10 +166,15 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
     delivered = eval_result.get("delivered", False)
     if delivered:
         st.success("✅ **DELIVERED**: Released to destination through verified gate receipt.")
+        if eval_result.get('receipt_id'):
+            st.caption('Delivery receipt')
+            st.code(eval_result['receipt_id'],language=None)
     else:
         st.warning("⏳ **NOT DELIVERED**: Content is inspected and held. Explicit release required.")
         req_id = eval_result.get("request_id")
-        if req_id and status == "READY" and decision in ("ALLOW", "SANITIZE"):
+        if eval_result.get('destination_id')=='local-preview':
+            st.info('Local preview only. No outgoing receiver is enrolled for this destination; inspection does not send the text.')
+        elif req_id and status == "READY" and decision in ("ALLOW", "SANITIZE"):
             if st.button(f"🚀 Authorize Delivery ({req_id})", key="deliver_btn", use_container_width=True):
                 try:
                     receipt = client.deliver_request(req_id,
@@ -168,6 +183,7 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
                     if receipt.get("delivered") is not True or not receipt.get("receipt_id"):
                         raise DevGuardError("Delivery was not acknowledged", code="NO_DELIVERY_RECEIPT")
                     eval_result["delivered"] = True
+                    eval_result['receipt_id'] = receipt['receipt_id']
                     st.session_state["last_eval_result"] = eval_result
                     st.success(f"Delivery receipt created: `{receipt.get('receipt_id', 'receipt-ok')}`")
                     st.rerun()

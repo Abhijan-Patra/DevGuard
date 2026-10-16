@@ -60,6 +60,8 @@ def run():
             app.session_state["backend_url"] = url
             app.sidebar.radio[0].set_value("Live Mode (FastAPI Backend)").run()
             assert not app.exception
+            app.sidebar.radio[1].set_value('🛡️ Privacy Gate').run()
+            assert not app.exception
 
             def field(label):
                 return next(item for item in app.text_input if item.label == label)
@@ -82,6 +84,8 @@ def run():
             next(button for button in app.button if "Authorize Delivery" in button.label).click().run()
             assert not app.exception
             assert app.session_state["last_eval_result"]["delivered"] is True
+            assert app.session_state["last_eval_result"].get('receipt_id')
+            report['delivery_receipt_recorded']=True
             assert received == [expected]
             report["receiver_got_only_inspected_cleaned_bytes"] = True
             try:
@@ -91,13 +95,13 @@ def run():
                 pass
             report["replay_held"] = True
 
-            for view in ("📋 Text Clipboard", "📊 Integration Coverage", "🔧 Repair & Patches", "📜 Audit Event Log"):
+            for view in ("Overview", "📋 Text Clipboard", "📊 Integration Coverage", "🔧 Repair & Patches", "📜 Audit Event Log"):
                 app.sidebar.radio[1].set_value(view).run()
                 assert not app.exception
             assert client.get_clipboard_status()["enabled"] is False
             assert client.get_status()["repair"]["configured"] is False
             assert secret not in json.dumps(client.get_events())
-            report["all_five_live_views_rendered"] = True
+            report["all_six_live_views_rendered"] = True
             report["audit_omits_synthetic_secret"] = True
             report["audit_file_mode"] = oct(stat.S_IMODE(database.stat().st_mode))
             report["status"] = "PASS"
