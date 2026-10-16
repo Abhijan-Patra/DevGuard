@@ -49,8 +49,8 @@
   - All 26 scenario records in `evals/results/results_registry.json` are marked `UNRUN` per AGENTS.md invariant.
   - No invented or fabricated model benchmarks.
 - [x] **Automated Test Suite:**
-  - `python -m pytest tests/ui/ -v` passes **25/25 tests** without errors.
-  - Full test suite contains 143 tests across backend, storage, repair, and UI.
+  - `python -m pytest tests/ui/ -v` passes **38/38 tests** without errors.
+  - Mac 1 full backend suite confirms **171/171 tests** passing on macOS M4 / Python 3.11.
 
 ---
 

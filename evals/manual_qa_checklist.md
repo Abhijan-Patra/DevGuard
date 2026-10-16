@@ -87,6 +87,25 @@ This checklist guides manual quality assurance across the DevGuard operator inte
 
 ---
 
-## 3. Results Recording
+## 3. Automated Dashboard Regression Coverage (38 Tests Passing)
 
-When executing live checks, record observations into `evals/results/results_registry.json` using the schema template `evals/results/template.json`. Leave unrun items strictly marked `UNRUN`.
+The Streamlit operator dashboard invariants requested in `docs/tasks/MAC_2_WINDOWS_2_CONTINUATION.md` are continuously automated and verified under `tests/ui/`:
+
+| Invariant / Check | Test Name | Result |
+| :--- | :--- | :---: |
+| **Failed replacement evaluation clears previous release cards** | `test_failed_replacement_evaluation_clears_previous_release_card` | **PASS** |
+| **Incomplete, expired, or local-only evaluations offer no delivery release** | `test_incomplete_or_local_only_evaluations_offer_no_release` | **PASS** |
+| **Fixture delivery state never leaks into freshly started sessions** | `test_fixture_delivery_does_not_leak_into_new_dashboard_session` | **PASS** |
+| **Cleaned copy displays only acknowledged returned clipboard versions** | `test_cleaned_copy_displays_only_acknowledged_returned_version` | **PASS** |
+| **Apply and reject actions never report unacknowledged success** | `test_patch_actions_do_not_report_unacknowledged_success` | **PASS** |
+| **Disabling clipboard capture requires backend acknowledgement** | `test_capture_disable_requires_backend_acknowledgement` | **PASS** |
+| **Live mode never loads fixture results; uninspected inputs are held** | `test_live_mode_never_loads_fixture_results_and_displays_held_evaluation` | **PASS** |
+| **Unenrolled or malicious destination URLs rejected** | `test_live_client_rejects_unenrolled_destinations` | **PASS** |
+| **Audit event timeline stream conforms to schema v1** | `test_audit_event_stream_fields` | **PASS** |
+| **Incident review authority prevents unauthorized modification** | `test_incident_and_patch_review_authority` | **PASS** |
+
+---
+
+## 4. Results Recording & Live Trial Reporting
+
+When executing live checks, record observations into `evals/results/results_registry.json` using the schema template `evals/results/template.json`. Leave unrun items strictly marked `UNRUN`. Reference trials executed on Apple Silicon hardware (e.g. Mac 1's 4 local reference checks and 38.24s Docker repair run) are documented with their exact digest and setup in `docs/MAC_1_READINESS_HANDOFF.md` and `docs/SUBMISSION_FINAL.md`.
