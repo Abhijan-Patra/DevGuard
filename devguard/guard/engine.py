@@ -141,8 +141,12 @@ class GuardEngine:
         if len(self.records) >= 128:
             self.revoke(next(iter(self.records)))
         self.records[record.request_id] = record
-        self.audit.add("guard.decision", decision.value, request_id=record.request_id,
-                       content_version=record.version, reason_codes=record.reasons)
+        try:
+            self.audit.add("guard.decision", decision.value, request_id=record.request_id,
+                           content_version=record.version, reason_codes=record.reasons)
+        except Exception:
+            self.revoke(record.request_id)
+            raise
         return record
 
     async def deliver(self, identifier, *, owner, version, destination):

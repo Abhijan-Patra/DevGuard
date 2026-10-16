@@ -18,8 +18,10 @@ from devguard.clipboard.service import ClipboardService
 from devguard.guard.context import ContextInspector
 from devguard.guard.engine import GuardEngine, GuardError
 from devguard.guard.scanner import CredentialScanner
-from devguard.storage.audit import AuditStore
+from devguard.storage.audit import AuditStore, AuditUnavailable
 from devguard.api.body_limit import BodyLimitMiddleware
+from devguard.api.repair_integration import RepairRuntime, integration_router
+from devguard.api.repair_routes import create_repair_router
 
 
 CAPABILITIES = (
@@ -32,25 +34,29 @@ class Unauthorized(Exception):
 
 
 def create_app(settings: Settings, *, transport=None, scanner=None, inspector=None,
-               clipboard_adapter=None, receivers=None, audit=None):
+               clipboard_adapter=None, receivers=None, audit=None, repair_factory=None):
     model = OllamaClient(settings, transport=transport)
     audit = audit or AuditStore()
     scanner = scanner or CredentialScanner()
     guard = GuardEngine(scanner, inspector or ContextInspector(model), audit, receivers=receivers)
     clipboard = ClipboardService(clipboard_adapter or native_clipboard(), guard, audit)
+    repair = RepairRuntime(repair_factory)
 
     @asynccontextmanager
     async def lifespan(app):
         watcher = asyncio.create_task(clipboard.run())
         try:
+            await repair.initialize(app)
             yield
         finally:
             watcher.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await watcher
+            repair.pause()
+            await model.close()
+            await repair.join()
             guard.close()
             audit.close()
-            await model.close()
 
     app = FastAPI(title="DevGuard", version="0.1.0", lifespan=lifespan,
                   docs_url=None, redoc_url=None, openapi_url=None)
@@ -92,8 +98,18 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     app.state.model_queue = model
     app.state.operator_auth = authenticate
     app.state.adapter_auth = authenticate_guard
+    app.state.repair_event_sink = audit.add_repair
+    app.state.repair = repair
+
+    @app.exception_handler(AuditUnavailable)
+    async def audit_unavailable(request, error):
+        return JSONResponse(status_code=503, content={"error": {
+            "code": "AUDIT_UNAVAILABLE", "message": "Action held; local audit storage is unavailable"
+        }})
 
     app.include_router(guard_router(authenticate, authenticate_guard, guard, clipboard, audit))
+    app.include_router(create_repair_router(repair, authenticate))
+    app.include_router(integration_router(repair, app, authenticate))
 
     @app.exception_handler(Unauthorized)
     async def unauthorized(request: Request, error: Unauthorized):
@@ -116,14 +132,22 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             "clipboard": {**clipboard.status(), "implemented": True},
             "guard_implemented": True,
             "credential_scanner_available": scanner.available,
-            "repair_implemented": False,
+            "audit": {"durable": audit.durable, "retention_events": 5000},
+            "repair_implemented": True,
+            "repair": repair.status(),
         }
 
     @app.get("/api/v1/coverage", dependencies=[Depends(authenticate)])
     async def coverage():
         return {"capabilities": [
             {"capability": name,
-             "status": "PARTIAL" if name in {"privacy_gate", "clipboard_capture"} else "UNIMPLEMENTED",
+             "status": "PARTIAL" if name in {"privacy_gate", "clipboard_capture", "backend_repair"} else "UNIMPLEMENTED",
+             "limitations": {
+                 "privacy_gate": "Real Gemma classification and actual client delivery remain unverified.",
+                 "clipboard_capture": "Opt-in macOS text only; starts OFF; native live trial pending.",
+                 "backend_repair": "Routes wired; trusted configuration, pinned model/image and Docker engine required; starts paused.",
+                 "codex_adapter": "Hook code exists; installed-client interception is unverified.",
+             }[name],
              "verified_at": None}
             for name in CAPABILITIES
         ]}

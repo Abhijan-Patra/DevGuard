@@ -22,9 +22,15 @@ class OllamaClient:
             transport=transport,
         )
         self.queue = InferenceQueue()
+        self._calls = set()
 
     async def close(self):
         await self.queue.close()
+        pending = [task for task in self._calls if task is not asyncio.current_task()]
+        for task in pending:
+            task.cancel()
+        if pending:
+            await asyncio.gather(*pending, return_exceptions=True)
         await self._client.aclose()
 
     async def inspect(self):
@@ -69,6 +75,8 @@ class OllamaClient:
             payload["tools"] = tools
         if output_format:
             payload["format"] = output_format
+        task = asyncio.current_task()
+        self._calls.add(task)
         try:
             async with self.queue.slot(priority):
                 response = await self._client.post("/api/chat", json=payload)
@@ -79,3 +87,5 @@ class OllamaClient:
                 return result
         except (httpx.HTTPError, QueueUnavailable, ValueError, TypeError, AttributeError):
             raise ModelUnavailable("Local model call failed or returned invalid data") from None
+        finally:
+            self._calls.discard(task)

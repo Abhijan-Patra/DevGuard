@@ -126,3 +126,22 @@ def test_http_calls_use_one_queue_and_canceled_waiter_never_reaches_ollama():
         with pytest.raises(ModelUnavailable):
             await call("after-close")
     asyncio.run(run())
+
+
+def test_client_shutdown_cancels_active_and_waiting_inference():
+    async def run():
+        entered=asyncio.Event()
+        async def transport(request):
+            entered.set()
+            await asyncio.Event().wait()
+        client=OllamaClient(Settings('shutdown-test-only-not-runtime-token-123456'),
+                            transport=httpx.MockTransport(transport))
+        active=asyncio.create_task(client.chat([{'role':'user','content':'synthetic'}]))
+        await entered.wait()
+        waiting=asyncio.create_task(client.chat([{'role':'user','content':'synthetic'}],priority='foreground'))
+        await asyncio.sleep(0)
+        await client.close()
+        assert active.cancelled() and waiting.cancelled()
+        assert not client._calls and not client.queue.status()['active']
+        assert client.queue.status()['foreground_waiting']==0
+    asyncio.run(run())

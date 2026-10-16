@@ -6,10 +6,12 @@ live backend mode consuming endpoints per docs/API_CONTRACT.md.
 """
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 import json
+import re
+from urllib.parse import urlsplit
+import httpx
 from typing import Any, Dict, List, Optional
-import urllib.error
-import urllib.request
 
 
 class DevGuardError(Exception):
@@ -78,7 +80,7 @@ class BaseDevGuardClient(ABC):
         pass
 
     @abstractmethod
-    def enable_clipboard(self, host_id: str, task: Optional[str] = None) -> Dict[str, Any]:
+    def enable_clipboard(self, host_id: str, task: Optional[str] = None, *, consent: bool = False) -> Dict[str, Any]:
         """Enable text clipboard capture on target host."""
         pass
 
@@ -106,7 +108,7 @@ class BaseDevGuardClient(ABC):
         pass
 
     @abstractmethod
-    def deliver_request(self, request_id: str) -> Dict[str, Any]:
+    def deliver_request(self, request_id: str, *, content_version: Optional[int] = None, destination_id: Optional[str] = None) -> Dict[str, Any]:
         """Trigger delivery of sanitized request to destination."""
         pass
 
@@ -126,7 +128,7 @@ class BaseDevGuardClient(ABC):
         pass
 
     @abstractmethod
-    def apply_patch(self, patch_id: str, expected_hash: str) -> Dict[str, Any]:
+    def apply_patch(self, patch_id: str, expected_hash: str, *, expected_base_revision: Optional[str] = None, idempotency_key: Optional[str] = None, approved: bool = False) -> Dict[str, Any]:
         """Operator action to apply candidate patch."""
         pass
 
@@ -157,15 +159,15 @@ class FixtureDevGuardClient(BaseDevGuardClient):
             SYNTHETIC_STATUS,
         )
 
-        self._health = dict(SYNTHETIC_HEALTH)
-        self._status = dict(SYNTHETIC_STATUS)
-        self._coverage = [dict(c) for c in SYNTHETIC_COVERAGE]
-        self._clipboard = dict(SYNTHETIC_CLIPBOARD)
-        self._privacy = dict(SYNTHETIC_PRIVACY_EVALUATION)
-        self._incidents = [dict(i) for i in SYNTHETIC_INCIDENTS]
-        self._run = dict(SYNTHETIC_RUN)
-        self._patch = dict(SYNTHETIC_PATCH)
-        self._events = [dict(e) for e in SYNTHETIC_EVENTS]
+        self._health = deepcopy(SYNTHETIC_HEALTH)
+        self._status = deepcopy(SYNTHETIC_STATUS)
+        self._coverage = deepcopy(SYNTHETIC_COVERAGE)
+        self._clipboard = deepcopy(SYNTHETIC_CLIPBOARD)
+        self._privacy = deepcopy(SYNTHETIC_PRIVACY_EVALUATION)
+        self._incidents = deepcopy(SYNTHETIC_INCIDENTS)
+        self._run = deepcopy(SYNTHETIC_RUN)
+        self._patch = deepcopy(SYNTHETIC_PATCH)
+        self._events = deepcopy(SYNTHETIC_EVENTS)
 
     def is_fixture_mode(self) -> bool:
         return True
@@ -182,7 +184,7 @@ class FixtureDevGuardClient(BaseDevGuardClient):
     def get_clipboard_status(self) -> Dict[str, Any]:
         return self._clipboard
 
-    def enable_clipboard(self, host_id: str, task: Optional[str] = None) -> Dict[str, Any]:
+    def enable_clipboard(self, host_id: str, task: Optional[str] = None, *, consent: bool = False) -> Dict[str, Any]:
         self._clipboard["enabled"] = True
         self._clipboard["state"] = "CHECKING"
         self._clipboard["capture_host_id"] = host_id
@@ -224,31 +226,15 @@ class FixtureDevGuardClient(BaseDevGuardClient):
         content_version: int,
         text: str,
     ) -> Dict[str, Any]:
-        # Return synthetic evaluation with redacted preview
-        has_secret = any(k in text.lower() for k in ["secret", "password", "key", "token", "auth"])
-        decision = "SANITIZE" if has_secret else "ALLOW"
-        safe_preview = text
-        reason_codes = []
-        if has_secret:
-            safe_preview = "[REDACTED_CREDENTIAL]"
-            reason_codes.append("HIGH_ENTROPY_SECRET")
+        # A declared presentation fixture is not a classifier. Never echo or
+        # classify arbitrary typed text while the model is unavailable.
+        result = deepcopy(self._privacy)
+        result.update(request_id=f"req-simulated-{content_version}",
+                      content_version=content_version, destination_id=destination_id,
+                      delivered=False, simulated=True)
+        return result
 
-        return {
-            "request_id": f"req-simulated-{content_version}",
-            "content_version": content_version,
-            "policy_revision": "policy-v1-simulated",
-            "destination_id": destination_id,
-            "decision": decision,
-            "safe_preview": safe_preview,
-            "reason_codes": reason_codes,
-            "finding_ids": [f"finding-sim-{content_version}"],
-            "status": "READY",
-            "expires_at": "2026-10-16T13:00:00Z",
-            "delivered": False,
-            "simulated": True,
-        }
-
-    def deliver_request(self, request_id: str) -> Dict[str, Any]:
+    def deliver_request(self, request_id: str, *, content_version: Optional[int] = None, destination_id: Optional[str] = None) -> Dict[str, Any]:
         if request_id == self._privacy.get("request_id"):
             self._privacy["delivered"] = True
         return {
@@ -267,7 +253,7 @@ class FixtureDevGuardClient(BaseDevGuardClient):
     def get_patch(self, patch_id: str) -> Dict[str, Any]:
         return self._patch
 
-    def apply_patch(self, patch_id: str, expected_hash: str) -> Dict[str, Any]:
+    def apply_patch(self, patch_id: str, expected_hash: str, *, expected_base_revision: Optional[str] = None, idempotency_key: Optional[str] = None, approved: bool = False) -> Dict[str, Any]:
         if expected_hash != self._patch.get("base_hash"):
             raise StaleContentError(
                 f"Base hash mismatch (expected: {expected_hash}, current: {self._patch.get('base_hash')})"
@@ -299,119 +285,129 @@ class FixtureDevGuardClient(BaseDevGuardClient):
 
 
 class HttpDevGuardClient(BaseDevGuardClient):
-    """Live HTTP display client connecting to FastAPI backend per API_CONTRACT.md."""
+    """Local display client; actions retain backend version/scope/approval checks."""
 
-    def __init__(self, base_url: str = "http://127.0.0.1:8000/api/v1", token: Optional[str] = None) -> None:
+    def __init__(self, base_url: str = "http://127.0.0.1:8765/api/v1", token: Optional[str] = None, *, session=None) -> None:
+        url = urlsplit(base_url)
+        if (url.scheme != "http" or url.hostname not in {"127.0.0.1", "localhost", "::1"}
+                or url.username or url.password or url.query or url.fragment
+                or url.path.rstrip("/") != "/api/v1"):
+            raise BackendConnectionError("Use the enrolled loopback API at http://127.0.0.1:8765/api/v1")
         self.base_url = base_url.rstrip("/")
         self.token = token
+        self.session = session
 
     def is_fixture_mode(self) -> bool:
         return False
 
     def _request(self, method: str, path: str, payload: Optional[Dict[str, Any]] = None) -> Any:
-        url = f"{self.base_url}{path}"
-        headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
+        headers = {"Accept": "application/json"}
         if self.token:
-            headers["Authorization"] = f"Bearer {self.token}"
-
-        data = json.dumps(payload).encode("utf-8") if payload is not None else None
-        req = urllib.request.Request(url, data=data, headers=headers, method=method)
-
+            headers["Authorization"] = "Bearer " + self.token
         try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                raw_body = resp.read().decode("utf-8")
-                if not raw_body:
-                    return {}
-                return json.loads(raw_body)
-        except urllib.error.HTTPError as err:
-            err_body = err.read().decode("utf-8", errors="replace")
-            err_code = "HTTP_ERROR"
-            err_msg = f"HTTP {err.code}: {err.reason}"
-            try:
-                parsed = json.loads(err_body)
-                if "error" in parsed:
-                    err_code = parsed["error"].get("code", err_code)
-                    err_msg = parsed["error"].get("message", err_msg)
-            except Exception:
-                pass
-
-            if err.code in (401, 403):
-                raise AuthenticationError(err_msg) from err
-            elif err.code == 409:
-                raise StaleContentError(err_msg) from err
-            elif err.code == 503:
-                raise ServiceUnavailableError(err_msg) from err
+            if self.session is not None:
+                response = self.session.request(method, self.base_url + path, headers=headers, json=payload)
             else:
-                raise DevGuardError(err_msg, code=err_code, status_code=err.code) from err
-        except urllib.error.URLError as err:
-            raise BackendConnectionError(f"Connection failed: {err.reason}") from err
-        except Exception as err:
-            raise DevGuardError(f"Unexpected transport error: {err}") from err
+                with httpx.Client(trust_env=False, follow_redirects=False, timeout=30) as session:
+                    response = session.request(method, self.base_url + path, headers=headers, json=payload)
+            if response.status_code >= 300:
+                code = "HTTP_ERROR"
+                try:
+                    candidate = response.json().get("error", {}).get("code")
+                    if isinstance(candidate, str) and re.fullmatch(r"[A-Z_]{1,60}", candidate):
+                        code = candidate
+                except (ValueError, AttributeError):
+                    pass
+                if response.status_code == 401:
+                    raise AuthenticationError()
+                if response.status_code == 409:
+                    raise StaleContentError()
+                if response.status_code == 503:
+                    raise ServiceUnavailableError()
+                raise DevGuardError("Action held by the local backend", code=code,
+                                    status_code=response.status_code)
+            return response.json() if response.content else {}
+        except DevGuardError:
+            raise
+        except httpx.HTTPError:
+            raise BackendConnectionError() from None
+        except (ValueError, TypeError, AttributeError):
+            raise DevGuardError("Backend returned an invalid response", code="INVALID_RESPONSE") from None
 
     def get_health(self) -> Dict[str, Any]:
-        return self._request("GET", "/health")
+        status = self.get_status()  # Authenticated readiness, including actual digest.
+        runtime = status.get("runtime", {})
+        return {"service_ready": True, "model_ready": runtime.get("model_ready", False),
+                "status": "ready" if runtime.get("model_ready") else "model_unavailable",
+                "model_name": runtime.get("model"), "model_digest": runtime.get("model_digest")}
 
     def get_status(self) -> Dict[str, Any]:
         return self._request("GET", "/status")
 
     def get_coverage(self) -> List[Dict[str, Any]]:
-        return self._request("GET", "/coverage")
+        return self._request("GET", "/coverage")["capabilities"]
 
     def get_clipboard_status(self) -> Dict[str, Any]:
         return self._request("GET", "/clipboard/status")
 
-    def enable_clipboard(self, host_id: str, task: Optional[str] = None) -> Dict[str, Any]:
-        payload = {"capture_host_id": host_id, "task": task}
-        return self._request("POST", "/clipboard/enable", payload)
+    def enable_clipboard(self, host_id: str, task: Optional[str] = None, *, consent: bool = False) -> Dict[str, Any]:
+        if host_id != "local-host" or consent is not True:
+            raise DevGuardError("Explicit consent on the capture Mac is required", code="CAPTURE_CONSENT_REQUIRED")
+        return self._request("POST", "/clipboard/enable", {"consent": True, "task": task})
 
     def disable_clipboard(self) -> Dict[str, Any]:
         return self._request("POST", "/clipboard/disable")
 
     def copy_cleaned_clipboard(self, expected_version: int) -> Dict[str, Any]:
-        payload = {"expected_content_version": expected_version}
-        return self._request("POST", "/clipboard/copy-cleaned", payload)
+        return self._request("POST", "/clipboard/copy-cleaned", {"content_version": expected_version})
 
-    def evaluate_privacy(
-        self,
-        project_id: str,
-        task: str,
-        surface: str,
-        destination_id: str,
-        content_version: int,
-        text: str,
-    ) -> Dict[str, Any]:
-        payload = {
-            "project_id": project_id,
-            "task": task,
-            "surface": surface,
-            "destination_id": destination_id,
-            "content_version": content_version,
-            "text": text,
-        }
-        return self._request("POST", "/guard/evaluate", payload)
+    def evaluate_privacy(self, project_id: str, task: str, surface: str, destination_id: str,
+                         content_version: int, text: str) -> Dict[str, Any]:
+        return self._request("POST", "/guard/evaluate", {
+            "project_id": project_id or None, "task": task, "surface": surface,
+            "destination_id": destination_id, "content_version": content_version, "text": text,
+        })
 
-    def deliver_request(self, request_id: str) -> Dict[str, Any]:
-        return self._request("POST", f"/guard/requests/{request_id}/deliver")
+    def deliver_request(self, request_id: str, *, content_version: Optional[int] = None,
+                        destination_id: Optional[str] = None) -> Dict[str, Any]:
+        if content_version is None or not destination_id:
+            raise DevGuardError("Use the inspected content version and destination", code="INSPECTION_BINDING_REQUIRED")
+        return self._request("POST", f"/guard/requests/{request_id}/deliver", {
+            "content_version": content_version, "destination_id": destination_id,
+        })
 
     def get_incidents(self) -> List[Dict[str, Any]]:
-        return self._request("GET", "/incidents")
+        return self._request("GET", "/incidents")["incidents"]
 
     def get_run(self, run_id: str) -> Dict[str, Any]:
-        return self._request("GET", f"/runs/{run_id}")
+        run = self._request("GET", f"/runs/{run_id}")
+        model = run.get("model") or {}
+        run.update(model_name=model.get("name"), model_digest=model.get("digest"),
+                   candidate_patch_id=run.get("candidate_id"))
+        run["verification"] = {"status": run.get("verification") or "NOT_RUN"}
+        return run
 
     def get_patch(self, patch_id: str) -> Dict[str, Any]:
-        return self._request("GET", f"/patches/{patch_id}")
+        patch = self._request("GET", f"/patches/{patch_id}")
+        patch.update(patch_id=patch.get("candidate_id"), status=patch.get("state"),
+                     base_hash=patch.get("base_revision"),
+                     target_file=", ".join(patch.get("base_hashes", {})),
+                     verification_summary=patch.get("verification"))
+        return patch
 
-    def apply_patch(self, patch_id: str, expected_hash: str) -> Dict[str, Any]:
-        payload = {"expected_base_hash": expected_hash}
-        return self._request("POST", f"/patches/{patch_id}/apply", payload)
+    def apply_patch(self, patch_id: str, expected_hash: str, *, expected_base_revision: Optional[str] = None,
+                    idempotency_key: Optional[str] = None, approved: bool = False) -> Dict[str, Any]:
+        if approved is not True or not expected_base_revision or not idempotency_key:
+            raise DevGuardError("Explicit approval and inspected candidate/base versions are required", code="PATCH_APPROVAL_REQUIRED")
+        return self._request("POST", f"/patches/{patch_id}/apply", {
+            "approved": True, "expected_candidate_hash": expected_hash,
+            "expected_base_revision": expected_base_revision, "idempotency_key": idempotency_key,
+        })
 
     def reject_patch(self, patch_id: str) -> Dict[str, Any]:
         return self._request("POST", f"/patches/{patch_id}/reject")
 
     def get_events(self, cursor: Optional[str] = None) -> Dict[str, Any]:
-        path = f"/events?after={cursor}" if cursor else "/events"
-        return self._request("GET", path)
+        if cursor is not None and not re.fullmatch(r"[0-9]{1,19}", cursor):
+            raise DevGuardError("Invalid audit cursor", code="INVALID_CURSOR")
+        return self._request("GET", f"/events?after={cursor}" if cursor else "/events")

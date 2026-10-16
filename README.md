@@ -2,7 +2,7 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: the Mac 1 branch implements authenticated privacy APIs, Gitleaks scanning, exact-span redaction, a version-bound delivery controller, protected-file utilities and an opt-in macOS text clipboard service. The current server keeps capture OFF. Real Gemma inference and coding-client delivery remain unverified, and backend repair is still Mac 2 work. See the [implementation handoff](docs/MAC_1_IMPLEMENTATION.md) for actual checks and gaps.
+Status: privacy/clipboard APIs, the dashboard and Mac 2's repair routes are now wired together. The CLI persists redacted audit metadata; capture starts OFF and repair stays unavailable/paused until trusted model/verifier configuration is ready. The combined suite passes 132 tests. Real Gemma inference, Docker repair and coding-client delivery remain unverified. See [integration status](docs/INTEGRATION_STATUS.md) for checks and remaining gates.
 
 DevGuard inspects supported prompts, file access, tool results and copied text; it also investigates reproducible backend failures and prepares independently tested patches in a disposable workspace. Clipboard capture is a required, opt-in feature. Bug diagnosis uses source, structured logs, diffs, named API probes and tests; it does not depend on screenshots or screen recordings.
 
@@ -40,6 +40,7 @@ Both Mac owners own all backend, model, enforcement and repair logic. Windows wo
 - [Privacy and execution policy](docs/SECURITY_POLICY.md)
 - [API and event contract](docs/API_CONTRACT.md)
 - [Mac 2 integration signatures](docs/MAC_2_INTEGRATION.md)
+- [Integrated setup and measured status](docs/INTEGRATION_STATUS.md)
 - [Integration coverage](docs/COVERAGE.md)
 - [Evaluation](docs/EVALUATION.md)
 - [Demo runbook](docs/DEMO_RUNBOOK.md)

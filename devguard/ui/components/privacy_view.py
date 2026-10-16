@@ -36,7 +36,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
                 index=0,
                 help="Surface category authenticated by adapter or submitted by operator.",
             )
-            destination_id = st.text_input("Configured Destination", value="configured-coding-client")
+            destination_id = st.text_input("Configured Destination", value="local-preview")
             content_version = st.number_input("Content Version", min_value=1, value=7, step=1)
             text_input = st.text_area(
                 "Text Payload to Inspect",
@@ -66,7 +66,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
     with col2:
         st.subheader("Evaluation Decision & Preview")
         eval_result = st.session_state.get("last_eval_result")
-        if not eval_result:
+        if not eval_result and client.is_fixture_mode():
             try:
                 # Load synthetic baseline if available
                 from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
@@ -74,7 +74,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
             except Exception:
                 eval_result = None
 
-        if eval_result:
+        if eval_result and (client.is_fixture_mode() or not eval_result.get("simulated")):
             _render_eval_card(eval_result, client)
         else:
             st.info("No evaluation performed yet. Submit text on the left to see gate decision.")
@@ -98,7 +98,7 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
 
     # Safe Preview
     st.markdown("**Safe Preview (Cleaned / Redacted Output):**")
-    safe_preview = eval_result.get("safe_preview", "(No preview available)")
+    safe_preview = eval_result.get("safe_preview") or "(No approved preview available)"
     st.code(safe_preview, language="text")
 
     # Finding and reasons
@@ -124,7 +124,11 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
         if req_id and decision in ("ALLOW", "SANITIZE"):
             if st.button(f"🚀 Authorize Delivery ({req_id})", key="deliver_btn", use_container_width=True):
                 try:
-                    receipt = client.deliver_request(req_id)
+                    receipt = client.deliver_request(req_id,
+                        content_version=eval_result.get("content_version"),
+                        destination_id=eval_result.get("destination_id"))
+                    if receipt.get("delivered") is not True or not receipt.get("receipt_id"):
+                        raise DevGuardError("Delivery was not acknowledged", code="NO_DELIVERY_RECEIPT")
                     eval_result["delivered"] = True
                     st.session_state["last_eval_result"] = eval_result
                     st.success(f"Delivery receipt created: `{receipt.get('receipt_id', 'receipt-ok')}`")

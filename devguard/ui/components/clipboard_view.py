@@ -69,10 +69,13 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
             )
             col_en, col_dis = st.columns(2)
             with col_en:
-                if st.button("Request Host Enable", use_container_width=True):
+                consent = st.checkbox("I am on the capture Mac and consent to inspect future text copies")
+                if st.button("Enable on This Mac", disabled=not consent, use_container_width=True):
                     try:
-                        client.enable_clipboard(host_id=enrolled_host)
-                        st.success("Enable request dispatched.")
+                        response = client.enable_clipboard(host_id=enrolled_host, consent=consent)
+                        if response.get("enabled") is not True:
+                            raise DevGuardError("Capture was not enabled", code="CAPTURE_NOT_ENABLED")
+                        st.success("Capture enabled for future copies on this Mac.")
                         st.rerun()
                     except DevGuardError as err:
                         st.error(f"Cannot enable [{err.code}]: {err}")

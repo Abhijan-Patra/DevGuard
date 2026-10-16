@@ -16,7 +16,7 @@ brew install gitleaks
 
 The clipboard extra installs the macOS bridge only on macOS. Gitleaks is an external executable. For the captured tested package versions, install `requirements.lock.txt` then install the editable project with `--no-deps`; PyObjC pins are macOS-only. Windows UI members need neither native capture nor the model.
 
-The server binds to `127.0.0.1:8765`. The CLI creates `.devguard/session-token` with private permissions if no environment token is supplied. It prints the path, never the token. Audit metadata currently lives in bounded in-memory SQLite. The capture service always starts OFF.
+The server binds to `127.0.0.1:8765`. The CLI creates `.devguard/session-token` with private permissions if no environment token is supplied. It prints the path, never the token. Audit metadata is kept in private `.devguard/audit.sqlite3`, with 5,000-event retention; raw input/previews never persist. The capture service always starts OFF.
 
 ## Explicit clipboard controls
 
@@ -74,4 +74,4 @@ See [API contract](API_CONTRACT.md) and [Mac 1 implementation handoff](MAC_1_IMP
 
 `local-preview` has no outgoing receiver. Real client delivery requires trusted code enrolment by Mac 2, plus that adapter's actual end-to-end coverage tests. Private inputs must not be sent through an unrelated unguarded tool while relying on this service for protection.
 
-Backend repair remains Mac 2 work and uses source/diffs/logs/API probes/tests, with no screenshot or recording dependency. Clipboard capture is retained as a required feature.
+Mac 2 repair routes and the Windows dashboard are integrated. Read [integrated setup](INTEGRATION_STATUS.md) for the optional UI installation, pinned Docker demo configuration, actual checks and pending live trials. Repair uses source/diffs/logs/API probes/tests; clipboard capture remains required.

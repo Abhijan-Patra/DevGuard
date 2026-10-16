@@ -32,7 +32,7 @@ class TestDevGuardUIFixturesAndClient(unittest.TestCase):
         health = self.client.get_health()
         self.assertEqual(health.get("status"), "ok")
         self.assertTrue(health.get("model_ready"))
-        self.assertEqual(health.get("model_name"), "gemma4:e4b")
+        self.assertEqual(health.get("model_name"), "gemma4:e4b-it-q4_K_M")
         self.assertIn("sha256:", health.get("model_digest", ""))
 
     def test_coverage_matrix_honesty(self) -> None:

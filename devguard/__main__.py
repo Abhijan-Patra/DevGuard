@@ -10,6 +10,8 @@ import uvicorn
 
 from devguard.api.app import create_app
 from devguard.config import Settings
+from devguard.storage.audit import AuditStore
+from devguard.api.repair_integration import demo_repair_factory
 
 
 def session_token():
@@ -41,11 +43,15 @@ def session_token():
 def main():
     parser = argparse.ArgumentParser(description="DevGuard local control API")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--demo-image-id", help="Opt into the named cart demo using an existing sha256 Docker image ID")
     args = parser.parse_args()
     settings = Settings.from_environment(session_token())
     print("DevGuard: http://127.0.0.1:%s (clipboard capture starts disabled)" % args.port)
     print("Operator token stays local in .devguard/session-token unless configured by environment.")
-    uvicorn.run(create_app(settings), host="127.0.0.1", port=args.port, access_log=False)
+    audit = AuditStore(Path(".devguard") / "audit.sqlite3")
+    factory = demo_repair_factory(Path.cwd(), args.demo_image_id) if args.demo_image_id else None
+    uvicorn.run(create_app(settings, audit=audit, repair_factory=factory),
+                host="127.0.0.1", port=args.port, access_log=False)
 
 
 if __name__ == "__main__":
