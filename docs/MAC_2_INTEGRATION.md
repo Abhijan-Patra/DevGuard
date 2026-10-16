@@ -14,6 +14,7 @@ async def chat(
     *,
     tools: list[dict] | None = None,
     output_format: dict | None = None,
+    priority: str = "background",  # foreground / background
 ) -> dict: ...
 
 model_chat = app.state.model_queue.chat
@@ -21,7 +22,7 @@ model_chat = app.state.model_queue.chat
 
 Return shape is the Ollama result, including `result["message"]`, optional `message["tool_calls"]` and runtime timing fields. Parse tool arguments using your own typed tool registry and permitted actions. Do not log raw bodies/hidden reasoning. `ModelUnavailable` is a fixed safe exception; propagate cancellation normally.
 
-Settings: exact `gemma4:e4b-it-q4_K_M`, loopback only, 4,096 context and 512 output tokens initially. One internal async lock serialises calls. This is **not yet a priority queue**. Do not hold a separate queue/inference lock while calling the privacy guard: its contextual inspection uses the same model internally. Foreground/background scheduling and larger budgets need coordination and measurement.
+Settings: exact `gemma4:e4b-it-q4_K_M`, loopback only, 4,096 context and 512 output tokens initially. One bounded queue serialises calls, with 16 waiting slots. Privacy inspection uses `foreground`; existing repair calls default to `background`. Foreground work overtakes waiting background work; each class keeps FIFO order. An active Ollama call is not preempted. A privacy deadline still holds the request if active work takes too long. Queue capacity/closure failures raise `ModelUnavailable`; canceled waiting calls are removed before any HTTP request. Do not hold a separate queue/inference lock while calling the privacy guard: its contextual inspection uses the same model internally. Larger budgets need coordination and measurement.
 
 Reuse your existing `devguard.agent.mac1_bridge.Mac1ModelBridge`; its `inspect()` and `chat()` calls match this client. Construct it on the running app loop using the installed runtime metadata. If the model/digest is missing, hold repair startup/readiness rather than invent metadata or prevent the privacy server from starting.
 
@@ -126,7 +127,7 @@ Do not call blocking `sanitize()` or `next_action()` on the app event loop. Keep
 
 ## Events and integration gates
 
-`app.state.audit.add(kind, state, *, request_id=None, content_version=None, reason_codes=()) -> int` and `.events(after=0) -> dict` exist, but this is bounded **in-memory** metadata storage, not your requested durable `event_sink(event)` port. Do not pass `audit.add` directly as that sink: signatures differ. A constrained, thread-safe repair event adapter and durable-store handling remain integration work. Keep the scheduler paused until that adapter, foreground inference priority and trusted project/verifier configuration are wired and checked.
+`app.state.audit.add(kind, state, *, request_id=None, content_version=None, reason_codes=()) -> int` and `.events(after=0) -> dict` exist, but this is bounded **in-memory** metadata storage, not your requested durable `event_sink(event)` port. Do not pass `audit.add` directly as that sink: signatures differ. A constrained, thread-safe repair event adapter and durable-store handling remain integration work. Keep the scheduler paused until that adapter and trusted project/verifier configuration are wired and checked. Foreground inference priority is now implemented; cross-thread worker/lifecycle integration remains pending.
 
 ## Protected source reads
 

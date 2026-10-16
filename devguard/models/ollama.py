@@ -4,6 +4,7 @@ import asyncio
 import httpx
 
 from devguard.config import Settings
+from devguard.models.queue import InferenceQueue, QueueUnavailable
 
 
 class ModelUnavailable(Exception):
@@ -20,9 +21,10 @@ class OllamaClient:
             trust_env=False,
             transport=transport,
         )
-        self._inference_lock = asyncio.Lock()
+        self.queue = InferenceQueue()
 
     async def close(self):
+        await self.queue.close()
         await self._client.aclose()
 
     async def inspect(self):
@@ -53,27 +55,27 @@ class OllamaClient:
                 "model_digest": None,
             }
 
-    async def chat(self, messages, *, tools=None, output_format=None):
+    async def chat(self, messages, *, tools=None, output_format=None, priority="background"):
         """Internal adapter only; callers must enforce their guard policy."""
-        async with self._inference_lock:
-            payload = {
-                "model": self.settings.model,
-                "messages": messages,
-                "stream": False,
-                "think": False,
-                "keep_alive": "5m",
-                "options": {"num_ctx": 4096, "num_predict": 512},
-            }
-            if tools:
-                payload["tools"] = tools
-            if output_format:
-                payload["format"] = output_format
-            try:
+        payload = {
+            "model": self.settings.model,
+            "messages": messages,
+            "stream": False,
+            "think": False,
+            "keep_alive": "5m",
+            "options": {"num_ctx": 4096, "num_predict": 512},
+        }
+        if tools:
+            payload["tools"] = tools
+        if output_format:
+            payload["format"] = output_format
+        try:
+            async with self.queue.slot(priority):
                 response = await self._client.post("/api/chat", json=payload)
                 response.raise_for_status()
                 result = response.json()
                 if not isinstance(result.get("message"), dict):
                     raise ValueError("Missing model message")
                 return result
-            except (httpx.HTTPError, ValueError, TypeError, AttributeError):
-                raise ModelUnavailable("Local model call failed or returned invalid data") from None
+        except (httpx.HTTPError, QueueUnavailable, ValueError, TypeError, AttributeError):
+            raise ModelUnavailable("Local model call failed or returned invalid data") from None

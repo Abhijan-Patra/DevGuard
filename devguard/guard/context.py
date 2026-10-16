@@ -32,7 +32,7 @@ class ContextInspector:
             result = await asyncio.wait_for(self.model.chat([
                 {"role": "system", "content": instructions},
                 {"role": "user", "content": content},
-            ], output_format=ModelProposal.model_json_schema()), timeout=12)
+            ], output_format=ModelProposal.model_json_schema(), priority="foreground"), timeout=12)
             proposal = ModelProposal.model_validate_json(result["message"]["content"])
             if not task and any(s.category.value == "IRRELEVANT" for s in proposal.spans):
                 raise ValueError("Relevance requires a task")

@@ -8,6 +8,7 @@ Branch: `codex/mac1-guard`. Pull request: [DevGuard #1](https://github.com/Abhij
 - Fast baseline rules plus installed Gitleaks 8.30.1. Gitleaks runs through stdin/stdout in an empty temporary working directory; repository allowlists and `gitleaks:allow` cannot downgrade it.
 - Codepoint-span redaction, no model-provided replacement text, no free-form model reasons in audit output, final scanner checks.
 - Contextual Gemma adapter that validates its JSON schema, holds unavailable/invalid/oversize analysis and never falls back to another model or scripted answer.
+- Bounded shared inference queue: foreground privacy before waiting background repair, FIFO within each class, cancellation cleanup and no preemption of an active call.
 - Immutable inspected candidate, owner/version/destination/policy/expiry checks, one-use delivery, no automatic retry after an ambiguous receiver failure, no arbitrary URL registration.
 - Scoped optional adapter credential and a separate operator credential. Authentication, validation and body-budget errors do not echo private inputs.
 - Redacted metadata events in bounded in-memory SQLite; ephemeral candidates expire and are revoked on source/capture changes.
@@ -16,7 +17,7 @@ Branch: `codex/mac1-guard`. Pull request: [DevGuard #1](https://github.com/Abhij
 
 ## Actual validation
 
-`pytest -q`: **38 passed**, with one upstream TestClient deprecation warning. Most checks intentionally inject a scanner/model/clipboard double to test enforcement; they are not model accuracy or native capture benchmarks. Integration tests also exercise the real cross-thread guard bridge and operator-only auth on an injected synchronous router.
+`pytest -q`: **42 passed**, with one upstream TestClient deprecation warning. Most checks intentionally inject a scanner/model/clipboard double to test enforcement; they are not model accuracy or native capture benchmarks. Integration tests also exercise the real cross-thread guard bridge, operator-only auth on an injected synchronous router, queue priority/FIFO/cancellation/capacity/closure and HTTP admission order with an injected transport.
 
 One test uses the actual installed Gitleaks binary and a declared synthetic provider-shaped token, including a `gitleaks:allow` comment, and confirms detection/redaction. A live API probe using synthetic password text produced REVIEW with CREDENTIAL and MODEL_UNAVAILABLE; delivery returned 403 and the value was absent from response/audit events.
 
@@ -47,7 +48,7 @@ Import `GuardInput`, `GuardEngine`, `ProjectFiles` and the app factory. Enrol re
 
 Use a separately generated `DEVGUARD_ADAPTER_TOKEN` in a local, ignored environment. Requests made with it are owned by `adapter`; operator request IDs cannot be released using that credential and vice versa. No adapter is configured by default and no client-coverage claim is made.
 
-Mac 1 still registers the repair router into the app when Mac 2 supplies it. The model adapter currently serialises calls; foreground/background scheduling priority is not yet integrated with the repair worker.
+Mac 1 still registers the repair router into the app when the worker lifecycle, event adapter and trusted configuration are ready. The model queue prioritises waiting privacy calls; existing repair model calls default to background. It does not cancel an already-running inference. Actual integrated repair scheduling remains unverified.
 
 ## Windows integration
 

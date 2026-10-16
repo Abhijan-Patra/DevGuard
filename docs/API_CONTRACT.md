@@ -4,6 +4,8 @@ Owner: Mac 1. Mac 2 and both Windows owners implement against this document. Gua
 
 ## Conventions
 
+The implemented `/status` also includes `inference_queue`: `active`, `foreground_waiting`, `background_waiting`, `capacity` and `closed`. These contain counts/flags only. Foreground privacy overtakes waiting repair calls; active inference is not preempted. This scheduling status is not model-readiness or completed-protection evidence.
+
 Base prefix `/api/v1`; JSON; IDs are opaque strings; UTC ISO-8601 timestamps. Backend uses relative safe display paths. Requests with text are sensitive and must not be logged. All endpoints except `/health` require a scoped `Authorization: Bearer <session-token>` header; tokens never appear in URLs, fixtures or Git. Streamlit holds its token server-side. Model tools cannot call operator APIs.
 
 Errors use `{ "error": { "code": "STALE_CONTENT", "message": "Content changed; rescan required", "request_id": "req-example" } }` with no sensitive values. Use 400 validation, 401/403 auth/policy, 404 absent resource, 409 stale/conflict, 413 oversize and 503 unavailable dependency. A 200 evaluation response is a decision, not permission to bypass the gate.

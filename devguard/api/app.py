@@ -112,6 +112,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
         return {
             "phase": "GUARD_AND_CLIPBOARD_IMPLEMENTATION",
             "runtime": await model.inspect(),
+            "inference_queue": model.queue.status(),
             "clipboard": {**clipboard.status(), "implemented": True},
             "guard_implemented": True,
             "credential_scanner_available": scanner.available,

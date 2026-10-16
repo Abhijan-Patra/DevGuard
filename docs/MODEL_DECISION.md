@@ -42,10 +42,13 @@ First shorten evidence, correct tool templates, bound output and move independen
 
 Setup has begun. Ollama client/server 0.40.4 respond locally; no model is currently loaded. The selected E4B Q4 download is in progress. Compatibility and inference/tool behaviour remain unverified until the download finishes and the smoke test runs.
 
+Both Macs must use the exact tag. If a Mac is downloading the generic `gemma4:e4b` and shows a 9.5 GB package, stop that terminal pull with Ctrl+C and run `ollama pull gemma4:e4b-it-q4_K_M`. Ollama lists the explicit Q4 package at approximately 6.6 GB total; its main model blob is about 5.5 GB, so that blob's progress is not whole-package progress. The backend checks the exact installed tag and later records its real digest; do not alias a different package to bypass those checks. The generic package is the same model family, but its alternate runtime/quantisation has not been validated by this project.
+
 ## Sources
 
 - [Google Gemma 4 model card](https://ai.google.dev/gemma/docs/core/model_card_4)
 - [Ollama Gemma 4 E4B package](https://ollama.com/library/gemma4:e4b)
+- [Exact Ollama Gemma 4 E4B Q4 package](https://ollama.com/library/gemma4:e4b-it-q4_K_M)
 - [Ollama context and unloading controls](https://docs.ollama.com/faq)
 
 Sources checked 16 October 2026. Model selection and trial requirements are project recommendations, not organiser requirements or comparative benchmark conclusions.
