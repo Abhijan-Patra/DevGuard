@@ -212,6 +212,7 @@ class FixtureDevGuardClient(BaseDevGuardClient):
             )
         return {
             "status": "copied",
+            "copied": True,
             "content_version": expected_version,
             "simulated": True,
             "message": "Cleaned text copied to simulated clipboard buffer.",

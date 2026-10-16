@@ -8,6 +8,7 @@ per docs/API_CONTRACT.md and docs/tasks/WINDOWS_1_DASHBOARD.md.
 import json
 from pathlib import Path
 from typing import Any, Dict
+from copy import deepcopy
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError
 
@@ -82,6 +83,8 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
             submitted = st.form_submit_button("🔍 Evaluate with DevGuard Gate", use_container_width=True)
 
         if submitted:
+            # A failed replacement check must not leave an older release card active.
+            st.session_state.pop("last_eval_result", None)
             try:
                 with st.spinner("Inspecting text through policy and local model..."):
                     eval_result = client.evaluate_privacy(
@@ -104,7 +107,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
             try:
                 # Load synthetic baseline if available
                 from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
-                eval_result = SYNTHETIC_PRIVACY_EVALUATION
+                eval_result = deepcopy(SYNTHETIC_PRIVACY_EVALUATION)
             except Exception:
                 eval_result = None
 
@@ -116,6 +119,7 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
 
 def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -> None:
     decision = eval_result.get("decision", "REVIEW")
+    status = eval_result.get("status", "UNKNOWN")
     color = DECISION_COLORS.get(decision, "gray")
 
     # Header metric
@@ -123,7 +127,7 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
     with m1:
         st.metric("Decision", decision)
     with m2:
-        st.metric("Status", eval_result.get("status", "READY"))
+        st.metric("Status", status)
     with m3:
         st.metric("Version", eval_result.get("content_version", 1))
 
@@ -155,7 +159,7 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
     else:
         st.warning("⏳ **NOT DELIVERED**: Content is inspected and held. Explicit release required.")
         req_id = eval_result.get("request_id")
-        if req_id and decision in ("ALLOW", "SANITIZE"):
+        if req_id and status == "READY" and decision in ("ALLOW", "SANITIZE"):
             if st.button(f"🚀 Authorize Delivery ({req_id})", key="deliver_btn", use_container_width=True):
                 try:
                     receipt = client.deliver_request(req_id,
@@ -169,5 +173,9 @@ def _render_eval_card(eval_result: Dict[str, Any], client: BaseDevGuardClient) -
                     st.rerun()
                 except DevGuardError as err:
                     st.error(f"Delivery blocked: [{err.code}] {err}")
+        elif status != "READY":
+            st.info("Release unavailable: inspection is not READY. Submit a new evaluation.")
+        elif decision == "LOCAL_ONLY":
+            st.info("Local-only content cannot be released to an external destination.")
         elif decision in ("BLOCK", "REVIEW"):
             st.error("Release disabled: Decision requires operator review or is blocked by security policy.")

@@ -1,6 +1,6 @@
 # Member 3 — Windows / Antigravity: dashboard
 
-Branch: `codex/windows-dashboard` when implementation starts. This is presentation and API consumption work, not backend policy/model logic.
+**Current owner (16 October 2026): Mac 1 / Abhijan through the dashboard continuation chat, on `codex/windows1-continuation`, because the Windows 1 assistant quota is exhausted. Continue the integrated dashboard; do not rebuild it. See [active workflow](../TEAM_WORKFLOW.md). Original branch: `codex/windows-dashboard`. This is presentation and API consumption work, not backend policy/model logic.
 
 ## Ownership
 

@@ -28,8 +28,10 @@ Gemma is a practical selection for this hardware and event, not a proven best mo
 |---|---|---|---|
 | 1 — Abhijan | M4 Mac / Codex account 1 | API, privacy policy, Gemma, clipboard service, schemas, integration | [Mac 1](docs/tasks/MAC_1_BACKEND_GUARD.md) |
 | 2 | Second Mac / Codex account 2 | Client adapters, incident/repair engine, sandbox, trusted verification, scheduler | [Mac 2](docs/tasks/MAC_2_BACKEND_REPAIR.md) |
-| 3 | Windows / Antigravity | Dashboard, presentation components and API display client | [Windows 1](docs/tasks/WINDOWS_1_DASHBOARD.md) |
-| 4 | Windows / Antigravity | Test-case specifications, fixture content, manual QA, demo and submission docs | [Windows 2](docs/tasks/WINDOWS_2_QA_DEMO.md) |
+| 3 | Mac 1 / Codex dashboard continuation (Windows 1 quota exhausted) | Dashboard, presentation components and API display client | [Windows 1](docs/tasks/WINDOWS_1_DASHBOARD.md) |
+| 4 | Mac 2 / Codex (Windows 2 quota exhausted) | Test-case specifications, fixture content, manual QA, demo and submission docs | [Windows 2](docs/tasks/WINDOWS_2_QA_DEMO.md) |
+
+The [active reassignment](docs/TEAM_WORKFLOW.md#active-reassignment--16-october-2026) records the Windows quota handoff. Mac 1 continues the dashboard in an isolated branch; Mac 2 receives the [QA/demo continuation task](docs/tasks/MAC_2_WINDOWS_2_CONTINUATION.md).
 
 Both Mac owners own all backend, model, enforcement and repair logic. Windows work uses sample data until the backend interface is available. Development assistants help build DevGuard; their accounts are not DevGuard's runtime inference provider. Do not share account credentials.
 

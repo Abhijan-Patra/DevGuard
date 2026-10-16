@@ -137,7 +137,9 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
                                            else patch.get("candidate_hash", "")),
                             expected_base_revision=patch.get("base_revision") or patch.get("base_hash"),
                             idempotency_key=st.session_state[key], approved=True)
-                        st.success(f"Patch applied successfully: {resp.get('message', 'Applied')}")
+                        if (resp.get("state") or resp.get("status")) != "APPLIED":
+                            raise DevGuardError("Patch application was not acknowledged", code="PATCH_NOT_APPLIED")
+                        st.success("Patch application acknowledged by the backend.")
                         st.rerun()
                     except StaleContentError as err:
                         st.error(f"409 Stale Error: Base code modified since patch generation! ({err})")
@@ -148,7 +150,9 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
                 if st.button("❌ Reject Candidate Patch", use_container_width=True):
                     try:
                         resp = client.reject_patch(patch_id)
-                        st.info(f"Patch rejected: {resp.get('message', 'Rejected')}")
+                        if (resp.get("state") or resp.get("status")) != "REJECTED":
+                            raise DevGuardError("Patch rejection was not acknowledged", code="PATCH_NOT_REJECTED")
+                        st.info("Patch rejection acknowledged by the backend.")
                         st.rerun()
                     except DevGuardError as err:
                         st.error(f"Reject failed [{err.code}]: {err}")
