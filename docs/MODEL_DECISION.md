@@ -42,7 +42,7 @@ First shorten evidence, correct tool templates, bound output and move independen
 
 The exact Q4 download is complete on Mac 1. Ollama 0.40.4 passed the native-tool smoke test and four synthetic reference-delivery checks. The current handoff records the actual digest/settings, earlier failures and remaining validation limits.
 
-Both Macs must use the exact tag. If a Mac is downloading the generic `gemma4:e4b` and shows a 9.5 GB package, stop that terminal pull with Ctrl+C and run `ollama pull gemma4:e4b-it-q4_K_M`. Ollama lists the explicit Q4 package at approximately 6.6 GB total; its main model blob is about 5.5 GB, so that blob's progress is not whole-package progress. The backend checks the exact installed tag and later records its real digest; do not alias a different package to bypass those checks. The generic package is the same model family, but its alternate runtime/quantisation has not been validated by this project.
+Both Macs must use the exact tag. If a Mac is downloading the generic `gemma4:e4b` and shows a 9.5 GB package, stop that terminal pull with Ctrl+C and run `ollama pull gemma4:e4b-it-q4_K_M`. Ollama lists the explicit Q4 package at approximately 6.6 GB total; its main model blob is about 5.5 GB, so that blob's progress is not whole-package progress. The backend now enforces the measured digest in `devguard/config.py` after every inference queue admission, in addition to the exact tag; do not alias a different package to bypass those checks. The generic package is the same model family, but its alternate runtime/quantisation has not been validated by this project.
 
 ## Sources
 

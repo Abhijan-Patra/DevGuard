@@ -5,7 +5,7 @@ The table reflects the combined integration branch. Move a complete path to VERI
 | Path | Planned control | Initial status / limit |
 |---|---|---|
 | DevGuard explicit text/prompt gate | Evaluate and synchronously release inspected bytes | PARTIAL; API/boundary tests and real Gitleaks verified; four synthetic Gemma/local-reference-receiver cases passed; installed-client delivery pending |
-| macOS text clipboard capture | Opt-in counter checks, scoped scans, cleaned-copy action | PARTIAL; native bridge and fake-adapter tests pass; live capture OFF and real copy trial pending |
+| macOS text clipboard capture | Opt-in counter checks, scoped scans, cleaned-copy action | PARTIAL; controlled private/system Cocoa pasteboard trials with real Gemma passed on macOS 26.6.2 after consent; capture OFF afterward; unrelated-app paste interception unsupported |
 | Clipboard paste into an unrelated app | No universal interception | UNSUPPORTED; copied content can be pasted before analysis |
 | Clipboard images/history | No collection | UNSUPPORTED in this build |
 | Codex prompt submission | Test documented UserPromptSubmit block on installed client | UNVERIFIED; blocks/augments, not assumed arbitrary prompt replacement |

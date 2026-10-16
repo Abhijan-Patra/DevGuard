@@ -82,7 +82,9 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
             with col_dis:
                 if st.button("Disable Capture", use_container_width=True):
                     try:
-                        client.disable_clipboard()
+                        response = client.disable_clipboard()
+                        if response.get("enabled") is not False:
+                            raise DevGuardError("Capture disable was not acknowledged", code="CAPTURE_NOT_DISABLED")
                         st.info("Capture disabled.")
                         st.rerun()
                     except DevGuardError as err:
@@ -115,7 +117,10 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
                 if st.button(f"📋 Copy Cleaned Text (v{version})", use_container_width=True):
                     try:
                         resp = client.copy_cleaned_clipboard(expected_version=version)
-                        st.success(f"✅ Cleaned version {version} copied! (Audit reference recorded)")
+                        copied_version = resp.get("content_version")
+                        if resp.get("copied") is not True or type(copied_version) is not int:
+                            raise DevGuardError("Cleaned copy was not acknowledged", code="COPY_NOT_ACKNOWLEDGED")
+                        st.success(f"Cleaned text copied; current clipboard version is {copied_version}.")
                     except StaleContentError as err:
                         st.error(f"⚠️ 409 Conflict: Clipboard changed before copy completed ({err})")
                     except DevGuardError as err:

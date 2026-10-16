@@ -2,7 +2,7 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: privacy/clipboard APIs, dashboard and Mac 2 repair routes are integrated. Capture starts OFF. The Mac 1 guard/readiness handoff passes 171 tests with merged PR #10, and four real Gemma synthetic cases passed through a managed local reference receiver. Mac 2 owns the final repair/demo and installed-client proof. See [current handoff](docs/MAC_1_READINESS_HANDOFF.md) and [integration status](docs/INTEGRATION_STATUS.md).
+Status: the Mac 1 and dashboard integration passes 199 tests. The exact Gemma package digest is enforced before inference. Controlled native clipboard trials and a real model/API/dashboard/reference-delivery check passed with synthetic data; capture is OFF afterward. Mac 2 owns final repair and installed-client evidence. See [completion evidence](docs/MAC_1_WINDOWS_1_COMPLETION.md) and [integration status](docs/INTEGRATION_STATUS.md).
 
 DevGuard inspects supported prompts, file access, tool results and copied text; it also investigates reproducible backend failures and prepares independently tested patches in a disposable workspace. Clipboard capture is a required, opt-in feature. Bug diagnosis uses source, structured logs, diffs, named API probes and tests; it does not depend on screenshots or screen recordings.
 
@@ -28,8 +28,10 @@ Gemma is a practical selection for this hardware and event, not a proven best mo
 |---|---|---|---|
 | 1 — Abhijan | M4 Mac / Codex account 1 | API, privacy policy, Gemma, clipboard service, schemas, integration | [Mac 1](docs/tasks/MAC_1_BACKEND_GUARD.md) |
 | 2 | Second Mac / Codex account 2 | Client adapters, incident/repair engine, sandbox, trusted verification, scheduler | [Mac 2](docs/tasks/MAC_2_BACKEND_REPAIR.md) |
-| 3 | Windows / Antigravity | Dashboard, presentation components and API display client | [Windows 1](docs/tasks/WINDOWS_1_DASHBOARD.md) |
-| 4 | Windows / Antigravity | Test-case specifications, fixture content, manual QA, demo and submission docs | [Windows 2](docs/tasks/WINDOWS_2_QA_DEMO.md) |
+| 3 | Mac 1 / Codex dashboard continuation (Windows 1 quota exhausted) | Dashboard, presentation components and API display client | [Windows 1](docs/tasks/WINDOWS_1_DASHBOARD.md) |
+| 4 | Mac 2 / Codex (Windows 2 quota exhausted) | Test-case specifications, fixture content, manual QA, demo and submission docs | [Windows 2](docs/tasks/WINDOWS_2_QA_DEMO.md) |
+
+The [active reassignment](docs/TEAM_WORKFLOW.md#active-reassignment--16-october-2026) records the Windows quota handoff. Mac 1 continues the dashboard in an isolated branch; Mac 2 receives the [QA/demo continuation task](docs/tasks/MAC_2_WINDOWS_2_CONTINUATION.md).
 
 Both Mac owners own all backend, model, enforcement and repair logic. Windows work uses sample data until the backend interface is available. Development assistants help build DevGuard; their accounts are not DevGuard's runtime inference provider. Do not share account credentials.
 

@@ -1,7 +1,7 @@
 # DevGuard UI notes & runbook
 
-**Owner:** Windows 1 (Antigravity)  
-**Branch:** `codex/windows-dashboard`  
+**Owner:** Mac 1 / Abhijan via the dashboard continuation chat (reassigned from Windows 1 on 16 October 2026)
+**Branch:** `codex/windows1-continuation`
 **Target Paths:** `devguard/ui/`, `tests/ui/`, `docs/UI_NOTES.md`
 
 ---
@@ -66,7 +66,7 @@ By default, the dashboard opens at `http://localhost:8501`.
 
 ## 5. Error Handling & Edge Cases
 
-- **`401/403 Unauthorized`**: Handled via `AuthenticationError`. Prompts operator to supply or refresh session token.
+- **`401 Unauthorized`**: Handled via `AuthenticationError`; refresh the operator session token. **`403` policy holds** remain backend action errors and do not imply an invalid token.
 - **`409 Conflict (Stale Content)`**: Handled via `StaleContentError`. Occurs when the clipboard version or source base-hash changes before an operator action completes. UI presents a clear warning and prevents stale overwrites.
 - **`503 Service Unavailable`**: Handled via `ServiceUnavailableError`. Occurs if Ollama or the pinned Gemma model is not ready.
 - **Connection Drops**: Handled via `BackendConnectionError` with clear retry guidance.
@@ -95,3 +95,23 @@ python -m pytest tests/ui/ -v
 ## Mac 1 integration follow-up
 
 The dashboard is integrated on `codex/mac1-integration`. Live mode uses actual backend payloads and never displays fallback fixture decisions. Fixture state remains isolated and labelled. The local Streamlit config binds to loopback and disables usage telemetry. Native enable requires an explicit consent checkbox on the capture Mac. Server-side credentials never enter requests to arbitrary remote hosts. Refer to [measured integration status](INTEGRATION_STATUS.md) for tests, dependency snapshots and remaining live gates.
+
+
+## Dashboard continuation — 16 October 2026
+
+Mac 1 / Abhijan takes Windows 1's UI scope on the isolated `codex/windows1-continuation` branch. Mac 2 takes Windows 2's QA/demo scope; see [the continuation task](tasks/MAC_2_WINDOWS_2_CONTINUATION.md). Existing backend, model and repair work stays with the Mac owners.
+
+When a replacement privacy evaluation fails, the previous decision and delivery action are cleared. Only READY ALLOW/SANITIZE responses offer delivery; incomplete/missing states and LOCAL_ONLY do not. Fixture delivery uses a session-owned copy of the example, so one operator session cannot mark a fresh session as delivered.
+
+Cleaned-copy success requires `copied: true` and displays the returned clipboard version. Disable requires `enabled: false`; patch apply/reject requires an acknowledged APPLIED/REJECTED response. Missing acknowledgements show errors rather than success. These checks affect display/action handling; backend authority remains unchanged.
+
+Verification uses Streamlit's element tree and synthetic API responses, plus the real FastAPI route/client tests with injected inspectors. No screenshots, native clipboard reads, real model calls or original-source patch application are used in these dashboard checks. This does not establish installed-client interception or real model repair.
+
+Validation on this continuation branch: `python -m pytest -q -p no:cacheprovider tests/ui` passed **33 tests** (one upstream TestClient deprecation warning). All **63** local links across the seven changed documentation files resolve; `git diff --check` passes.
+
+
+## Combined Mac 1 follow-up
+
+The `codex/mac1-windows1-finish` handoff passes **199** combined tests and a real local API/Gemma/dashboard smoke. All five live views rendered; only inspected sanitized bytes reached the enrolled local reference receiver, replay was held, capture remained OFF and no patch was applied. LIVE mode now refuses incompatible status envelopes before rendering text/action controls. The standalone mock demo server is not accepted as actual execution; use labelled Fixture Mode for rehearsal. [Exact evidence and reproduction](MAC_1_WINDOWS_1_COMPLETION.md).
+
+The chat “Choose an open source model” is continuing modern dashboard presentation from this tested behavior after user-authorized coordination. Preserve its local edits and the receipt/stale/model-pin/consent boundaries when integrating.

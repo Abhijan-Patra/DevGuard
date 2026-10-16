@@ -5,6 +5,9 @@ import os
 from urllib.parse import urlsplit
 
 MODEL = "gemma4:e4b-it-q4_K_M"
+# Exact package measured in the local native-tool and reference-delivery trial.
+# Changing it requires a new trial and a reviewed source change, not an HTTP flag.
+MODEL_DIGEST = "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
 
 
 @dataclass(frozen=True)
