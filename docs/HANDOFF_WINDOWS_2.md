@@ -21,9 +21,12 @@ Member 4 has completed the scenario specifications, results registry, demo fixtu
 | **Contract Timeline Events** | [`demo/fixtures/sample_events.json`](../demo/fixtures/sample_events.json) | Ready |
 | **Demonstration Script & Scenarios** | [`demo/fixtures/demo_scenarios.json`](../demo/fixtures/demo_scenarios.json) | Ready |
 | **Backend Repair Oracles** | [`demo/fixtures/backend_oracles.json`](../demo/fixtures/backend_oracles.json) | Ready |
-| **Evaluation Test Harness** | [`evals/runner.py`](../evals/runner.py)<br>[`tests/ui/test_qa_fixtures_and_evals.py`](../tests/ui/test_qa_fixtures_and_evals.py) | Verified (14/14 tests PASS) |
+| **Evaluation Test Harness** | [`evals/runner.py`](../evals/runner.py)<br>[`tests/ui/test_qa_fixtures_and_evals.py`](../tests/ui/test_qa_fixtures_and_evals.py) | Verified (25/25 tests PASS) |
 | **Live Demo Runbook** | [`docs/DEMO_RUNBOOK.md`](DEMO_RUNBOOK.md) | Ready |
-| **Hackathon Submission Draft** | [`docs/SUBMISSION_DRAFT.md`](SUBMISSION_DRAFT.md) | Ready |
+| **1-Click Demo Launchers** | [`demo/run_demo.ps1`](../demo/run_demo.ps1)<br>[`demo/run_demo.bat`](../demo/run_demo.bat) | Ready |
+| **Mock Live Server (Offline)** | [`demo/mock_live_server.py`](../demo/mock_live_server.py) | Ready (Port 8765) |
+| **Hackathon Submission Final** | [`docs/SUBMISSION_FINAL.md`](SUBMISSION_FINAL.md) | Complete |
+| **Pre-Submission Freeze Checklist** | [`docs/FINAL_FREEZE_CHECKLIST.md`](FINAL_FREEZE_CHECKLIST.md) | Verified |
 | **QA Summary Report** | [`evals/QA_SUMMARY.md`](../evals/QA_SUMMARY.md) | Ready |
 
 ---

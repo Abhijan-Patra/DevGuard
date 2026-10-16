@@ -120,6 +120,21 @@ class TestMember4ScenariosAndQA(unittest.TestCase):
         self.assertIn("oracles", oracles_data)
         self.assertGreaterEqual(len(oracles_data["oracles"]), 6)
 
+    def test_demo_launchers_exist(self):
+        ps1_file = REPO_ROOT / "demo" / "run_demo.ps1"
+        bat_file = REPO_ROOT / "demo" / "run_demo.bat"
+        self.assertTrue(ps1_file.exists(), "demo/run_demo.ps1 must exist")
+        self.assertTrue(bat_file.exists(), "demo/run_demo.bat must exist")
+
+        ps1_text = ps1_file.read_text(encoding="utf-8")
+        self.assertIn("mock_live_server.py", ps1_text)
+        self.assertTrue("devguard/ui/app.py" in ps1_text or "devguard\\ui\\app.py" in ps1_text)
+
+        bat_text = bat_file.read_text(encoding="utf-8")
+        self.assertIn("mock_live_server.py", bat_text)
+        self.assertTrue("devguard/ui/app.py" in bat_text or "devguard\\ui\\app.py" in bat_text)
+
 
 if __name__ == "__main__":
     unittest.main()
+
