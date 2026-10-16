@@ -12,6 +12,7 @@ import re
 from urllib.parse import urlsplit
 import httpx
 from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 
 class DevGuardError(Exception):
@@ -142,6 +143,24 @@ class BaseDevGuardClient(ABC):
         """Fetch audit log event stream."""
         pass
 
+    def get_findings(self):
+        raise DevGuardError('Findings are unavailable',code='FEATURE_UNAVAILABLE')
+
+    def initialize_repair(self):
+        raise DevGuardError('Repair controls are unavailable',code='FEATURE_UNAVAILABLE')
+
+    def create_incident(self,project_id,signal):
+        raise DevGuardError('Repair controls are unavailable',code='FEATURE_UNAVAILABLE')
+
+    def investigate_incident(self,incident_id):
+        raise DevGuardError('Repair controls are unavailable',code='FEATURE_UNAVAILABLE')
+
+    def set_repair_idle(self,idle):
+        raise DevGuardError('Repair controls are unavailable',code='FEATURE_UNAVAILABLE')
+
+    def cancel_run(self,run_id):
+        raise DevGuardError('Repair controls are unavailable',code='FEATURE_UNAVAILABLE')
+
 
 class FixtureDevGuardClient(BaseDevGuardClient):
     """Synthetic presentation client operating on declared test fixtures."""
@@ -168,6 +187,8 @@ class FixtureDevGuardClient(BaseDevGuardClient):
         self._run = deepcopy(SYNTHETIC_RUN)
         self._patch = deepcopy(SYNTHETIC_PATCH)
         self._events = deepcopy(SYNTHETIC_EVENTS)
+        self._repair={'configured':True,'available':True,'state':'PAUSED','reason_code':'SIMULATED'}
+        self._queued_runs={}
 
     def is_fixture_mode(self) -> bool:
         return True
@@ -176,7 +197,10 @@ class FixtureDevGuardClient(BaseDevGuardClient):
         return self._health
 
     def get_status(self) -> Dict[str, Any]:
-        return self._status
+        return {**self._status,'repair':self._repair,
+                'runtime':{'model_ready':self._health.get('model_ready'),
+                           'model':self._health.get('model_name'),'model_digest':self._health.get('model_digest')},
+                'audit':{'durable':False},'simulated':True}
 
     def get_coverage(self) -> List[Dict[str, Any]]:
         return self._coverage
@@ -249,7 +273,7 @@ class FixtureDevGuardClient(BaseDevGuardClient):
         return self._incidents
 
     def get_run(self, run_id: str) -> Dict[str, Any]:
-        return self._run
+        return self._queued_runs.get(run_id,self._run)
 
     def get_patch(self, patch_id: str) -> Dict[str, Any]:
         return self._patch
@@ -283,6 +307,36 @@ class FixtureDevGuardClient(BaseDevGuardClient):
             "events": self._events,
             "next_cursor": "cursor-simulated-end",
         }
+
+    def get_findings(self):
+        return [deepcopy(self._privacy)]
+
+    def initialize_repair(self):
+        return {**self._repair,'simulated':True}
+
+    def create_incident(self,project_id,signal):
+        incident={'incident_id':'incident-simulated-'+uuid4().hex,'project_id':project_id,
+                  'signal':signal,'title':'Synthetic named check: '+signal,'status':'OPEN',
+                  'source_revision':'synthetic-presentation-revision','simulated':True}
+        self._incidents.append(incident)
+        return incident
+
+    def investigate_incident(self,incident_id):
+        incident=next(i for i in self._incidents if i['incident_id']==incident_id)
+        run={'run_id':'run-simulated-'+uuid4().hex,'state':'QUEUED','verification':{'status':'NOT_RUN'},
+             'completed_tools':[],'candidate_patch_id':None,'simulated':True}
+        incident['active_run_id']=run['run_id']
+        self._queued_runs[run['run_id']]=run
+        return run
+
+    def set_repair_idle(self,idle):
+        self._repair['state']='RUNNING' if idle else 'PAUSED'
+        return {'paused':not idle,'simulated':True}
+
+    def cancel_run(self,run_id):
+        run=self.get_run(run_id)
+        run['state']='CANCELED'
+        return run
 
 
 class HttpDevGuardClient(BaseDevGuardClient):
@@ -412,3 +466,21 @@ class HttpDevGuardClient(BaseDevGuardClient):
         if cursor is not None and not re.fullmatch(r"[0-9]{1,19}", cursor):
             raise DevGuardError("Invalid audit cursor", code="INVALID_CURSOR")
         return self._request("GET", f"/events?after={cursor}" if cursor else "/events")
+
+    def get_findings(self):
+        return self._request('GET','/findings')['findings']
+
+    def initialize_repair(self):
+        return self._request('POST','/repair/initialize')
+
+    def create_incident(self,project_id,signal):
+        return self._request('POST','/incidents',{'project_id':project_id,'signal':signal})
+
+    def investigate_incident(self,incident_id):
+        return self._request('POST',f'/incidents/{incident_id}/investigate',{})
+
+    def set_repair_idle(self,idle):
+        return self._request('POST','/scheduler/enter-idle' if idle else '/scheduler/pause',{})
+
+    def cancel_run(self,run_id):
+        return self._request('POST',f'/runs/{run_id}/cancel',{})
