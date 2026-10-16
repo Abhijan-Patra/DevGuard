@@ -59,24 +59,30 @@ def read_source(root: Path, name: str) -> bytes:
     # symlinks as well as a symlink leaf. Do not validate a path then follow it later.
     descriptor = None
     fd = None
+    data = b""
     try:
-        descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-        parts = PurePosixPath(name).parts
-        for part in parts[:-1]:
-            following = os.open(
-                part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor
+        if os.name == "nt":
+            target = checked_file(root, name)
+            with open(target, "rb") as f:
+                data = f.read(MAX_FILE_BYTES + 1)
+        else:
+            descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            parts = PurePosixPath(name).parts
+            for part in parts[:-1]:
+                following = os.open(
+                    part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor
+                )
+                os.close(descriptor)
+                descriptor = following
+            fd = os.open(
+                parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptor
             )
-            os.close(descriptor)
-            descriptor = following
-        fd = os.open(
-            parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=descriptor
-        )
-        info = os.fstat(fd)
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
-            raise RepairError("FILE_TYPE_DENIED")
-        if info.st_size > MAX_FILE_BYTES:
-            raise RepairError("SOURCE_TOO_LARGE")
-        data = os.read(fd, MAX_FILE_BYTES + 1)
+            info = os.fstat(fd)
+            if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                raise RepairError("FILE_TYPE_DENIED")
+            if info.st_size > MAX_FILE_BYTES:
+                raise RepairError("SOURCE_TOO_LARGE")
+            data = os.read(fd, MAX_FILE_BYTES + 1)
     except OSError:
         # Keep the exact reason for a pre-existing symlink without reflecting paths.
         checked_file(root, name)

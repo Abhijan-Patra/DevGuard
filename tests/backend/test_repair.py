@@ -113,12 +113,14 @@ def test_protected_paths_rejected(name):
 
 
 def test_snapshot_preserves_saved_uncommitted_bytes(spec, tmp_path):
-    (spec.root / "cart.py").write_text("# saved edit\nVALUE = 7\n")
+    import os
+    (spec.root / "cart.py").write_text("# saved edit\nVALUE = 7\n", newline="\n")
     snapshot = capture(spec, tmp_path / "runtime")
     try:
         assert (snapshot.source / "cart.py").read_text() == "# saved edit\nVALUE = 7\n"
         assert not (snapshot.source / "trusted_tests").exists()
-        assert snapshot.directory.stat().st_mode & 0o777 == 0o700
+        if os.name != "nt":
+            assert snapshot.directory.stat().st_mode & 0o777 == 0o700
     finally:
         snapshot.close()
 

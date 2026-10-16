@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevGuard — Hackathon Presentation (10 Slides)</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --cyan: #38bdf8;
+      --indigo: #818cf8;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+    .logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .counter {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      background: var(--card-bg);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+    .deck-container {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1100px;
+      height: 82%;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 44px;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.96) translateY(20px);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+    }
+    .category {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-bottom: 8px;
+    }
+    .slide h2 {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 24px;
+      line-height: 1.25;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+    }
+    .card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card li {
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--muted);
+      position: relative;
+      padding-left: 18px;
+    }
+    .card li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      font-weight: bold;
+    }
+    .card.amber li::before { color: var(--amber); }
+    .card.green li::before { color: var(--green); }
+    .card.indigo li::before { color: var(--indigo); }
+    .card.amber h3 { color: var(--amber); }
+    .card.green h3 { color: var(--green); }
+    .card.indigo h3 { color: var(--indigo); }
+    .card.cyan h3 { color: var(--cyan); }
+
+    /* Title Slide Special */
+    .title-slide {
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    .title-slide h1 {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--cyan);
+      margin-bottom: 16px;
+    }
+    .title-slide .tagline {
+      font-size: 22px;
+      color: var(--text);
+      max-width: 800px;
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+    .title-slide .badges {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .badge {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .badge.indigo {
+      background: rgba(129, 140, 248, 0.15);
+      color: var(--indigo);
+      border-color: rgba(129, 140, 248, 0.3);
+    }
+    .badge.green {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--green);
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    /* Footer & Controls */
+    footer {
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.85);
+    }
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+    button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: var(--border);
+      border-color: var(--cyan);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .shortcuts {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .kbd {
+      background: #334155;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      🛡️ DEVGUARD
+    </div>
+    <div class="counter" id="slideCounter">Slide 1 of 10</div>
+  </header>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1 -->
+    <div class="slide active title-slide" id="slide-1">
+      <div class="category">HACKATHON PRESENTATION 2026</div>
+      <h1>DEVGUARD</h1>
+      <p class="tagline">Local-First Privacy Guard & Autonomous Backend Repair Agent for Developers</p>
+      <div class="badges">
+        <span class="badge">Local Gemma 4 E4B (Ollama)</span>
+        <span class="badge indigo">Zero Screen Recording</span>
+        <span class="badge green">Docker Sandbox Verification</span>
+      </div>
+      <p style="color: var(--muted); font-size: 14px;">Track: Best Use of Gemma 4 | Open Source AI</p>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide" id="slide-2">
+      <div class="category">PROBLEM STATEMENT</div>
+      <h2>The Critical Security Blindspot in AI Coding</h2>
+      <div class="grid-3">
+        <div class="card amber">
+          <h3>1. Accidental Cloud Leaks</h3>
+          <ul>
+            <li>Engineers inadvertently paste API tokens, database URIs, and AWS secrets into AI prompt channels.</li>
+            <li>Error stack traces contain live customer PII and internal microservice addresses.</li>
+            <li>Cloud models retain prompts, risking regulatory breaches and intellectual property theft.</li>
+          </ul>
+        </div>
+        <div class="card amber">
+          <h3>2. Invasive Surveillance</h3>
+          <ul>
+            <li>Traditional security relies on screen scrapers, video watchers, or keyloggers.</li>
+            <li>Deeply invasive to engineer privacy and causes heavy battery/CPU drain.</li>
+            <li>Completely lacks semantic understanding of code facts and developer intent.</li>
+          </ul>
+        </div>
+        <div class="card amber">
+          <h3>3. Risky Bug Fixing</h3>
+          <ul>
+            <li>Debugging regressions requires manual log copy-pasting to cloud assistants.</li>
+            <li>Untested AI code suggestions introduce subtle downstream bugs.</li>
+            <li>Manual patch application risks silently overwriting concurrent code edits.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide" id="slide-3">
+      <div class="category">SOLUTION & ARCHITECTURE</div>
+      <h2>DevGuard Dual-Agent Local-First Architecture</h2>
+      <div class="grid-2">
+        <div class="card cyan">
+          <h3>Agent 1: Synchronous Privacy Gate</h3>
+          <ul>
+            <li>Inspects developer prompts & clipboard before external delivery.</li>
+            <li>High-priority foreground queue powered by local Gemma 4 E4B.</li>
+            <li>High-entropy regex scanning paired with semantic confidential prose analysis.</li>
+            <li>Exact-span type-safe redaction (<code>[CUSTOMER_EMAIL_1]</code>, <code>[REDACTED_SECRET_TOKEN_1]</code>).</li>
+            <li>Fail-closed invariant: Holds delivery (<code>REVIEW</code>) if offline rather than leaking data.</li>
+          </ul>
+        </div>
+        <div class="card indigo">
+          <h3>Agent 2: Autonomous Sandbox Repair</h3>
+          <ul>
+            <li>Diagnoses backend test failures inside disposable Docker sandboxes.</li>
+            <li>Zero screen recording: uses structured pytest traces and code diffs only.</li>
+            <li>Gemma 4 explores code with scoped tools & produces minimal unified diffs.</li>
+            <li>Verified against independent, immutable test oracles.</li>
+            <li>Base-hash conflict protection: Rejects patch if working tree changed (HTTP 409).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide" id="slide-4">
+      <div class="category">CORE FEATURE 1</div>
+      <h2>Exact-Span Redaction & Fail-Closed Gate</h2>
+      <div class="grid-2">
+        <div class="card cyan">
+          <h3>Precision Semantic Redaction</h3>
+          <ul>
+            <li>Multi-tier inspection: High-entropy regex + Gemma 4 semantic reasoning.</li>
+            <li>Catches unformatted secrets regex misses: plain passwords, internal cluster hosts, customer PII.</li>
+            <li>Type-Safe Placeholders: Replaces secrets while preserving 100% of debugging facts.</li>
+            <li>File paths, line numbers, and exception syntax stay intact so AI still fixes the bug.</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <h3>Deterministic Gate Policy</h3>
+          <ul>
+            <li><code>ALLOW</code>: Clean text approved for transmission with verifiable receipt.</li>
+            <li><code>SANITIZE</code>: Exact spans replaced with safe placeholders before release.</li>
+            <li><code>REVIEW</code>: Triggered on model offline or ambiguities; prevents uninspected leakage.</li>
+            <li><code>BLOCK</code>: Rejects malicious inputs (directory traversal, command injection).</li>
+            <li>One-Time Tokens: Delivered payloads cannot be re-transmitted or intercepted.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide" id="slide-5">
+      <div class="category">CORE FEATURE 2</div>
+      <h2>Opt-In macOS Clipboard Watcher & Cleaned Copy</h2>
+      <div class="grid-2">
+        <div class="card cyan">
+          <h3>Strict Opt-In & Privacy Invariants</h3>
+          <ul>
+            <li>Explicit Consent: Capture starts strictly OFF; requires deliberate local activation.</li>
+            <li>Text Payloads Only: Ignores images, binaries, and unmanaged clipboard buffers.</li>
+            <li>Anti-Scan Loop: Hash tracking prevents infinite re-scans when copying sanitized text.</li>
+            <li>Transient Processing: Clipboard contents are never written to disk or audit logs.</li>
+            <li>Rapid Overwrite Cancel: If user copies again, previous inspection aborts cleanly.</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <h3>One-Click 'Copy Cleaned Text'</h3>
+          <ul>
+            <li>Detects connection strings: <code>DATABASE_URL="postgres://admin:pass@host:5432"</code>.</li>
+            <li>Instantly displays sanitized safe preview in operator dashboard.</li>
+            <li>Operator clicks 'Copy Cleaned Text' to replace sensitive clipboard contents.</li>
+            <li>Developer pastes directly into AI assistant without leaking database credentials.</li>
+            <li>Audited Metadata: Only event hashes and redaction counts survive restarts.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div class="slide" id="slide-6">
+      <div class="category">CORE FEATURE 3</div>
+      <h2>Autonomous Docker Sandbox Repair Agent</h2>
+      <div class="grid-2">
+        <div class="card indigo">
+          <h3>Reproducible Sandbox Diagnosis</h3>
+          <ul>
+            <li>Triggered by test failure signals (e.g., cart quantity calculation regression).</li>
+            <li>Executes inside isolated, pinned Docker containers with immutable tests.</li>
+            <li>Gemma 4 uses strictly scoped tools: <code>read_allowed_file</code>, <code>propose_patch</code>, <code>run_tests</code>.</li>
+            <li>Zero Host Access: Cannot touch host filesystem or run uncontained shell scripts.</li>
+            <li>Step Budget: Enforces strict 6-step limits to prevent infinite agent loops.</li>
+          </ul>
+        </div>
+        <div class="card cyan">
+          <h3>Independent Test Verification</h3>
+          <ul>
+            <li>Baseline Check: Verifies regression genuinely reproduces in clean container.</li>
+            <li>Independent Oracle: Evaluates candidate patch against protected <code>trusted_tests</code>.</li>
+            <li>No Fabricated Outcomes: Fails closed if test suite fails or error persists.</li>
+            <li>Generates clean unified diff ready for human operator review.</li>
+            <li>Complete transparency: Model actions and verifier outputs clearly logged.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div class="slide" id="slide-7">
+      <div class="category">CORE FEATURE 4</div>
+      <h2>Concurrency Safety & Stale Base-Hash Guard</h2>
+      <div class="grid-2">
+        <div class="card amber">
+          <h3>Cryptographic Base-Hash Validation</h3>
+          <ul>
+            <li>When an incident is captured, SHA-256 hashes of target files are recorded.</li>
+            <li>Repair agent builds patch against that specific snapshot revision.</li>
+            <li>Before patch application, DevGuard re-hashes the live working tree on disk.</li>
+            <li>If developer edited files while the repair ran &rarr; Base hashes mismatch!</li>
+            <li>Result: Instant HTTP 409 Conflict (<code>STALE_CONTENT</code>) &mdash; zero code overwrites.</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <h3>Strict Operator Authority</h3>
+          <ul>
+            <li>AI Proposes, Human Authorizes: No automated silent code modifications.</li>
+            <li>Idempotent Application: Retrying an already applied patch returns cached state.</li>
+            <li>File-Level Locking: Cross-thread file locks prevent race conditions during apply.</li>
+            <li>Clean Reversion: Unapplied or canceled candidates leave original files untouched.</li>
+            <li>Full Git compatibility: Operates cleanly on standard git branches and diffs.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8 -->
+    <div class="slide" id="slide-8">
+      <div class="category">USER EXPERIENCE</div>
+      <h2>Operator Dashboard & Real-Time Observability</h2>
+      <div class="grid-3">
+        <div class="card cyan">
+          <h3>5 Unified Views</h3>
+          <ul>
+            <li>🛡️ Privacy Gate: Interactive prompt evaluator with scenario prefill selectors.</li>
+            <li>📋 Clipboard View: Live capture status, safe previews & cleaned copy button.</li>
+            <li>🔍 Coverage Matrix: Honest VERIFIED / PARTIAL / UNSUPPORTED boundaries.</li>
+            <li>🔧 Patch Review: Side-by-side unified diffs & sandbox verification evidence.</li>
+            <li>📜 Audit Stream: Chronological metadata events (no raw secrets).</li>
+          </ul>
+        </div>
+        <div class="card amber">
+          <h3>Honest Fixture Mode</h3>
+          <ul>
+            <li>Prominent warning banner when running in simulated fixture mode.</li>
+            <li>Declared synthetic data never masquerades as live model inference.</li>
+            <li>Clearly distinguishes offline demonstration from live on-device evaluation.</li>
+            <li>Full failure procedures documented for judges and evaluators.</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <h3>Enterprise Compliance</h3>
+          <ul>
+            <li>Zero Token Leaks: Operator session tokens kept server-side, never in UI states.</li>
+            <li>Cross-Platform: Windows operator viewer + native macOS capture host.</li>
+            <li>FastAPI Backend: Typed Pydantic models with 32 KiB bounded requests.</li>
+            <li>Durable SQLite Audit: Up to 5,000 events survive restart without private data.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9 -->
+    <div class="slide" id="slide-9">
+      <div class="category">USE CASES & IMPACT</div>
+      <h2>Target Use Cases: Where DevGuard Delivers Value</h2>
+      <div class="grid-3">
+        <div class="card cyan">
+          <h3>1. Enterprise AI Adoption</h3>
+          <ul>
+            <li>Target: Engineering teams adopting Cursor, Copilot, or Claude Code.</li>
+            <li>Value: Prevent accidental leakage of AWS keys, database strings, and internal hostnames.</li>
+            <li>Compliance: Adhere to SOC 2, ISO 27001, and enterprise security policies seamlessly.</li>
+          </ul>
+        </div>
+        <div class="card indigo">
+          <h3>2. FinTech & Healthcare</h3>
+          <ul>
+            <li>Target: Developers working with HIPAA PII or PCI-DSS financial transactions.</li>
+            <li>Value: Exact-span redaction of customer emails, account IDs, and patient records in crash logs.</li>
+            <li>Context Retained: AI can fix the crash without seeing regulated health or payment data.</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <h3>3. Autonomous CI/CD Triage</h3>
+          <ul>
+            <li>Target: Fast-moving agile teams managing regression test failures.</li>
+            <li>Value: Automatically spins up isolated Docker sandboxes when tests break and prepares verified diff.</li>
+            <li>Time Saved: Reduces bug resolution from hours of context-switching to a 1-click review.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10 -->
+    <div class="slide" id="slide-10">
+      <div class="category">SUMMARY</div>
+      <h2>Technology Stack & Why DevGuard Wins</h2>
+      <div class="grid-2">
+        <div class="card indigo">
+          <h3>Modern Local Tech Stack</h3>
+          <ul>
+            <li>Local LLM: Gemma 4 E4B (<code>gemma4:e4b-it-q4_K_M</code>) via Ollama &mdash; 100% on-device.</li>
+            <li>Backend Engine: FastAPI + Pydantic v2 + Python 3.11+ async loop.</li>
+            <li>Security Scanner: Gitleaks integration + custom semantic span matcher.</li>
+            <li>Verification Sandbox: Docker containerized runner with pinned test images.</li>
+            <li>Operator UI: Streamlit 1.40+ dashboard with reactive HTTP display client.</li>
+            <li>Storage: File-locked SQLite metadata store with POSIX permission guards.</li>
+          </ul>
+        </div>
+        <div class="card cyan">
+          <h3>5 Invariants: Why DevGuard Wins</h3>
+          <ul>
+            <li>1. True Dual-Agent Synergy: Fast synchronous gate + background sandbox healer.</li>
+            <li>2. Zero Surveillance: No screens, keyloggers, or audio scraping &mdash; only code facts.</li>
+            <li>3. Fail-Closed Privacy: Offline models hold requests; no data escapes uninspected.</li>
+            <li>4. Cryptographic Concurrency Safety: Stale base-hashes reject conflicting writes.</li>
+            <li>5. Complete Honesty: Clear capability matrix, no fabricated AI outcomes.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="shortcuts">
+      Navigate with <span class="kbd">&larr;</span> and <span class="kbd">&rarr;</span> arrow keys or buttons
+    </div>
+    <div class="controls">
+      <button id="prevBtn" onclick="prevSlide()" disabled>&larr; Previous</button>
+      <button id="nextBtn" onclick="nextSlide()">Next &rarr;</button>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function updateSlide() {
+      document.querySelectorAll('.slide').forEach((s, idx) => {
+        s.classList.toggle('active', idx + 1 === currentSlide);
+      });
+      document.getElementById('slideCounter').textContent = `Slide ${currentSlide} of ${totalSlides}`;
+      document.getElementById('prevBtn').disabled = currentSlide === 1;
+      document.getElementById('nextBtn').disabled = currentSlide === totalSlides;
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>
