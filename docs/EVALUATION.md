@@ -1,6 +1,18 @@
 # Evaluation specification and results template
 
-Status: no cases executed. Windows 2 supplies scenarios and manual observations; Mac 1 implements privacy assertions and Mac 2 implements trusted repair tests. Keep withheld variants out of prompts and runtime fixture lookup tables.
+Status: the 26 catalogue records remain UNRUN. Separate targeted real-model experiments have now run; their results below do not convert these catalogue entries to passes. Mac 2 continues the assigned Windows 2 QA/demo scope. Keep withheld variants out of prompts and runtime fixture lookup tables.
+
+## Measured experiments — 16 October 2026
+
+- Integrated main `1099a86` plus Mac 2 worker: **209 automated tests passed**; pip check clean. Unit tests use declared fake model/verifier ports and do not measure model accuracy.
+- Actual local Gemma + guard + API + restricted Docker: failing cart baseline, genuine source patch, independent PASS, approved application on a disposable public copy, idempotent repeat and post-apply PASS in **46.07 s**. Original repository/test hashes unchanged; worker stopped; 28 audit records survived reopening.
+- Separate actual stale/cancel trial: queued cancellation without candidate, then a passing model candidate, concurrent edit, **409 STALE_SOURCE**, edit preserved and run OBSOLETE in **42.19 s**. Full metadata and failed attempts: [repair verification](../devguard/repair/README.md).
+- Mac 2 isolated named pasteboard: all 12 lifecycle/copy checks passed; **1.550 s** copy-to-finding; no general clipboard access. [Metadata](../evals/results/mac2-private-pasteboard.json).
+- Mac 2 real loopback API + Gemma + Streamlit element tree: SANITIZE in **1.282 s**, managed local receiver got exactly the inspected cleaned bytes, replay held, all five live views rendered, private audit omitted the synthetic secret, shutdown acknowledged. [Metadata](../evals/results/mac2-live-dashboard.json). No installed-client interception was tested.
+- Mac 2 explicitly consented system clipboard input containing a combined synthetic trace/email/api-key was HELD/REVIEW by final policy scanning. Cleaned-copy was not exercised; capture was disabled afterward. This failure is preserved rather than replaced by the passing private-board input. [Metadata](../devguard/repair/verification/mac2-system-clipboard-held.json).
+- Mac 1's separate native/system clipboard and live reference-delivery/render checks are recorded in [owner evidence](MAC_1_WINDOWS_1_COMPLETION.md). No cross-host timings are pooled into an accuracy or latency benchmark.
+
+The real repair tests use `unit_amount`, `quantity`, and parameterized `test_cart_behavior`; older catalogue descriptions mention conceptual `price` fields and nonexistent test function names. Those entries need explicit mapping before execution. Expectations have not been changed to manufacture passes. A JSON schema/fixture check is not scenario execution. The mock server is rehearsal data and fails the actual live runtime contract; use labelled Fixture Mode for offline presentation.
 
 ## Case catalogue
 

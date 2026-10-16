@@ -1,0 +1,29 @@
+{
+  "scope": "Actual loopback API, real pinned Gemma, Streamlit element tree; synthetic input only",
+  "general_clipboard_enabled": false,
+  "source_patch_applied": false,
+  "runtime": {
+    "server_ready": true,
+    "server_version": "0.40.5",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "reason_code": "MODEL_READY"
+  },
+  "evaluation_seconds": 1.282,
+  "decision": "SANITIZE",
+  "receiver_got_only_inspected_cleaned_bytes": true,
+  "replay_held": true,
+  "all_five_live_views_rendered": true,
+  "audit_omits_synthetic_secret": true,
+  "audit_file_mode": "0o600",
+  "status": "PASS",
+  "backend_shutdown_acknowledged": true,
+  "measurement_date": "2026-10-16",
+  "implementation_revision": "d3ca586",
+  "host_class": "macOS-AppleSilicon-M4-16GB",
+  "python_version": "3.12.14",
+  "streamlit_version": "1.66.0",
+  "limitations": "One synthetic case through a managed local reference receiver; not installed coding-client interception or general accuracy."
+}
