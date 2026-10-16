@@ -10,4 +10,4 @@ Current combined test result: **223 passed**; pip check clean; scoped Ruff, whit
 
 Use [the current runbook](DEMO_RUNBOOK.md) and [prepared submission text](SUBMISSION_FINAL.md), with [the final checklist](FINAL_FREEZE_CHECKLIST.md). The newer mock server matches the live response envelope, but its outputs remain simulated rehearsal data rather than actual model execution. Installed Codex interception remains unverified. Automatic OS-idle scheduling and arbitrary-project enrollment remain unfinished.
 
-Abhijan should review/merge the worker and QA PRs, reconcile the modern presentation branch, then the team should rehearse and submit before 4:30 PM IST. No hackathon form or recording is submitted by this handoff.
+Abhijan merged worker #16, QA #17 and modern dashboard #18. Mac 2 integrated the published UI and checked all six views against the actual backend with zero errors/exceptions. The team should now rehearse and submit before 4:30 PM IST. No hackathon form or recording is submitted by this handoff.
