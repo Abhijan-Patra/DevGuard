@@ -1,6 +1,6 @@
 """Use Mac 1's actual async OllamaClient, not a second HTTP client/model server.
 
-Aligned with codex/mac1-guard commit 2f28880. Construct on the running app loop,
+Aligned with merged main commit 831e008. Construct on the running app loop,
 then invoke from the repair worker thread. Privacy remains a separate required port.
 """
 

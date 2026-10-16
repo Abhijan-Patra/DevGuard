@@ -18,14 +18,13 @@ This is an initial implementation, not a completed live Gemma repair demonstrati
 ## Recorded local verification — October 16, 2026
 
 - Apple M4 / 16 GB; Python 3.12.14; Docker Desktop 4.95.0, engine 29.8.2; Gitleaks 8.30.1 installed.
-- Mac 2 unit suite: **79 passed**, one integration module skipped because Mac 1 source is absent on this branch.
-- Temporary combined source using Mac 1 `2f28880` and this worker: **118 passed**, including the actual app/auth binding and installed Gitleaks fixture check. Model HTTP responses are mocked in these tests; native clipboard capture remains disabled.
+- Full integrated suite against merged `main` at `831e008` plus this worker: **130 passed**, including the actual app/auth binding, inference-priority queue, installed Gitleaks fixture check and dashboard client tests. Model HTTP responses are mocked in these tests; native clipboard capture remains disabled.
 - Real restricted Docker run over an approved snapshot: **FAIL / exit 1**, **4 failed, 3 passed**, as required for the declared buggy cart baseline. All seven checks ran with no network and the prepared dependencies. No model was used and original source was unchanged.
 - Built local ARM64 verifier image: `sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7`. This ID is local, not a published registry image; other machines build/inspect their own image.
 - Actual serialized guard inputs for this Docker evidence measured **1,554 bytes** for baseline evidence and **1,620 bytes** for the named-test tool result, below the published 2,048-byte limit. Larger/different outputs can still hold.
 - Ruff checks and `git diff --check` passed. Pytest emits a dependency deprecation warning about Starlette's HTTPX TestClient.
 
-Still unverified: genuine shared Gemma repair, live coding-client interception, foreground-priority scheduling and durable/supervised application integration. These are readiness gates, not implied by the passing unit checks.
+Still unverified: genuine shared Gemma repair, live coding-client interception and durable/supervised repair application integration. Priority queue behaviour passed unit checks; real inference latency has not been measured. Passing unit checks do not imply a live repair milestone.
 
 ## Local commands
 
@@ -62,7 +61,7 @@ Internal protocols live in `contracts.py`. They are provisional integration boun
 
 The selected model is the explicit `gemma4:e4b-it-q4_K_M` package and the API port is 8765. `devguard/agent/mac1_bridge.py` adapts Mac 1's asynchronous `inspect()` and `chat(messages, tools=...)` to the synchronous worker, using the same client/lock, checking the digest before each call and requiring one complete native tool call. There is no duplicate Ollama client or inference server.
 
-### Mac 1 application binding, checked against `2f28880`
+### Mac 1 application binding, checked against merged `main` at `831e008`
 
 The guard/scoped auth and `RepairGuardBridge` now exist. Read Mac 1's `docs/MAC_2_INTEGRATION.md`; the following helper uses its exact app-state ports without changing Mac 1's files:
 
@@ -88,7 +87,7 @@ The default `Mac1AuditEventBridge` schedules constrained kind/state records thro
 
 Mac 1 must supervise shutdown before closing audit/model/guard resources: `stopped = await asyncio.to_thread(service.shutdown, 30)`. Check the returned result; false means the worker has not stopped and lifecycle readiness has not been established. Shutdown pauses/cancels work and clears retained original/replacement bytes once the worker stops. Do not start a second app/model server.
 
-Mac 1's current inference lock serializes requests but is not yet a foreground-priority queue. Its default audit is in memory. Keep execution paused until these gates, trusted image configuration and lifecycle wiring are implemented and verified. The first contextual privacy budget is 2 KiB of serialized task/text; oversized evidence holds rather than silently truncating. Named Docker checks run every test, use one-line failure reports and omit warning/header noise. A separate temporary bytecode prefix prevents loading host bytecode caches with stale source paths.
+Mac 1's bounded queue now prioritizes waiting foreground privacy requests over waiting background repairs; active inference is not preempted. Its default audit is still in memory. Keep execution paused until durable audit handling, trusted image configuration and lifecycle wiring are implemented and verified, then report the verified queue capability through the readiness callback. The first contextual privacy budget is 2 KiB of serialized task/text; oversized evidence holds rather than silently truncating. Named Docker checks run every test, use one-line failure reports and omit warning/header noise. A separate temporary bytecode prefix prevents loading host bytecode caches with stale source paths.
 
 Trusted application startup constructs a `RepairService`, registers `ProjectSpec` configurations and mounts the router. Registration comes from the operator-selected project, not model arguments or arbitrary UI roots. The demo registration helper is `demo.backend.config.demo_project(repository_root, image_id)`.
 
