@@ -15,6 +15,31 @@ class RepairError(Exception):
     pass
 
 
+def test_repair_scope_uses_sensitivity_checks_without_conversational_relevance():
+    async def run():
+        class InspectSource:
+            def __init__(self):
+                self.seen = []
+            async def inspect(self, text, task):
+                self.seen.append((text, task))
+                return ModelProposal(decision=Decision.ALLOW, spans=[])
+        inspector = InspectSource()
+        audit = AuditStore()
+        guard = GuardEngine(TestScanner(), inspector, audit)
+        bridge = RepairGuardBridge(guard, asyncio.get_running_loop(), RepairError)
+        source = 'def total(values):\n    return sum(values)\n'
+        assert await asyncio.to_thread(bridge.sanitize, source, purpose='snapshot_source') == source
+        secret = 'synthetic-only-credential-459834905'
+        cleaned = await asyncio.to_thread(bridge.sanitize, 'password=' + secret, purpose='tool_result')
+        assert secret not in cleaned
+        assert len(inspector.seen) == 2
+        assert all(task is None for _, task in inspector.seen)
+        assert secret not in inspector.seen[1][0]
+        assert not guard.records
+        audit.close()
+    asyncio.run(run())
+
+
 def test_worker_bridge_returns_cleaned_text_and_clears_transient_record():
     async def run():
         audit = AuditStore()

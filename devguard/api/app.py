@@ -45,6 +45,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     @asynccontextmanager
     async def lifespan(app):
         watcher = asyncio.create_task(clipboard.run())
+        repair.lifecycle_managed = True
         try:
             await repair.initialize(app)
             yield
@@ -53,8 +54,13 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             with contextlib.suppress(asyncio.CancelledError):
                 await watcher
             repair.pause()
+            stopped = await repair.join()
             await model.close()
-            await repair.join()
+            # A bounded drain normally stops before resources close. If a model
+            # call was still active, closing it cancels inference, then require
+            # worker acknowledgement before clearing guard/audit resources.
+            if not stopped and not await repair.join():
+                raise RuntimeError('WORKER_SHUTDOWN_TIMEOUT')
             guard.close()
             audit.close()
 

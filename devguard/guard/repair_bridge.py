@@ -33,7 +33,12 @@ class RepairGuardBridge:
 
         async def call():
             record = await self.guard.evaluate(GuardInput(
-                task="Inspect backend repair evidence; preserve source and debugging facts",
+                # Trusted manifests/named tools select repair evidence. It must
+                # remain reproducible byte for byte: conversational relevance
+                # filtering is inappropriate for source, test output and diffs.
+                # No task disables only relevance; credential, personal-data and
+                # confidentiality checks still run through the same guard.
+                task=None,
                 surface=self.PURPOSES[purpose], destination_id="local-preview",
                 content_version=0, text=text,
             ), owner="repair-worker")
