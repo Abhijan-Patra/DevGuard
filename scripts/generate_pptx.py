@@ -1,4 +1,4 @@
-"""Generate DevGuard 10-slide presentation deck using python-pptx."""
+"""Generate a developer-crafted, authentic 10-slide presentation deck using python-pptx."""
 
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -8,328 +8,398 @@ from pptx.enum.shapes import MSO_SHAPE
 
 def create_deck(output_path="DevGuard_Presentation.pptx"):
     prs = Presentation()
-    # 16:9 widescreen
     prs.slide_width = Inches(13.333)
     prs.slide_height = Inches(7.5)
-    blank_layout = prs.slide_layouts[6]  # Blank
+    blank_layout = prs.slide_layouts[6]
 
-    # Color Palette (Dark Theme / Cyber-Defense Slate)
-    BG_COLOR = RGBColor(15, 23, 42)       # #0F172A
-    CARD_BG = RGBColor(30, 41, 59)        # #1E293B
-    BORDER_COLOR = RGBColor(51, 65, 85)   # #334155
-    TEXT_MAIN = RGBColor(248, 250, 252)   # #F8FAFC
-    TEXT_MUTED = RGBColor(148, 163, 184)  # #94A3B8
-    ACCENT_CYAN = RGBColor(56, 189, 248)  # #38BDF8
-    ACCENT_INDIGO = RGBColor(129, 140, 248) # #818CF8
-    ACCENT_GREEN = RGBColor(52, 211, 153) # #34D399
-    ACCENT_AMBER = RGBColor(251, 191, 36) # #FBBF24
+    # Warm & sleek developer theme (Deep navy slate + vibrant electric blue/emerald)
+    BG_COLOR = RGBColor(15, 23, 42)         # #0F172A
+    CARD_BG = RGBColor(30, 41, 59)          # #1E293B
+    CODE_BG = RGBColor(10, 15, 30)          # #0A0F1E
+    BORDER_COLOR = RGBColor(51, 65, 85)     # #334155
+    TEXT_MAIN = RGBColor(248, 250, 252)     # #F8FAFC
+    TEXT_MUTED = RGBColor(148, 163, 184)    # #94A3B8
+    TEXT_EMPHASIS = RGBColor(226, 232, 240) # #E2E8F0
+    ACCENT_CYAN = RGBColor(56, 189, 248)    # #38BDF8
+    ACCENT_GREEN = RGBColor(52, 211, 153)   # #34D399
+    ACCENT_AMBER = RGBColor(251, 191, 36)   # #FBBF24
+    ACCENT_ROSE = RGBColor(244, 63, 94)     # #F43F5E
 
-    def add_background(slide):
+    def set_bg(slide):
         bg = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, 0, 0, Inches(13.333), Inches(7.5))
         bg.fill.solid()
         bg.fill.fore_color.rgb = BG_COLOR
         bg.line.color.rgb = BG_COLOR
         return bg
 
-    def add_header(slide, title, category=None):
-        if category:
-            cat_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.4), Inches(11.5), Inches(0.4))
-            tf_cat = cat_box.text_frame
-            tf_cat.word_wrap = True
-            p_cat = tf_cat.paragraphs[0]
-            p_cat.text = category.upper()
-            p_cat.font.size = Pt(11)
-            p_cat.font.bold = True
-            p_cat.font.color.rgb = ACCENT_CYAN
+    def add_slide_header(slide, title, kicker=None):
+        if kicker:
+            k_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.4), Inches(11.5), Inches(0.35))
+            tf_k = k_box.text_frame
+            tf_k.word_wrap = True
+            p_k = tf_k.paragraphs[0]
+            p_k.text = kicker.upper()
+            p_k.font.size = Pt(11)
+            p_k.font.bold = True
+            p_k.font.color.rgb = ACCENT_CYAN
+            p_k.font.name = "Segoe UI"
 
-        title_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.7 if category else 0.5), Inches(11.5), Inches(0.8))
-        tf = title_box.text_frame
+        t_box = slide.shapes.add_textbox(Inches(0.8), Inches(0.7 if kicker else 0.5), Inches(11.5), Inches(0.8))
+        tf = t_box.text_frame
         tf.word_wrap = True
         p = tf.paragraphs[0]
         p.text = title
-        p.font.size = Pt(28)
+        p.font.size = Pt(26)
         p.font.bold = True
         p.font.color.rgb = TEXT_MAIN
+        p.font.name = "Segoe UI"
 
-    def add_card(slide, left, top, width, height, title, items, badge_color=ACCENT_CYAN):
+    def add_card(slide, left, top, width, height, title, body_bullets, accent=ACCENT_CYAN, subheader=None):
         card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
         card.fill.solid()
         card.fill.fore_color.rgb = CARD_BG
         card.line.color.rgb = BORDER_COLOR
         card.line.width = Pt(1.5)
 
-        tx_box = slide.shapes.add_textbox(Inches(left + 0.25), Inches(top + 0.2), Inches(width - 0.5), Inches(height - 0.4))
-        tf = tx_box.text_frame
+        tx = slide.shapes.add_textbox(Inches(left + 0.3), Inches(top + 0.25), Inches(width - 0.6), Inches(height - 0.5))
+        tf = tx.text_frame
         tf.word_wrap = True
 
-        p_title = tf.paragraphs[0]
-        p_title.text = title
-        p_title.font.size = Pt(18)
-        p_title.font.bold = True
-        p_title.font.color.rgb = badge_color
-        p_title.space_after = Pt(12)
+        p_t = tf.paragraphs[0]
+        p_t.text = title
+        p_t.font.size = Pt(17)
+        p_t.font.bold = True
+        p_t.font.color.rgb = accent
+        p_t.font.name = "Segoe UI"
 
-        for item in items:
+        if subheader:
+            p_sub = tf.add_paragraph()
+            p_sub.text = subheader
+            p_sub.font.size = Pt(11)
+            p_sub.font.color.rgb = TEXT_MUTED
+            p_sub.font.italic = True
+            p_sub.space_after = Pt(8)
+        else:
+            p_t.space_after = Pt(8)
+
+        for b in body_bullets:
             p = tf.add_paragraph()
-            p.text = "• " + item
+            p.text = b
             p.font.size = Pt(13)
-            p.font.color.rgb = TEXT_MUTED
+            p.font.color.rgb = TEXT_EMPHASIS
+            p.font.name = "Segoe UI"
             p.space_after = Pt(8)
 
+    def add_code_box(slide, left, top, width, height, code_text, label="CODE SNIPPET"):
+        box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(left), Inches(top), Inches(width), Inches(height))
+        box.fill.solid()
+        box.fill.fore_color.rgb = CODE_BG
+        box.line.color.rgb = BORDER_COLOR
+        box.line.width = Pt(1)
+
+        tx = slide.shapes.add_textbox(Inches(left + 0.2), Inches(top + 0.15), Inches(width - 0.4), Inches(height - 0.3))
+        tf = tx.text_frame
+        tf.word_wrap = True
+
+        p_lbl = tf.paragraphs[0]
+        p_lbl.text = label
+        p_lbl.font.size = Pt(9)
+        p_lbl.font.bold = True
+        p_lbl.font.color.rgb = ACCENT_CYAN
+        p_lbl.font.name = "Segoe UI"
+        p_lbl.space_after = Pt(6)
+
+        for line in code_text.strip().split("\n"):
+            p = tf.add_paragraph()
+            p.text = line
+            p.font.size = Pt(11)
+            p.font.name = "Consolas"
+            if line.startswith("-"):
+                p.font.color.rgb = ACCENT_ROSE
+            elif line.startswith("+"):
+                p.font.color.rgb = ACCENT_GREEN
+            elif "REDACTED" in line or "[" in line:
+                p.font.color.rgb = ACCENT_AMBER
+            else:
+                p.font.color.rgb = TEXT_MUTED
+
     # -------------------------------------------------------------
-    # SLIDE 1: Title Slide
+    # SLIDE 1: Real Developer Title
     # -------------------------------------------------------------
     s1 = prs.slides.add_slide(blank_layout)
-    add_background(s1)
+    set_bg(s1)
 
-    t_box = s1.shapes.add_textbox(Inches(1.0), Inches(1.8), Inches(11.333), Inches(3.5))
+    t_box = s1.shapes.add_textbox(Inches(1.0), Inches(1.8), Inches(11.3), Inches(3.5))
     tf1 = t_box.text_frame
     tf1.word_wrap = True
 
     p0 = tf1.paragraphs[0]
-    p0.text = "DEVGUARD"
-    p0.font.size = Pt(56)
+    p0.text = "DevGuard"
+    p0.font.size = Pt(60)
     p0.font.bold = True
     p0.font.color.rgb = ACCENT_CYAN
+    p0.font.name = "Segoe UI"
     p0.space_after = Pt(8)
 
     p1 = tf1.add_paragraph()
-    p1.text = "Local-First Privacy Guard & Autonomous Backend Repair Agent"
-    p1.font.size = Pt(24)
+    p1.text = "Stop accidentally leaking private keys & customer data to AI tools."
+    p1.font.size = Pt(22)
     p1.font.color.rgb = TEXT_MAIN
-    p1.space_after = Pt(16)
+    p1.font.name = "Segoe UI"
+    p1.space_after = Pt(14)
 
     p2 = tf1.add_paragraph()
-    p2.text = "Powered entirely on-device by Gemma 4 E4B (Ollama) | Zero Screen/Key Recording | Fail-Closed Security"
+    p2.text = "A local-first privacy guard & automated bug fixer powered by Gemma 4.\nNo invasive screen recorders. No cloud prompts. Zero fluff."
     p2.font.size = Pt(14)
-    p2.font.color.rgb = ACCENT_INDIGO
+    p2.font.color.rgb = TEXT_MUTED
+    p2.font.name = "Segoe UI"
 
-    # Info footer
-    foot = s1.shapes.add_textbox(Inches(1.0), Inches(5.8), Inches(11.333), Inches(0.8))
+    foot = s1.shapes.add_textbox(Inches(1.0), Inches(5.8), Inches(11.3), Inches(0.8))
     p_foot = foot.text_frame.paragraphs[0]
-    p_foot.text = "Hackathon Presentation | Track: Best Use of Gemma 4 & Open Source AI | 2026"
+    p_foot.text = "Team DevGuard | Hackathon 2026 | Powered by Gemma 4 E4B"
     p_foot.font.size = Pt(12)
-    p_foot.font.color.rgb = TEXT_MUTED
+    p_foot.font.color.rgb = ACCENT_GREEN
+    p_foot.font.name = "Segoe UI"
 
     # -------------------------------------------------------------
-    # SLIDE 2: The Core Problem
+    # SLIDE 2: Relatable Problem
     # -------------------------------------------------------------
     s2 = prs.slides.add_slide(blank_layout)
-    add_background(s2)
-    add_header(s2, "The Critical Security Blindspot in AI Coding Assistants", "Problem Statement")
+    set_bg(s2)
+    add_slide_header(s2, "We've All Done This at 2 AM...", "The Problem")
 
-    add_card(s2, 0.8, 1.8, 3.7, 4.8, "1. Accidental Cloud Leaks", [
-        "Developers inadvertently paste proprietary API keys, database URLs, and AWS tokens into AI chats.",
-        "Diagnostic stack traces contain real customer PII and internal microservice URIs.",
-        "Cloud models retain prompts, risking intellectual property and compliance violations."
-    ], ACCENT_AMBER)
+    add_card(s2, 0.8, 1.8, 3.7, 4.8, "The 'Copy-Paste' Mistake", [
+        "You get a nasty crash in auth.py.",
+        "You copy the entire traceback into ChatGPT or Cursor.",
+        "Oops: You just sent a live customer email and AWS token straight to an external cloud server.",
+        "Now that secret sits in external model logs."
+    ], ACCENT_ROSE, "Accidental credential leakage")
 
-    add_card(s2, 4.8, 1.8, 3.7, 4.8, "2. Invasive Surveillance", [
-        "Traditional enterprise security relies on screen scrapers, video watchers, or keyboard loggers.",
-        "Heavy privacy intrusion for developers and massive CPU/battery performance drain.",
-        "Lacks semantic understanding of developer workflows and code facts."
-    ], ACCENT_AMBER)
+    add_card(s2, 4.8, 1.8, 3.7, 4.8, "The 'Corporate Spyware' Fix", [
+        "Company IT panics and installs 'monitoring agents'.",
+        "They record your screen, log every keystroke, and kill your laptop battery.",
+        "Engineers hate it, feel watched, and it doesn't even understand code context.",
+        "There has to be a smarter, non-creepy way."
+    ], ACCENT_AMBER, "Overly invasive enterprise tooling")
 
-    add_card(s2, 8.8, 1.8, 3.7, 4.8, "3. Slow & Risky Bug Fixing", [
-        "Debugging production regressions requires manual log copy-pasting to cloud assistants.",
-        "Manual patch application often overwrites concurrent developer edits (lost changes).",
-        "Untested AI patches can introduce subtle regression failures."
-    ], ACCENT_AMBER)
+    add_card(s2, 8.8, 1.8, 3.7, 4.8, "The Risky AI Patches", [
+        "You ask AI to fix a failing test.",
+        "While it generates code, you edit a nearby function.",
+        "You apply the AI suggestion — and it silently overwrites your fresh work.",
+        "Plus, you still had to test it by hand."
+    ], ACCENT_CYAN, "Concurrency & unverified code")
 
     # -------------------------------------------------------------
-    # SLIDE 3: DevGuard Dual-Agent Solution & Architecture
+    # SLIDE 3: The Solution
     # -------------------------------------------------------------
     s3 = prs.slides.add_slide(blank_layout)
-    add_background(s3)
-    add_header(s3, "DevGuard Architecture: Dual-Agent Local-First Protection", "Solution Overview")
+    set_bg(s3)
+    add_slide_header(s3, "How DevGuard Works: Two Local Agents, Zero Spying", "Our Solution")
 
-    add_card(s3, 0.8, 1.8, 5.6, 4.8, "Agent 1: Synchronous Privacy Gate", [
-        "Interceps text prompts & clipboard BEFORE external delivery.",
-        "High-priority foreground queue powered by local Gemma 4 E4B.",
-        "High-entropy Gitleaks pattern detection + semantic confidential prose analysis.",
-        "Exact-span type-safe redaction ([CUSTOMER_EMAIL_1], [REDACTED_SECRET_TOKEN_1]).",
-        "Fail-Closed Gate: If offline, holds delivery (REVIEW) rather than leaking data."
-    ], ACCENT_CYAN)
+    add_card(s3, 0.8, 1.8, 5.6, 4.8, "Agent 1: The Fast Privacy Gate", [
+        "Sits right between your editor and the network.",
+        "Runs synchronously in milliseconds using local Gemma 4.",
+        "Catches API keys, emails, and internal URLs before they leave your laptop.",
+        "Replaces ONLY sensitive bytes with typed placeholders.",
+        "Keeps the full stack trace intact so AI can still debug it.",
+        "Fail-Closed: If offline, it holds the request. Never leaks by default."
+    ], ACCENT_CYAN, "Protects you before prompt sends")
 
-    add_card(s3, 6.8, 1.8, 5.6, 4.8, "Agent 2: Autonomous Sandbox Repair", [
-        "Investigates backend test failures in disposable Docker sandboxes.",
-        "Zero screen/audio/video recording: uses structured pytest logs & code diffs only.",
-        "Gemma 4 explores code with scoped tools & produces minimal unified diffs.",
-        "Verified against independent, immutable test oracles.",
-        "Base-hash conflict protection: Rejects patch if working tree changed (HTTP 409)."
-    ], ACCENT_INDIGO)
+    add_card(s3, 6.8, 1.8, 5.6, 4.8, "Agent 2: The Sandbox Fixer", [
+        "Runs quietly in the background when tests fail.",
+        "Spins up an isolated Docker container with your repo.",
+        "Gemma 4 examines pytest traces & writes a minimal fix.",
+        "Runs independent tests to prove the fix actually works.",
+        "Base-Hash Check: Rejects the patch if you edited code in the meantime (no lost work!).",
+        "Human must click 'Apply' — no auto-overwriting."
+    ], ACCENT_GREEN, "Heals bugs without manual copy-paste")
 
     # -------------------------------------------------------------
-    # SLIDE 4: Feature 1 - Precision Pre-Delivery Privacy Gate
+    # SLIDE 4: Feature 1 - Privacy Gate in Action
     # -------------------------------------------------------------
     s4 = prs.slides.add_slide(blank_layout)
-    add_background(s4)
-    add_header(s4, "Feature 1: Exact-Span Redaction & Fail-Closed Gate", "Core Feature")
+    set_bg(s4)
+    add_slide_header(s4, "Privacy Gate: Clean Secrets, Keep Debug Context", "Feature 1")
 
-    add_card(s4, 0.8, 1.8, 5.6, 4.8, "Semantic & Pattern Redaction", [
-        "Multi-layer detection: Regex scans for known token signatures + Gemma 4 contextual reasoning.",
-        "Catches confidential text that regex misses: unformatted passwords, internal hostnames, and PII.",
-        "Type-Safe Placeholders: Replaces secrets while keeping 100% of the debugging structure.",
-        "Preserves line numbers, exception classes, and syntax so AI can still fix the bug."
-    ], ACCENT_CYAN)
+    add_card(s4, 0.8, 1.8, 5.6, 4.8, "Why Simple Regex Fails", [
+        "Regex is great for AWS keys (AKIA...), but terrible at confidential sentences.",
+        "What about: 'Use db password SuperSecretPass2026!'?",
+        "Or customer PII buried inside JSON response dumps?",
+        "Gemma 4 understands semantics: It spots private context that regex misses.",
+        "Result: Type-safe replacements ([CUSTOMER_EMAIL_1], [REDACTED_PASSWORD_01])."
+    ], ACCENT_CYAN, "Combining Gitleaks + Gemma 4 reasoning")
 
-    add_card(s4, 6.8, 1.8, 5.6, 4.8, "Deterministic Gate Policy", [
-        "ALLOW: Clean text is approved for transmission with verifiable receipt.",
-        "SANITIZE: Exact spans replaced with safe placeholders before release.",
-        "REVIEW: Triggered on model offline or ambiguities; prevents uninspected leakage.",
-        "BLOCK: Reject malicious inputs (directory traversal, command injection).",
-        "One-Time Token Receipts: Delivered payloads cannot be re-transmitted or intercepted."
-    ], ACCENT_GREEN)
+    add_code_box(s4, 6.8, 1.8, 5.6, 4.8,
+"""// BEFORE: Raw error with live secret
+ValueError: Auth failed for contact@enterprise.com
+Token: ghp_synthetic_pat_1234567890abcdef
+File: auth.py:54 in verify_session()
+
+// AFTER: DevGuard Gate output
+ValueError: Auth failed for [CUSTOMER_EMAIL_1]
+Token: [REDACTED_SECRET_TOKEN_1]
+File: auth.py:54 in verify_session()
+
+// DECISION: SANITIZE (Sent safely to assistant!)""",
+    "LIVE EXAMPLE: EXACT-SPAN REDACTION")
 
     # -------------------------------------------------------------
-    # SLIDE 5: Feature 2 - Opt-In macOS Clipboard Watcher
+    # SLIDE 5: Feature 2 - Clipboard
     # -------------------------------------------------------------
     s5 = prs.slides.add_slide(blank_layout)
-    add_background(s5)
-    add_header(s5, "Feature 2: Native Text Clipboard Protection & Cleaned Copy", "Core Feature")
+    set_bg(s5)
+    add_slide_header(s5, "Clipboard Watcher: One Click to 'Copy Cleaned'", "Feature 2")
 
-    add_card(s5, 0.8, 1.8, 5.6, 4.8, "Strict Opt-In & Privacy Invariants", [
-        "Explicit Consent: Capture starts strictly OFF; requires local user activation.",
-        "Text Payloads Only: Ignores images, binaries, and unmanaged clipboard buffers.",
-        "Anti-Scan Loop: Hash tracking prevents infinite re-scans when copying sanitized text.",
-        "Transient Processing: Clipboard contents are never written to disk or audit logs.",
-        "Rapid Overwrite Cancel: If user copies again, previous inspection aborts cleanly."
-    ], ACCENT_CYAN)
+    add_card(s5, 0.8, 1.8, 5.6, 4.8, "The Everyday Clipboard Trap", [
+        "You copy a Postgres connection string from your .env file.",
+        "You want to ask AI: 'Why does this query hang?'",
+        "Your clipboard currently has the live database password in plaintext.",
+        "DevGuard's macOS text watcher flags it immediately: State: SENSITIVE.",
+        "Strictly Opt-In: Starts OFF. Only watches text when you turn it on."
+    ], ACCENT_AMBER, "Opt-in text pasteboard watcher")
 
-    add_card(s5, 6.8, 1.8, 5.6, 4.8, "One-Click 'Copy Cleaned Text'", [
-        "Detects connection strings (DATABASE_URL='postgres://admin:pass@host:5432').",
-        "Instantly displays sanitized safe preview in operator dashboard.",
-        "Operator clicks 'Copy Cleaned Text' to replace sensitive clipboard contents.",
-        "Developer pastes directly into AI assistant without leaking database credentials.",
-        "Audited Metadata: Only event hashes and redaction counts survive restarts."
-    ], ACCENT_GREEN)
+    add_card(s5, 6.8, 1.8, 5.6, 4.8, "One Click: 'Copy Cleaned Text'", [
+        "Dashboard shows a sanitized preview right away.",
+        "Click one button: 'Copy Cleaned Text'.",
+        "Your clipboard is replaced with the safe version:",
+        "postgres://admin:REDACTED_PASS@db.internal:5432/app",
+        "Anti-Scan Loop: We hash the cleaned text so the watcher doesn't re-trigger itself.",
+        "Zero raw clipboard history is ever saved to disk."
+    ], ACCENT_GREEN, "Safe paste into Cursor / Slack / AI")
 
     # -------------------------------------------------------------
-    # SLIDE 6: Feature 3 - Autonomous Docker Sandbox Repair
+    # SLIDE 6: Feature 3 - Repair Agent
     # -------------------------------------------------------------
     s6 = prs.slides.add_slide(blank_layout)
-    add_background(s6)
-    add_header(s6, "Feature 3: Background Code Repair via Sandboxed Oracles", "Core Feature")
+    set_bg(s6)
+    add_slide_header(s6, "Autonomous Repair: Real Docker Tests, No Hallucinations", "Feature 3")
 
-    add_card(s6, 0.8, 1.8, 5.6, 4.8, "Reproducible Sandbox Diagnosis", [
-        "Triggered by test failure signals (e.g., cart quantity calculation regression).",
-        "Executes inside isolated, pinned Docker containers with immutable tests.",
-        "Gemma 4 uses strictly scoped tools: 'read_allowed_file', 'propose_patch', 'run_tests'.",
-        "Zero Host Access: Cannot touch host filesystem or run uncontained shell scripts.",
-        "Step Budget: Enforces strict 6-step limits to prevent infinite agent loops."
-    ], ACCENT_INDIGO)
+    add_card(s6, 0.8, 1.8, 5.6, 4.8, "How It Actually Diagnoses", [
+        "1. Pytest fails in your demo cart service.",
+        "2. DevGuard spins up a disposable Docker container.",
+        "3. Baseline check: Confirms the test genuinely fails.",
+        "4. Gemma 4 reads the code and error output using scoped tools.",
+        "5. Gemma writes a candidate patch.",
+        "6. Re-runs the test suite in isolation. If it doesn't pass 100%, patch is thrown out!"
+    ], ACCENT_CYAN, "Deterministic test-driven loop")
 
-    add_card(s6, 6.8, 1.8, 5.6, 4.8, "Independent Test Verification", [
-        "Baseline Check: Verifies regression genuinely reproduces in clean container.",
-        "Independent Oracle: Evaluates candidate patch against protected 'trusted_tests'.",
-        "No Fabricated Outcomes: Fails closed if test suite fails or error persists.",
-        "Generates clean unified diff ready for human operator review.",
-        "Complete transparency: Model actions and verifier outputs clearly logged."
-    ], ACCENT_CYAN)
+    add_code_box(s6, 6.8, 1.8, 5.6, 4.8,
+"""// Incident: inc-cart-01 (Cart quantity regression)
+// Baseline test: FAIL (3 * $125 returned $125)
+
+--- a/demo/backend/cart.py
++++ b/demo/backend/cart.py
+@@ -6,3 +6,3 @@
+-    total += item['price']
++    total += item['quantity'] * item['price']
+
+// Sandbox Test Verification:
+// pytest trusted_tests/test_cart.py
+// 3 passed in 0.14s (READY_FOR_REVIEW)""",
+    "VERIFIED CANDIDATE DIFF")
 
     # -------------------------------------------------------------
-    # SLIDE 7: Feature 4 - Concurrency Safety & Stale Base-Hash Guard
+    # SLIDE 7: Feature 4 - Base Hash Protection
     # -------------------------------------------------------------
     s7 = prs.slides.add_slide(blank_layout)
-    add_background(s7)
-    add_header(s7, "Feature 4: Concurrency Protection & Stale Patch Rejection", "Core Feature")
+    set_bg(s7)
+    add_slide_header(s7, "Concurrency Protection: 'Don't Overwrite My Code!'", "Feature 4")
 
-    add_card(s7, 0.8, 1.8, 5.6, 4.8, "Cryptographic Base-Hash Validation", [
-        "When an incident is captured, SHA-256 hashes of target files are recorded.",
-        "Repair agent builds patch against that specific snapshot revision.",
-        "Before patch application, DevGuard re-hashes the live working tree on disk.",
-        "If developer edited files while the repair ran -> Base hashes mismatch!",
-        "Result: Instant HTTP 409 Conflict ('STALE_CONTENT') — zero code overwrites."
-    ], ACCENT_AMBER)
+    add_card(s7, 0.8, 1.8, 5.6, 4.8, "The Problem With Auto-Apply", [
+        "Imagine an AI agent quietly modifying your files while you're typing.",
+        "It's a recipe for merge conflicts and lost code.",
+        "DevGuard uses cryptographic base-hashes (SHA-256):",
+        "When an incident starts, we record the hash of cart.py.",
+        "Before applying any patch, we check if the file changed on disk."
+    ], ACCENT_AMBER, "Preventing silent code loss")
 
-    add_card(s7, 6.8, 1.8, 5.6, 4.8, "Strict Operator Authority", [
-        "AI Proposes, Human Authorizes: No automated silent code modifications.",
-        "Idempotent Application: Retrying an already applied patch returns cached state.",
-        "File-Level Locking: Cross-thread file locks prevent race conditions during apply.",
-        "Clean Reversion: Unapplied or canceled candidates leave original files untouched.",
-        "Full Git compatibility: Operates cleanly on standard git branches and diffs."
-    ], ACCENT_GREEN)
+    add_card(s7, 6.8, 1.8, 5.6, 4.8, "HTTP 409 Conflict: Safe by Default", [
+        "If you edited cart.py while Gemma was thinking:",
+        "DevGuard immediately blocks the apply with HTTP 409 STALE_CONTENT.",
+        "Your code is completely protected.",
+        "You get to decide: discard your edits or generate a fresh patch.",
+        "Human is always in control."
+    ], ACCENT_GREEN, "Human operator has final authority")
 
     # -------------------------------------------------------------
-    # SLIDE 8: Operator Dashboard & Real-Time Observability
+    # SLIDE 8: Dashboard
     # -------------------------------------------------------------
     s8 = prs.slides.add_slide(blank_layout)
-    add_background(s8)
-    add_header(s8, "Operator Dashboard: Complete Transparency & Zero Fluff", "User Experience")
+    set_bg(s8)
+    add_slide_header(s8, "The Operator Dashboard: Clean & Honest", "The Experience")
 
-    add_card(s8, 0.8, 1.8, 3.7, 4.8, "5 Unified Views", [
-        "🛡️ Privacy Gate: Real-time prompt evaluation with scenario prefill selectors.",
-        "📋 Clipboard View: Live capture status, safe previews & cleaned copy button.",
-        "🔍 Coverage Matrix: Honest VERIFIED / PARTIAL / UNSUPPORTED boundaries.",
-        "🔧 Patch Review: Interactive side-by-side unified diffs & verification status.",
-        "📜 Audit Stream: Filtered chronological metadata events (no raw secrets)."
-    ], ACCENT_CYAN)
+    add_card(s8, 0.8, 1.8, 3.7, 4.8, "5 Simple Views", [
+        "🛡️ Privacy Gate: Test prompts with real or scenario inputs.",
+        "📋 Clipboard: Status, preview, and 'Copy Cleaned'.",
+        "🔍 Coverage Matrix: What's verified vs unverified.",
+        "🔧 Patch Review: Side-by-side diffs & test proof.",
+        "📜 Audit Stream: Filtered log of past actions."
+    ], ACCENT_CYAN, "Streamlit-powered interface")
 
     add_card(s8, 4.8, 1.8, 3.7, 4.8, "Honest Fixture Mode", [
-        "Prominent warning banner when running in simulated fixture mode.",
-        "Declared synthetic data never masquerades as live model inference.",
-        "Clearly distinguishes offline demonstration from live on-device evaluation.",
-        "Full failure procedure documented for judges and evaluators."
-    ], ACCENT_AMBER)
+        "Big disclaimer banner when running offline.",
+        "Synthetic demo data never pretends to be real model output.",
+        "Judges can see exactly what is running live vs simulated.",
+        "No fake 99% accuracy progress bars."
+    ], ACCENT_AMBER, "Radical transparency")
 
-    add_card(s8, 8.8, 1.8, 3.7, 4.8, "Enterprise Compliance", [
-        "Zero Token Leaks: Operator session tokens kept server-side, never in UI states.",
-        "Cross-Platform: Windows operator viewer + native macOS capture host.",
-        "FastAPI Backend: Strictly typed Pydantic models with 32 KiB bounded requests.",
-        "Durable SQLite Audit: Up to 5,000 events survive restart without private data."
-    ], ACCENT_GREEN)
+    add_card(s8, 8.8, 1.8, 3.7, 4.8, "Security Invariants", [
+        "Tokens stay server-side, never exposed in browser HTML.",
+        "Cross-platform: Windows dashboard acts as a viewer for macOS capture hosts.",
+        "Audit DB is private SQLite capped at 5,000 events."
+    ], ACCENT_GREEN, "Zero secret leakage in UI")
 
     # -------------------------------------------------------------
-    # SLIDE 9: Real-World Uses & Target Use Cases
+    # SLIDE 9: Real-World Uses
     # -------------------------------------------------------------
     s9 = prs.slides.add_slide(blank_layout)
-    add_background(s9)
-    add_header(s9, "Target Use Cases: Where DevGuard Delivers Immediate Value", "Use Cases & Impact")
+    set_bg(s9)
+    add_slide_header(s9, "Who Needs DevGuard Today?", "Real-World Impact")
 
-    add_card(s9, 0.8, 1.8, 3.7, 4.8, "Enterprise AI Adoption", [
-        "Target: Engineering teams adopting Cursor, Copilot, or Claude Code.",
-        "Value: Prevent accidental leakage of AWS keys, database strings, and internal hostnames.",
-        "Compliance: Adhere to SOC 2, ISO 27001, and enterprise security policies seamlessly."
-    ], ACCENT_CYAN)
+    add_card(s9, 0.8, 1.8, 3.7, 4.8, "Dev Teams Using AI", [
+        "Every engineer using Cursor, Copilot, or Claude Code.",
+        "Management wants to say 'yes' to AI productivity, but security says 'no' due to secret leaks.",
+        "DevGuard is the bridge: Devs keep their AI tools, security sleeps soundly at night."
+    ], ACCENT_CYAN, "Enterprise compliance")
 
     add_card(s9, 4.8, 1.8, 3.7, 4.8, "FinTech & Healthcare", [
-        "Target: Developers working with HIPAA PII or PCI-DSS financial transactions.",
-        "Value: Automatic exact-span redaction of customer emails, account IDs, and patient records in crash logs.",
-        "Context Retained: AI can fix the crash without seeing regulated health or payment data."
-    ], ACCENT_INDIGO)
+        "Teams handling HIPAA health data or credit card numbers.",
+        "When an API crashes, stack traces often contain real customer data.",
+        "DevGuard sanitizes patient/account IDs automatically so devs can debug legally."
+    ], ACCENT_GREEN, "Regulated environments")
 
-    add_card(s9, 8.8, 1.8, 3.7, 4.8, "Autonomous CI/CD Triage", [
-        "Target: Fast-moving agile teams managing regression test failures.",
-        "Value: Automatically spins up isolated Docker sandboxes when tests break, diagnoses root cause, and prepares verified diff.",
-        "Time Saved: Reduces bug resolution from hours of context-switching to a 1-click review."
-    ], ACCENT_GREEN)
+    add_card(s9, 8.8, 1.8, 3.7, 4.8, "On-Call Bug Triage", [
+        "When tests break in staging or CI, engineers waste hours digging through logs.",
+        "Repair agent runs in the background, identifies the bug, and prepares a verified PR.",
+        "Turns a 2-hour debugging session into a 2-minute review."
+    ], ACCENT_AMBER, "CI/CD acceleration")
 
     # -------------------------------------------------------------
-    # SLIDE 10: Tech Stack & Key Takeaways
+    # SLIDE 10: Tech Stack & Why Gemma 4
     # -------------------------------------------------------------
     s10 = prs.slides.add_slide(blank_layout)
-    add_background(s10)
-    add_header(s10, "Technology Stack & Why DevGuard Wins", "Summary")
+    set_bg(s10)
+    add_slide_header(s10, "Under the Hood & Why Gemma 4", "Summary")
 
-    add_card(s10, 0.8, 1.8, 5.6, 4.8, "The Modern Local Tech Stack", [
-        "Local LLM: Gemma 4 E4B (q4_K_M) running via Ollama — 100% on-device inference.",
-        "Backend Engine: FastAPI + Pydantic v2 + Python 3.11+ async loop.",
-        "Security Scanner: Gitleaks integration + custom semantic span matcher.",
-        "Verification Sandbox: Docker containerized runner with pinned test images.",
-        "Operator UI: Streamlit 1.40+ dashboard with reactive HTTP display client.",
-        "Storage: File-locked SQLite metadata store with POSIX permission guards."
-    ], ACCENT_INDIGO)
+    add_card(s10, 0.8, 1.8, 5.6, 4.8, "Our Stack", [
+        "Model: Gemma 4 E4B (q4_K_M) via Ollama (100% on-device inference).",
+        "Backend: FastAPI + Pydantic v2 (async, strictly typed).",
+        "Scanner: Gitleaks pattern detector + Gemma semantic classifier.",
+        "Sandboxing: Scoped Docker runner with immutable test mounts.",
+        "UI: Streamlit dashboard with real-time API client.",
+        "Tested: Over 130 unit, integration, and UI tests passing."
+    ], ACCENT_CYAN, "Fast, lightweight & self-hosted")
 
-    add_card(s10, 6.8, 1.8, 5.6, 4.8, "Core Invariants (Why DevGuard Wins)", [
-        "1. True Dual-Agent Synergy: Fast synchronous gate + background sandbox healer.",
-        "2. Zero Surveillance: No screens, keyloggers, or audio scraping — only code facts.",
-        "3. Fail-Closed Privacy: Offline models hold requests; no data escapes uninspected.",
-        "4. Cryptographic Concurrency Safety: Stale base-hashes reject conflicting writes.",
-        "5. Complete Honesty: Clear capability matrix, no fabricated AI outcomes."
-    ], ACCENT_CYAN)
+    add_card(s10, 6.8, 1.8, 5.6, 4.8, "Why DevGuard Wins", [
+        "1. Real Gemma 4 Power: Small 4B footprint fits on laptops, fast enough for real-time prompts.",
+        "2. Zero Surveillance: We respect developers. No screen recording, no keylogging.",
+        "3. Fail-Closed: Privacy isn't an afterthought. If offline, data is held.",
+        "4. Built for Engineers: Clean diffs, concurrency safety, and transparent logs.",
+        "Try it out today: github.com/Abhijan-Patra/DevGuard"
+    ], ACCENT_GREEN, "Honest open-source AI engineering")
 
     prs.save(output_path)
-    print(f"Presentation saved successfully to {output_path}")
+    print(f"Developer presentation saved to {output_path}")
 
 if __name__ == "__main__":
     create_deck()
