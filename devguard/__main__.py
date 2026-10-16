@@ -30,7 +30,7 @@ def session_token():
         fd = os.open(token_file, flags)
         with os.fdopen(fd) as stream:
             info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077:
+            if not stat.S_ISREG(info.st_mode) or (os.name != "nt" and info.st_mode & 0o077):
                 raise ValueError("Session token must be a private regular file")
             return stream.read(512).strip()
     else:

@@ -33,15 +33,17 @@ def private_database(path):
     path = Path(path).absolute()
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     parent = path.parent.lstat()
-    if (not stat.S_ISDIR(parent.st_mode) or parent.st_mode & 0o077
-            or parent.st_uid != os.getuid()):
+    if not stat.S_ISDIR(parent.st_mode) or (
+        os.name != "nt" and (parent.st_mode & 0o077 or parent.st_uid != os.getuid())
+    ):
         raise AuditUnavailable()
     flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
     fd = os.open(path, flags, 0o600)
     try:
         info = os.fstat(fd)
-        if (not stat.S_ISREG(info.st_mode) or info.st_mode & 0o077 or info.st_nlink != 1
-                or info.st_uid != os.getuid()):
+        if not stat.S_ISREG(info.st_mode) or (
+            os.name != "nt" and (info.st_mode & 0o077 or info.st_nlink != 1 or info.st_uid != os.getuid())
+        ):
             raise AuditUnavailable()
         for suffix in ("-journal", "-wal", "-shm"):
             if Path(str(path) + suffix).is_symlink():
