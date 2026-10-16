@@ -33,6 +33,7 @@ def _clear_results():
 
 def main():
     apply_design()
+    live_error=None
     with st.sidebar:
         st.markdown('<div class="brand"><span class="brand-mark">D</span><div><div class="brand-name">DevGuard</div><div class="brand-sub">LOCAL OPERATOR WORKSPACE</div></div></div>',unsafe_allow_html=True)
         st.subheader('Data source')
@@ -40,7 +41,9 @@ def main():
         st.session_state.app_mode=mode
         if mode==LIVE:
             with st.expander('Connection settings',expanded=not bool(st.session_state.get('session_token') or st.session_state.get('local_operator_token'))):
-                base_url=st.text_input('Base URL',value=st.session_state.get('backend_url','http://127.0.0.1:8765/api/v1'))
+                previous_url=st.session_state.get('backend_url','http://127.0.0.1:8765/api/v1')
+                base_url=st.text_input('Base URL',value=previous_url)
+                if base_url!=previous_url:st.session_state.pop('local_operator_token',None)
                 st.session_state.backend_url=base_url
                 manual=st.text_input('Operator Session Token',type='password',value=st.session_state.get('session_token',''),help='Manual enrolment. Never share this token in chat or commit it.')
                 st.session_state.session_token=manual
@@ -78,7 +81,8 @@ def main():
             st.caption('MODEL READY' if health.get('model_ready') else 'MODEL UNAVAILABLE')
             st.markdown('**Gemma 4 E4B**')
             st.caption('One local model · foreground privacy priority')
-        except DevGuardError:
+        except DevGuardError as error:
+            if not client.is_fixture_mode():live_error=error
             st.caption('API NOT CONNECTED')
             st.markdown('**Gemma 4 E4B**')
         st.divider()
@@ -87,6 +91,10 @@ def main():
     with top_left:render_fixture_banner(client.is_fixture_mode())
     with top_right:
         st.button('Refresh status',use_container_width=True,help='Fetch current backend metadata. Does not enable capture or resume repair.')
+    if live_error is not None:
+        st.error(f'Live backend unavailable [{live_error.code}]: {live_error}')
+        st.info('Open connection settings and connect to the actual local DevGuard API. Inspection and operator actions remain unavailable until its status is validated.')
+        return
     {
         'Overview':render_overview_view,
         '🛡️ Privacy Gate':render_privacy_view,

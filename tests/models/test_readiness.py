@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from devguard.api.app import create_app
-from devguard.config import MODEL, Settings
+from devguard.config import MODEL, MODEL_DIGEST, Settings
 from devguard.models.ollama import ModelUnavailable, OllamaClient
 
 TOKEN = "unit-test-token-not-valid-in-production-000"
@@ -60,6 +60,10 @@ def test_shared_runtime_uses_fixed_deterministic_bounded_settings(tools, predict
     async def exercise():
         requests = []
         def handle(request):
+            if request.url.path == '/api/version':
+                return httpx.Response(200, json={'version': 'synthetic'})
+            if request.url.path == '/api/tags':
+                return httpx.Response(200, json={'models': [{'name': MODEL, 'digest': MODEL_DIGEST}]})
             requests.append(json.loads(request.content))
             return httpx.Response(200, json={'message': {'content': 'synthetic'}})
         client = OllamaClient(Settings(TOKEN), transport=httpx.MockTransport(handle))
@@ -70,4 +74,59 @@ def test_shared_runtime_uses_fixed_deterministic_bounded_settings(tools, predict
         assert requests[0]['options'] == {'num_ctx':4096, 'num_predict':predict, 'temperature':0}
         assert requests[0]['model'] == MODEL
         assert requests[0]['think'] is False
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize('digest', [None, 'a' * 64, 'malformed'])
+def test_wrong_or_missing_digest_holds_before_any_input_reaches_inference(digest):
+    async def exercise():
+        posted = []
+        def handle(request):
+            if request.url.path == '/api/version':
+                return httpx.Response(200, json={'version': 'synthetic'})
+            if request.url.path == '/api/tags':
+                return httpx.Response(200, json={'models': [{'name': MODEL, 'digest': digest}]})
+            posted.append(request.content)
+            return httpx.Response(200, json={'message': {'content': 'synthetic'}})
+        client = OllamaClient(Settings(TOKEN), transport=httpx.MockTransport(handle))
+        try:
+            status = await client.inspect()
+            assert not status['model_ready']
+            assert status['reason_code'] == 'MODEL_DIGEST_MISMATCH'
+            with pytest.raises(ModelUnavailable):
+                await client.chat([{'role': 'user', 'content': 'synthetic-private-input'}])
+            assert posted == []
+        finally:
+            await client.close()
+    asyncio.run(exercise())
+
+
+def test_digest_is_rechecked_after_a_queued_request_is_admitted():
+    async def exercise():
+        entered, release = asyncio.Event(), asyncio.Event()
+        digest = [MODEL_DIGEST]
+        posted = []
+        async def handle(request):
+            if request.url.path == '/api/version':
+                return httpx.Response(200, json={'version': 'synthetic'})
+            if request.url.path == '/api/tags':
+                return httpx.Response(200, json={'models': [{'name': MODEL, 'digest': digest[0]}]})
+            posted.append(json.loads(request.content)['messages'][0]['content'])
+            entered.set()
+            await release.wait()
+            return httpx.Response(200, json={'message': {'content': 'synthetic'}})
+        client = OllamaClient(Settings(TOKEN), transport=httpx.MockTransport(handle))
+        try:
+            first = asyncio.create_task(client.chat([{'role': 'user', 'content': 'first'}]))
+            await entered.wait()
+            waiting = asyncio.create_task(client.chat([{'role': 'user', 'content': 'waiting'}]))
+            await asyncio.sleep(0)
+            digest[0] = 'a' * 64
+            release.set()
+            await first
+            with pytest.raises(ModelUnavailable):
+                await waiting
+            assert posted == ['first']
+        finally:
+            await client.close()
     asyncio.run(exercise())

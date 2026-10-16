@@ -38,7 +38,7 @@ Expose current version, capture host, supported scope and last redacted finding.
 
 **Copy cleaned text** is explicit. It verifies expected clipboard version, copies the validated cleaned bytes, records only metadata and suppresses the watcher's own resulting change event. Reject version mismatch with a conflict and leave new content alone. Avoid an unbounded self-scan loop.
 
-The implemented macOS bridge rechecks `changeCount` and ownership immediately around the write, and never retries a lost write automatically. NSPasteboard does not provide an atomic compare-and-swap across all applications, so an inter-application race cannot be eliminated by this prototype. Synthetic adapter tests verify the supervisor's stale-version logic; native capture/write remains an explicit manual test after consent.
+The implemented macOS bridge rechecks `changeCount` and ownership immediately around the write, and never retries a lost write automatically. NSPasteboard does not provide an atomic compare-and-swap across all applications, so an inter-application race cannot be eliminated by this prototype. Synthetic adapter tests verify the supervisor's stale-version logic. Controlled native read/write, cleaned-copy and stale rejection also passed on macOS 26.6.2 with synthetic text after explicit consent; see [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md). This does not eliminate the OS race.
 
 **Guarded send** is a separate synchronous operation. Recheck content, task, destination and policy before delivering. If inspection is still pending, hold it. Unknown task means confidentiality checking only; do not guess relevance. Failure/timeout means REVIEW or BLOCK through the supported route.
 

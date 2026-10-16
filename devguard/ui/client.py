@@ -6,6 +6,7 @@ live backend mode consuming endpoints per docs/API_CONTRACT.md.
 """
 
 from abc import ABC, abstractmethod
+from devguard.config import MODEL
 from copy import deepcopy
 import json
 import re
@@ -397,7 +398,15 @@ class HttpDevGuardClient(BaseDevGuardClient):
                 "model_name": runtime.get("model"), "model_digest": runtime.get("model_digest")}
 
     def get_status(self) -> Dict[str, Any]:
-        return self._request("GET", "/status")
+        status = self._request("GET", "/status")
+        runtime = status.get("runtime") if isinstance(status, dict) else None
+        if (not isinstance(status, dict) or status.get("phase") != "GUARD_AND_CLIPBOARD_IMPLEMENTATION"
+                or not isinstance(runtime, dict)
+                or type(runtime.get("model_ready")) is not bool
+                or runtime.get("model") != MODEL):
+            raise DevGuardError("Live mode requires the actual DevGuard status contract; use Fixture Mode for rehearsal",
+                                code="LIVE_BACKEND_UNVERIFIED")
+        return status
 
     def get_coverage(self) -> List[Dict[str, Any]]:
         return self._request("GET", "/coverage")["capabilities"]
