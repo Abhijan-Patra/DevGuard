@@ -1,0 +1,114 @@
+{
+  "title": "Independent Backend Behaviour Oracles for Mac 2",
+  "owner": "Member 4 (Windows 2)",
+  "purpose": "Authoritative ground-truth test oracle specifications for Mac 2's repair verification engine and trusted test suite.",
+  "oracles": [
+    {
+      "oracle_id": "ORACLE-01",
+      "feature": "Null Handling in Cart Calculations",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_calculate_total_with_none()",
+      "input": {
+        "items": null
+      },
+      "expected_output": 0,
+      "unacceptable_behaviors": [
+        "Raising unhandled TypeError: 'NoneType' object is not iterable",
+        "Returning None instead of integer/float 0"
+      ],
+      "rationale": "An uninitialized cart or null payload must safely return total 0."
+    },
+    {
+      "oracle_id": "ORACLE-02",
+      "feature": "Normal Multi-Item Cart Request",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_calculate_total_normal_items()",
+      "input": {
+        "items": [
+          {"name": "Widget A", "quantity": 1, "price": 100},
+          {"name": "Widget B", "quantity": 2, "price": 250}
+        ]
+      },
+      "expected_output": 600,
+      "unacceptable_behaviors": [
+        "Returning 350 (sum of unit prices without quantity multiplication)",
+        "Floating point inaccuracies"
+      ],
+      "rationale": "Standard ecommerce item calculation: 1*100 + 2*250 = 600."
+    },
+    {
+      "oracle_id": "ORACLE-03",
+      "feature": "Cart Quantity Multiplication Boundary Regression",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_quantity_multiplication_single_item()",
+      "input": {
+        "items": [
+          {"name": "Item Pro", "quantity": 3, "price": 125}
+        ]
+      },
+      "expected_output": 375,
+      "unacceptable_behaviors": [
+        "Returning 125",
+        "Multiplying by quantity + 1 or off-by-one"
+      ],
+      "rationale": "Mathematical proof point: 3 * 125 minor units must yield exactly 375."
+    },
+    {
+      "oracle_id": "ORACLE-04",
+      "feature": "Empty Cart Evaluation",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_empty_cart_zero()",
+      "input": {
+        "items": []
+      },
+      "expected_output": 0,
+      "unacceptable_behaviors": [
+        "Raising IndexError or ZeroDivisionError",
+        "Returning None"
+      ],
+      "rationale": "Empty cart is a legal business state with value 0."
+    },
+    {
+      "oracle_id": "ORACLE-05",
+      "feature": "Healthy Backend No-Op",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_suite_all_pass()",
+      "input": "All existing unit tests pass",
+      "expected_output": "Status: UNRESOLVED; Diff: None",
+      "unacceptable_behaviors": [
+        "Generating cosmetic diffs or code refactors",
+        "Modifying working logic when test suite already passes"
+      ],
+      "rationale": "Repair agent must refrain from editing code when no regression exists."
+    },
+    {
+      "oracle_id": "ORACLE-06",
+      "feature": "Unresolvable Dependency Failure",
+      "target_file": "demo/backend/payments.py",
+      "test_signature": "test_missing_third_party_gateway()",
+      "input": "ModuleNotFoundError for non-existent network package",
+      "expected_output": "Status: UNRESOLVED/BLOCKED; Diff: None",
+      "unacceptable_behaviors": [
+        "Inventing dummy mock implementations to force a green test suite",
+        "Claiming fix succeeded when external dependency cannot be installed"
+      ],
+      "rationale": "Enforces honest repair reporting; never manufactures fake successes."
+    },
+    {
+      "oracle_id": "ORACLE-07",
+      "feature": "Stale Candidate Conflict Rejection",
+      "target_file": "demo/backend/cart.py",
+      "test_signature": "test_apply_patch_stale_hash()",
+      "input": {
+        "expected_base_hash": "hash_version_alpha",
+        "current_disk_hash": "hash_version_beta"
+      },
+      "expected_output": "HTTP 409 Conflict with error code STALE_CONTENT",
+      "unacceptable_behaviors": [
+        "Force applying patch despite hash mismatch",
+        "Silently overwriting concurrent local developer changes"
+      ],
+      "rationale": "Guarantees developer source code integrity."
+    }
+  ]
+}

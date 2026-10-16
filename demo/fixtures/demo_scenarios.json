@@ -1,0 +1,88 @@
+{
+  "demo_title": "DevGuard Live Demonstration Sequence",
+  "disclaimer": "All keys, emails, and hostnames are declared synthetic test fixtures using .invalid domains.",
+  "scenarios": [
+    {
+      "step_number": 1,
+      "title": "Privacy Gate - Diagnostic Log Sanitization",
+      "task_description": "Developer diagnoses a login exception containing customer PII and a synthetic access token.",
+      "request_payload": {
+        "project_id": "project-demo-ecommerce",
+        "task": "Diagnose the login exception",
+        "surface": "explicit_prompt",
+        "destination_id": "configured-coding-client",
+        "content_version": 1,
+        "text": "ValueError at auth.py:54 in authenticate: Invalid credentials for user contact@enterprise.invalid with token ghp_synthetic_pat_1234567890abcdef. Please check why validation failed."
+      },
+      "expected_decision": {
+        "request_id": "req-demo-privacy-101",
+        "content_version": 1,
+        "policy_revision": "policy-v1",
+        "destination_id": "configured-coding-client",
+        "decision": "SANITIZE",
+        "safe_preview": "ValueError at auth.py:54 in authenticate: Invalid credentials for user [CUSTOMER_EMAIL_1] with token [REDACTED_SECRET_TOKEN_1]. Please check why validation failed.",
+        "reason_codes": ["PERSONAL_DATA", "CREDENTIAL"],
+        "finding_ids": ["finding-demo-email-01", "finding-demo-pat-01"],
+        "status": "READY",
+        "expires_at": "2026-10-16T12:30:00Z",
+        "delivered": false
+      },
+      "demonstration_point": "All diagnostic context (file, line number, exception type) is preserved while private customer and credential bytes are safely redacted before assistant delivery."
+    },
+    {
+      "step_number": 2,
+      "title": "Opt-In macOS Text Clipboard Inspection & Cleaned Copy",
+      "task_description": "Developer copies a database connection string containing a raw database password.",
+      "clipboard_initial_payload": "DATABASE_URL=\"postgres://demo_admin:SuperSecretPass2026!@db.internal.invalid:5432/app_db\"",
+      "expected_clipboard_state": {
+        "capture_host_id": "mac-m4-workstation",
+        "content_version": 104,
+        "state": "SENSITIVE",
+        "enabled": true,
+        "redacted_summary": "Password pattern detected in database connection string",
+        "finding_ids": ["finding-clip-104a"],
+        "can_copy_cleaned": true,
+        "safe_preview": "DATABASE_URL=\"postgres://demo_admin:REDACTED_PASSWORD_01@db.internal.invalid:5432/app_db\""
+      },
+      "operator_action": "Click 'Copy Cleaned Text' in UI or call POST /clipboard/copy-cleaned",
+      "expected_result": {
+        "copied": true,
+        "new_content_version": 105,
+        "new_state": "CLEAR_FOR_CAPTURE_SCOPE"
+      },
+      "demonstration_point": "Opt-in watcher warns the developer; Copy Cleaned action replaces the OS clipboard with sanitized string without triggering recursive scan loops."
+    },
+    {
+      "step_number": 3,
+      "title": "Backend Repair - Reproducible Cart Regression & Sandbox Test",
+      "task_description": "Demo backend has a cart calculation bug where item price is added once instead of multiplied by quantity.",
+      "incident": {
+        "incident_id": "inc-demo-cart-01",
+        "project_id": "project-demo-ecommerce",
+        "title": "Cart quantity calculation regression in demo/backend/cart.py",
+        "signal": "AssertionError: calculate_cart_total([{'quantity': 3, 'price': 125}]) returned 125, expected 375",
+        "source_revision": "git-commit-initial-cart"
+      },
+      "run_observations": [
+        "Identified line 8 in demo/backend/cart.py: `total += item['price']` ignores `item['quantity']`",
+        "Generated candidate patch multiplying quantity and price",
+        "Ran independent test runner in isolated Docker sandbox: pytest trusted_tests/test_cart.py (3/3 PASSED)"
+      ],
+      "candidate_diff": "--- a/demo/backend/cart.py\n+++ b/demo/backend/cart.py\n@@ -6,3 +6,3 @@\n-    total += item['price']\n+    total += item['quantity'] * item['price']\n",
+      "demonstration_point": "Gemma analyzes structured test signals and diffs without visual screen scraping. Sandboxed tests independently verify the candidate before operator review."
+    },
+    {
+      "step_number": 4,
+      "title": "Stale Conflict Rejection (Safety Gate)",
+      "task_description": "Developer makes a concurrent local modification while repair candidate was pending.",
+      "action": "POST /patches/{id}/apply with mismatched expected_base_hash",
+      "expected_response": {
+        "error": {
+          "code": "STALE_CONTENT",
+          "message": "Base file hash mismatch; source has been modified since candidate generation. Rescan required."
+        }
+      },
+      "demonstration_point": "Guarantees zero accidental overwrites of developer work."
+    }
+  ]
+}

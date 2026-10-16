@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DevGuard Evaluation Result Record Template",
+  "type": "object",
+  "required": [
+    "case_id",
+    "source_revision",
+    "timestamp",
+    "host_class",
+    "model_runtime_digest",
+    "policy_revision",
+    "expected_observation",
+    "actual_observation",
+    "status",
+    "safe_evidence_ref",
+    "elapsed_seconds",
+    "limitations"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Identifier matching case catalogue (e.g. P01, C01, B01, W01)"
+    },
+    "source_revision": {
+      "type": "string",
+      "description": "Git commit SHA or release tag under test"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO-8601 timestamp of evaluation"
+    },
+    "host_class": {
+      "type": "string",
+      "enum": ["macOS-AppleSilicon", "Windows-Antigravity", "Linux-CI"],
+      "description": "Hardware and OS environment of execution"
+    },
+    "model_runtime_digest": {
+      "type": "string",
+      "description": "Pinned digest of Gemma 4 E4B (e.g. gemma4:e4b-it-q4_K_M sha256:...)"
+    },
+    "policy_revision": {
+      "type": "string",
+      "description": "Security policy version applied (e.g. policy-v1)"
+    },
+    "expected_observation": {
+      "type": "string",
+      "description": "Defined expected output, state, or gate action"
+    },
+    "actual_observation": {
+      "type": "string",
+      "description": "Actual observation recorded. Must NEVER contain unredacted secrets or private keys."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["UNRUN", "PASS", "FAIL", "BLOCKED"],
+      "description": "Evaluation outcome status"
+    },
+    "safe_evidence_ref": {
+      "type": "string",
+      "description": "Pointer to sanitized event ID, receipt ID, or test report"
+    },
+    "elapsed_seconds": {
+      "type": ["number", "null"],
+      "description": "Execution latency in seconds"
+    },
+    "limitations": {
+      "type": "string",
+      "description": "Honest limitation note or scope boundary observed"
+    }
+  }
+}

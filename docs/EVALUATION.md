@@ -41,14 +41,30 @@ Backend response rules and validation semantics must be specified by Mac owners 
 
 Model observations and host measurements remain separate. No invented confidence values, latency claims or percentages.
 
-## Results record
+## Results record and implementation files
+
+The complete synthetic evaluation specifications, templates, and result records have been scaffolded in the repository:
+
+- **Scenario Specifications:**
+  - Privacy Scenarios: [`evals/cases/privacy_cases.json`](../evals/cases/privacy_cases.json) (P01–P07)
+  - Clipboard Scenarios: [`evals/cases/clipboard_cases.json`](../evals/cases/clipboard_cases.json) (C01–C06)
+  - Backend Repair Scenarios: [`evals/cases/repair_cases.json`](../evals/cases/repair_cases.json) (B01–B08)
+  - Withheld Variants: [`evals/cases/withheld_variants.json`](../evals/cases/withheld_variants.json) (W01–W05)
+- **Results Registry:**
+  - Schema Template: [`evals/results/template.json`](../evals/results/template.json)
+  - Execution Registry: [`evals/results/results_registry.json`](../evals/results/results_registry.json)
+- **Demo Fixtures & Oracles:**
+  - Demo Walkthrough Scenarios: [`demo/fixtures/demo_scenarios.json`](../demo/fixtures/demo_scenarios.json)
+  - Contract Sample Events: [`demo/fixtures/sample_events.json`](../demo/fixtures/sample_events.json)
+  - Mac 2 Backend Oracles: [`demo/fixtures/backend_oracles.json`](../demo/fixtures/backend_oracles.json)
 
 Each case result in `evals/results/` includes: case ID, source revision, timestamp, host class, model/runtime digest, policy revision, expected observation, actual observation, pass/fail/blocked/unrun, safe evidence reference, elapsed time and limitation. Never include raw sensitive originals.
 
-Before code exists, Windows 2 may create JSON scenario records and labelled UI fixtures; mark them `synthetic_fixture: true` and `execution_status: UNRUN`. Actual backend tests are implemented and reviewed by the Mac owners. Do not publish a fixture as a model result.
+All records are marked `synthetic_fixture: true` and `status: UNRUN` until executed against the live local backend by the Mac owners. Do not publish a fixture as a model result.
 
 ## Minimum demonstration gate
 
 P0 privacy/clipboard: real local model, real capture change, explicit cleaned-copy flow, one actual managed delivery with leakage inspection, benign case, crash/pending case and honest coverage view.
 
 P1 repair: at least one independent baseline failure, real model-selected evidence/tool actions, source patch, unchanged independent verifier passing, scan of exports and stale candidate rejection. If P1 is unfinished, say so in the submission.
+

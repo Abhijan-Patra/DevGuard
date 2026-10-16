@@ -1,0 +1,105 @@
+[
+  {
+    "id": "C01",
+    "scenario_name": "Clipboard capture disabled",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "macOS",
+    "initial_state": "OFF",
+    "operator_action": "POST /clipboard/disable",
+    "synthetic_clipboard_content": "aws_secret_key = 'FAKE_EXAMPLE_SECRET_001'",
+    "expected_state": "OFF",
+    "expected_behavior": "No ongoing clipboard polling or reads occur; any transient in-memory original strings are wiped immediately.",
+    "what_remains_useful": "Zero CPU overhead and zero risk of unintended text collection when capture is toggled off.",
+    "withheld_variant": false,
+    "notes": "Validates explicit opt-in privacy invariant: DevGuard never monitors the clipboard without explicit local consent."
+  },
+  {
+    "id": "C02",
+    "scenario_name": "Repeated same counter/content",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "macOS",
+    "initial_state": "CHECKING",
+    "counter_event": "Change count unchanged at 42",
+    "synthetic_clipboard_content": "def test_calculate_total(): assert calculate_total([10, 20]) == 30",
+    "expected_state": "CLEAR_FOR_CAPTURE_SCOPE",
+    "expected_behavior": "Change count match triggers immediate deduplication; no repeated Gemma or Gitleaks inference invocation for duplicate text within same scope.",
+    "what_remains_useful": "Preserves inference queue budget and local battery/CPU while keeping text accessible.",
+    "withheld_variant": false,
+    "notes": "Protects against repetitive polling loops on active clipboards."
+  },
+  {
+    "id": "C03",
+    "scenario_name": "Copy A then B before A finishes (Rapid Copy Overwrite)",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "macOS",
+    "sequence": [
+      {
+        "step": 1,
+        "content_version": 10,
+        "content": "export STRIPE_API_KEY='sk_test_synthetic_stripe_token_01'"
+      },
+      {
+        "step": 2,
+        "content_version": 11,
+        "content": "git status --short"
+      }
+    ],
+    "expected_state": "CLEAR_FOR_CAPTURE_SCOPE",
+    "expected_behavior": "Gemma evaluation of version 10 is invalidated/canceled; only current version 11 sets the final state. Version 10 cannot overwrite the clipboard or publish obsolete findings.",
+    "what_remains_useful": "Benign shell command in version 11 is immediately ready without stale sensitive warnings.",
+    "withheld_variant": false,
+    "notes": "Prevents race conditions in clipboard event processing."
+  },
+  {
+    "id": "C04",
+    "scenario_name": "Explicit Copy cleaned text",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "macOS",
+    "content_version": 14,
+    "initial_state": "SENSITIVE",
+    "synthetic_original": "DATABASE_URL=\"postgres://app_user:SuperSecretPassword123@db.internal.invalid:5432/orders\"",
+    "operator_action": "POST /clipboard/copy-cleaned",
+    "expected_state": "CLEAR_FOR_CAPTURE_SCOPE",
+    "expected_cleaned_text": "DATABASE_URL=\"postgres://app_user:REDACTED_PASSWORD_01@db.internal.invalid:5432/orders\"",
+    "expected_behavior": "Cleaned text replaces clipboard contents; internal hash marker prevents a recursive self-scan loop on the synthetic redaction marker.",
+    "what_remains_useful": "Developer can paste cleaned database connection string directly into assistant chat without leaking production credentials.",
+    "withheld_variant": false,
+    "notes": "Demonstrates the core user workflow: detect, sanitize, and supply safe text to clipboard with operator confirmation."
+  },
+  {
+    "id": "C05",
+    "scenario_name": "Large text, image or unsupported host",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "Windows / non-text / 100KB payload",
+    "synthetic_input_type": "image/png OR utf-8 string > 32 KiB",
+    "expected_state": "SKIPPED",
+    "expected_behavior": "Explicitly labelled SKIPPED or UNSUPPORTED; never falsely marked as 'CLEAR/SAFE'. Oversize or binary payloads are ignored without memory explosion.",
+    "what_remains_useful": "Clear audit log notice indicating payload exceeded capture budget or was non-text.",
+    "withheld_variant": false,
+    "notes": "Honest limitation enforcement: does not attempt image OCR or universal clipboard scraping."
+  },
+  {
+    "id": "C06",
+    "scenario_name": "Paste into unrelated application",
+    "category": "CLIPBOARD",
+    "synthetic_fixture": true,
+    "execution_status": "UNRUN",
+    "host_platform": "macOS / Windows",
+    "action": "User pastes uncleaned clipboard into Slack or TextEdit prior to DevGuard evaluation",
+    "expected_state": "UNSUPPORTED",
+    "expected_behavior": "DevGuard explicitly states it cannot block OS-wide arbitrary pastes before analysis completes. Managed gates (Codex hooks, DevGuard API) protect destination channels.",
+    "what_remains_useful": "Accurate security posture; does not claim miraculous OS-kernel-level universal paste interception.",
+    "withheld_variant": false,
+    "notes": "Crucial requirement from AGENTS.md and COVERAGE.md: do not overclaim universal interception."
+  }
+]
