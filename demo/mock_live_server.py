@@ -107,19 +107,37 @@ class DevGuardMockHandler(BaseHTTPRequestHandler):
         # Worker status
         if path == "/api/v1/status":
             return self._send_json(200, {
-                "worker_id": "worker-live-demo-m4",
-                "model_state": "READY",
-                "model_name": "gemma4:e4b-it-q4_K_M",
-                "clipboard_watcher": "ACTIVE" if STATE["clipboard_enabled"] else "OFF",
-                "enrolled_host": "mac-m4-workstation",
-                "windows_native_capture": "UNSUPPORTED",
-                "capabilities": ["guard.evaluate", "guard.deliver", "clipboard.status", "repair.investigate"],
+                "phase": "GUARD_AND_CLIPBOARD_IMPLEMENTATION",
+                "runtime": {
+                    "server_ready": True,
+                    "server_version": "0.40.4",
+                    "model": "gemma4:e4b-it-q4_K_M",
+                    "model_ready": True,
+                    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+                    "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+                    "reason_code": "MODEL_READY",
+                },
+                "inference_queue": {"queued": 0, "active": 0, "closed": False},
+                "clipboard": {
+                    "capture_host_id": "mac-m4-workstation",
+                    "content_version": STATE["clipboard_version"],
+                    "state": STATE["clipboard_state"],
+                    "enabled": STATE["clipboard_enabled"],
+                    "implemented": True,
+                },
+                "guard_implemented": True,
+                "credential_scanner_available": True,
+                "audit": {"durable": True, "retention_events": 5000},
+                "repair_implemented": True,
                 "repair": {
                     "configured": True,
                     "available": True,
-                    "state": "RUNNING",
-                    "reason_code": "READY",
+                    "state": "PAUSED",
+                    "reason_code": "MANUAL_IDLE",
                 },
+                "worker_id": "worker-live-demo-m4",
+                "windows_native_capture": "UNSUPPORTED",
+                "capabilities": ["guard.evaluate", "guard.deliver", "clipboard.status", "repair.investigate"],
             })
 
         # Clipboard status

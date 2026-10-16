@@ -73,6 +73,18 @@ class TestMockLiveServer(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertTrue(copy_res["copied"])
 
+    def test_http_client_status_envelope_compatibility(self):
+        from devguard.ui.client import HttpDevGuardClient
+        client = HttpDevGuardClient(base_url=f"http://127.0.0.1:{TEST_PORT}/api/v1")
+        status = client.get_status()
+        self.assertEqual(status["phase"], "GUARD_AND_CLIPBOARD_IMPLEMENTATION")
+        self.assertTrue(status["runtime"]["model_ready"])
+        self.assertEqual(status["runtime"]["model"], "gemma4:e4b-it-q4_K_M")
+
+        health = client.get_health()
+        self.assertTrue(health["model_ready"])
+        self.assertEqual(health["model_name"], "gemma4:e4b-it-q4_K_M")
+
 
 if __name__ == "__main__":
     unittest.main()
