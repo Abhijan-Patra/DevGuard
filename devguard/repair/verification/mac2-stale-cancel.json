@@ -1,0 +1,134 @@
+{
+  "run": {
+    "run_id": "run-ad27243450544dd7813555aeb1532f69",
+    "incident_id": "incident-ffdf005fd70048d6916b8bf46454c884",
+    "project_id": "demo-cart",
+    "state": "READY_FOR_REVIEW",
+    "candidate_id": "patch-b886596a99e64d2e8f959bd3fa439783",
+    "baseline": "FAIL",
+    "verification": "PASS",
+    "reason_code": null,
+    "model": {
+      "name": "gemma4:e4b-it-q4_K_M",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+    },
+    "completed_tools": [
+      "read_allowed_file",
+      "run_named_test",
+      "read_allowed_file",
+      "propose_patch",
+      "run_named_test"
+    ]
+  },
+  "applied_to_original_repository": false,
+  "queued_cancellation": {
+    "state": "CANCELED",
+    "candidate_created": false
+  },
+  "candidate": {
+    "candidate_id": "patch-b886596a99e64d2e8f959bd3fa439783",
+    "run_id": "run-ad27243450544dd7813555aeb1532f69",
+    "base_revision": "cef5e9ebb12e3b894a29bb1c9532a5def7dc87be15ec9f1b5794a94405b456b6",
+    "candidate_hash": "a585cbd7165a96bce401f204d66b5c20848f94a93db627b083b93a1c001397ef",
+    "state": "READY_FOR_REVIEW",
+    "verification": "PASS",
+    "base_hashes": {
+      "cart.py": "70e7b8340695e252156275d67ca45dd1484933cfa634dbee22cd1181799e0bb8",
+      "main.py": "9b5cadaff8779ffbb58217dfe1e28f4615dbf991702cfeecfc1cb7ca555a5f12"
+    }
+  },
+  "stale_apply": {
+    "http_status": 409,
+    "reason_code": "STALE_SOURCE",
+    "concurrent_edit_preserved": true,
+    "run_after_attempt": "OBSOLETE"
+  },
+  "model_runtime": {
+    "server_ready": true,
+    "server_version": "0.40.5",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+  },
+  "audit_event_count": 25,
+  "guard_checks": [
+    {
+      "surface": "file_read",
+      "input_bytes": 184,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "file_read",
+      "input_bytes": 482,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 1386,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 309,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 1442,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 621,
+      "decision": "SANITIZE",
+      "reason_codes": [
+        "PERSONAL_DATA"
+      ]
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 135,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 143,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 347,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 347,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 347,
+      "decision": "ALLOW",
+      "reason_codes": []
+    }
+  ],
+  "native_format_failures": 0,
+  "last_native_action_issue": null,
+  "worker_stopped": true,
+  "original_source_unchanged": true,
+  "trusted_tests_unchanged": true,
+  "audit_reopen_event_count": 25,
+  "elapsed_seconds": 42.19,
+  "evidence_scope": "Measured real local Gemma + guard + restricted Docker; public synthetic cart only. Metadata export; not a runtime answer.",
+  "implementation_revision": "e02172b + then-uncommitted Mac 2 trial/recovery changes, later committed as c457af1",
+  "measurement_date": "2026-10-16"
+}

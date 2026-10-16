@@ -1,6 +1,7 @@
 """One-file candidates for an atomic first implementation; originals stay in memory."""
 
 import difflib
+
 try:
     import fcntl
 except ImportError:
