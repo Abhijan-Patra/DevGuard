@@ -115,3 +115,10 @@ Windows 1 builds views from examples and synthetic events under a persistent FIX
 ## Integrated repair setup
 
 `GET /incidents` returns `{ "incidents": [], "repair": { "configured": false, "available": false, "state": "UNAVAILABLE", "reason_code": "REPAIR_NOT_CONFIGURED" } }` until trusted startup configures a real service. `GET /status` includes `repair` and `audit` metadata. Existing mutation/run/patch routes remain operator-only and return a held dependency error when unconfigured. `POST /repair/initialize` retries the startup-supplied configuration; no request can choose a root or verifier image. See [integration status](INTEGRATION_STATUS.md).
+
+
+## Measured model package pin
+
+The authenticated status `runtime` now adds `expected_model_digest` and `reason_code` (`MODEL_READY`, `MODEL_NOT_INSTALLED`, `MODEL_DIGEST_MISMATCH` or `MODEL_RUNTIME_UNAVAILABLE`). A matching tag alone no longer makes `model_ready` true. The shared model client rechecks the installed digest after queue admission and before each inference POST; mismatch holds without posting the input. These are additive status fields; request and repair adapter interfaces remain unchanged.
+
+The live dashboard validates the actual status envelope (`phase` plus typed `runtime`) before rendering text/action controls. Incompatible standalone mock servers require labelled Fixture Mode for rehearsal; this compatibility check does not authenticate arbitrary local software.

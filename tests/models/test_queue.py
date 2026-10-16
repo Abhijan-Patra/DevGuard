@@ -6,7 +6,7 @@ import json
 import httpx
 import pytest
 
-from devguard.config import Settings
+from devguard.config import MODEL, MODEL_DIGEST, Settings
 from devguard.models.ollama import ModelUnavailable, OllamaClient
 from devguard.models.queue import InferenceQueue, QueueUnavailable
 
@@ -98,6 +98,10 @@ def test_http_calls_use_one_queue_and_canceled_waiter_never_reaches_ollama():
         active, release = asyncio.Event(), asyncio.Event()
         received = []
         async def transport(request):
+            if request.url.path == '/api/version':
+                return httpx.Response(200, json={'version': 'synthetic'})
+            if request.url.path == '/api/tags':
+                return httpx.Response(200, json={'models': [{'name': MODEL, 'digest': MODEL_DIGEST}]})
             name = json.loads(request.content)["messages"][0]["content"]
             received.append(name)
             if name == "active":
@@ -132,6 +136,10 @@ def test_client_shutdown_cancels_active_and_waiting_inference():
     async def run():
         entered=asyncio.Event()
         async def transport(request):
+            if request.url.path == '/api/version':
+                return httpx.Response(200, json={'version': 'synthetic'})
+            if request.url.path == '/api/tags':
+                return httpx.Response(200, json={'models': [{'name': MODEL, 'digest': MODEL_DIGEST}]})
             entered.set()
             await asyncio.Event().wait()
         client=OllamaClient(Settings('shutdown-test-only-not-runtime-token-123456'),

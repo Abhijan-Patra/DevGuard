@@ -3,7 +3,7 @@
 import asyncio
 import httpx
 
-from devguard.config import Settings
+from devguard.config import MODEL_DIGEST, Settings
 from devguard.models.queue import InferenceQueue, QueueUnavailable
 
 
@@ -45,12 +45,17 @@ class OllamaClient:
                 (m for m in tags.json().get("models", [])
                  if m.get("name") == self.settings.model), None
             )
+            digest = selected.get("digest") if selected else None
+            ready = selected is not None and digest == MODEL_DIGEST
             return {
                 "server_ready": True,
                 "server_version": version.json().get("version"),
                 "model": self.settings.model,
-                "model_ready": selected is not None,
-                "model_digest": selected.get("digest") if selected else None,
+                "model_ready": ready,
+                "model_digest": digest,
+                "expected_model_digest": MODEL_DIGEST,
+                "reason_code": ("MODEL_READY" if ready else
+                                "MODEL_DIGEST_MISMATCH" if selected else "MODEL_NOT_INSTALLED"),
             }
         except (httpx.HTTPError, ValueError, TypeError, AttributeError):
             return {
@@ -59,6 +64,8 @@ class OllamaClient:
                 "model": self.settings.model,
                 "model_ready": False,
                 "model_digest": None,
+                "expected_model_digest": MODEL_DIGEST,
+                "reason_code": "MODEL_RUNTIME_UNAVAILABLE",
             }
 
     async def chat(self, messages, *, tools=None, output_format=None, priority="background"):
@@ -80,6 +87,11 @@ class OllamaClient:
         self._calls.add(task)
         try:
             async with self.queue.slot(priority):
+                # Check after queue admission: a queued request must not use a
+                # package that changed while it was waiting. No input is posted
+                # to inference when metadata is absent or the digest differs.
+                if not (await self.inspect())["model_ready"]:
+                    raise ModelUnavailable("Pinned local model is unavailable")
                 response = await self._client.post("/api/chat", json=payload)
                 response.raise_for_status()
                 result = response.json()

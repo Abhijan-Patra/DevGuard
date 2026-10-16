@@ -14,7 +14,7 @@ async def run():
     try:
         runtime = await client.inspect()
         if not runtime["model_ready"]:
-            state = "MODEL_NOT_INSTALLED" if runtime["server_ready"] else "SERVER_UNAVAILABLE"
+            state = runtime["reason_code"]
             print(json.dumps({"status": state, "runtime": runtime}))
             return 2
         tool = {"type": "function", "function": {

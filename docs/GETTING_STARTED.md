@@ -48,7 +48,7 @@ Disable and clear transient state:
 .venv/bin/python -m devguard.clipboard.cli disable
 ```
 
-The control CLI never prints raw clipboard text. Native capture/copy has not been exercised against the user's clipboard during development; only import/availability and synthetic-adapter tests have run.
+The control CLI never prints raw clipboard text. Controlled native trials with declared synthetic copies passed on both a private named pasteboard and the system clipboard after explicit operator consent. Capture was disabled afterward; preexisting private content was not read. See [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md).
 
 ## Model download and later smoke test
 
@@ -75,3 +75,12 @@ See [API contract](API_CONTRACT.md) and [Mac 1 implementation handoff](MAC_1_IMP
 `local-preview` has no outgoing receiver. Real client delivery requires trusted code enrolment by Mac 2, plus that adapter's actual end-to-end coverage tests. Private inputs must not be sent through an unrelated unguarded tool while relying on this service for protection.
 
 Mac 2 repair routes and the Windows dashboard are integrated. Read [integrated setup](INTEGRATION_STATUS.md) for the optional UI installation, pinned Docker demo configuration, actual checks and pending live trials. Repair uses source/diffs/logs/API probes/tests; clipboard capture remains required.
+
+
+## Reproducible local checks
+
+`python -m devguard.clipboard.smoke` tests a private named Cocoa pasteboard with synthetic text and the actual local model. It does not access the system clipboard by default. System testing requires explicit operator approval and both `--system-clipboard --consent`; that mode replaces the clipboard with synthetic items and disables capture afterward.
+
+`python -m devguard.ui.smoke` exercises the actual local backend/Gemma and all five dashboard views using Streamlit's element tree and synthetic text. A temporary in-process reference receiver checks delivered bytes; no source patch is applied and capture stays OFF.
+
+The runtime enforces the measured model digest, not only the mutable tag. A missing or changed digest reports `model_ready: false` with a fixed reason code and holds inference. Do not alias a different package to bypass this check.
