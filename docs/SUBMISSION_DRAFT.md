@@ -102,17 +102,20 @@ In accordance with our commitment to honest open-source documentation, we explic
 ### 2. Install & Start Backend
 ```powershell
 python -m pip install -r requirements.lock.txt
-python -m devguard.api
+python -m devguard
+# Default port: http://127.0.0.1:8765/api/v1 (session token generated in .devguard/session-token)
 ```
 
 ### 3. Launch Operator Dashboard
 ```powershell
-python -m pip install streamlit httpx pytest
+python -m pip install -r requirements-ui.lock.txt
 python -m streamlit run devguard/ui/app.py
+# Opens dashboard at http://localhost:8501
 ```
 
 ### 4. Run Verification Tests
 ```powershell
+# Run the complete test suite (132 backend/repair tests + 20 UI/QA tests)
 python -m pytest tests/ -v
 ```
 

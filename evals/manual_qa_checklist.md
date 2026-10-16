@@ -26,7 +26,7 @@ This checklist guides manual quality assurance across the DevGuard operator inte
 | :---: | :--- | :--- | :---: |
 | A.1 | Launch Streamlit dashboard (`python -m streamlit run devguard/ui/app.py`) | Browser opens to `http://localhost:8501`. Sidebar displays `🛡️ DevGuard` title, runtime mode radio, navigation list, and model readiness status. | [ ] |
 | A.2 | Check default mode | Persistent banner displays: `⚠️ FIXTURE MODE — simulated presentation data (not an actual model or gate outcome)`. | [ ] |
-| A.3 | Toggle to Live Mode in Sidebar | Base URL input (`http://127.0.0.1:8000/api/v1`) and password-masked session token field appear. Persistent banner switches to `🟢 LIVE MODE`. | [ ] |
+| A.3 | Toggle to Live Mode in Sidebar | Base URL input (`http://127.0.0.1:8765/api/v1`) and password-masked session token field appear. Persistent banner switches to `🟢 LIVE MODE`. | [ ] |
 | A.4 | Click "🔌 Test Connection" with backend offline | Clean, non-crashing error displays: `Connection Error [CONNECTION_FAILED]: Could not connect to DevGuard backend server`. | [ ] |
 
 ---

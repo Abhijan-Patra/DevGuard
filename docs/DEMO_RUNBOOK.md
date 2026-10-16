@@ -18,8 +18,8 @@ Execute this checklist 15 minutes before the presentation starts:
    ```
 2. **Start DevGuard Backend:**
    ```powershell
-   python -m devguard.api
-   # Confirm GET http://127.0.0.1:8000/api/v1/health returns {"status":"ok","model_ready":true}
+   python -m devguard
+   # Confirm GET http://127.0.0.1:8765/api/v1/health returns {"status":"ok","model_ready":true}
    ```
 3. **Launch Operator Dashboard:**
    ```powershell
@@ -31,7 +31,7 @@ Execute this checklist 15 minutes before the presentation starts:
      `total += item['price']` instead of `total += item['quantity'] * item['price']`.
    - Ensure `trusted_tests/test_cart.py` is unmodified.
 5. **Set Environment to LIVE or FIXTURE Mode:**
-   - If Ollama and FastAPI are running: Switch sidebar to **Live Mode** (`http://127.0.0.1:8000/api/v1`).
+   - If Ollama and FastAPI are running: Switch sidebar to **Live Mode** (`http://127.0.0.1:8765/api/v1`).
    - If presenting offline without local GPU/Ollama: Keep default **Fixture Mode** with the persistent, honest disclaimer banner.
 
 ---
