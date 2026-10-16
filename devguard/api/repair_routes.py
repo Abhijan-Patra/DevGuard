@@ -5,6 +5,7 @@ import uuid
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
@@ -93,7 +94,7 @@ def create_repair_router(service: RepairService, require_operator) -> APIRouter:
                 body = schema.model_validate(json.loads(data or b"{}"))
             except (ValidationError, ValueError, TypeError):
                 raise RepairError("INVALID_REQUEST") from None
-            return invoke(lambda: action(body), status)
+            return await run_in_threadpool(invoke, lambda: action(body), status)
         except RepairError as error:
             return response_error(error)
 

@@ -1,5 +1,6 @@
 """API authorization and hook-process contract tests, not live Codex coverage evidence."""
 
+import asyncio
 import json
 import os
 import subprocess
@@ -104,6 +105,36 @@ def test_api_stale_apply_returns_409(api, spec):
     )
     assert response.status_code == 409
     assert (spec.root / "cart.py").read_text() == "# newer work\n"
+
+
+def test_api_apply_does_not_block_the_shared_model_guard_event_loop(api):
+    client, service = api
+    run = run_once(service)
+    patch = service.patches.get(run.candidate_id)
+
+    class ThreadAwareGuard:
+        def sanitize(self, text, *, purpose):
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                return text
+            raise AssertionError(
+                "Synchronous guard bridge must run outside the application loop"
+            )
+
+    service.guard = ThreadAwareGuard()
+    response = client.post(
+        f"/api/v1/patches/{patch.candidate_id}/apply",
+        headers=AUTH,
+        json={
+            "approved": True,
+            "expected_candidate_hash": patch.candidate_hash,
+            "expected_base_revision": patch.base_revision,
+            "idempotency_key": "thread-safe-review",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["state"] == "APPLIED"
 
 
 def test_router_cannot_be_created_without_auth_dependency(api):
