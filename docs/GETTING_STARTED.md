@@ -1,6 +1,6 @@
 # Getting started: Mac 1 guard and clipboard service
 
-Ollama is already installed on the first Mac. Gemma downloads separately; implementation and control tests do not depend on waiting for it. Runtime endpoints hold requests when contextual analysis is unavailable.
+Ollama and the selected Gemma package are installed on the first Mac. See [current handoff](MAC_1_READINESS_HANDOFF.md) for the measured digest and checks. Runtime endpoints hold requests when contextual analysis is unavailable.
 
 ## Install and run
 
@@ -58,9 +58,9 @@ The selected package remains Gemma 4 E4B with explicit Q4 quantisation:
 ollama pull gemma4:e4b-it-q4_K_M
 ```
 
-The first Mac's download is already running. The generic E4B tag initially chose a larger backend-dependent package, so that attempt was stopped. Existing unrelated models remain untouched. No paid cloud service is needed.
+The first Mac's exact Q4 download is complete. Another machine needs the pull only if the exact tag is absent. Existing unrelated models remain untouched. No paid cloud service is needed.
 
-After download completes, the real trial command is:
+The real native-tool smoke command is:
 
 ```sh
 .venv/bin/python -m devguard.models.smoke

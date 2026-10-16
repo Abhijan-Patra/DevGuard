@@ -2,7 +2,7 @@
 
 Branch: `codex/mac1-guard`; PR [#1](https://github.com/Abhijan-Patra/DevGuard/pull/1). The queue, guard and auth instances are available after `create_app(settings)` through `app.state`. This file describes actual code, not a guessed worker protocol.
 
-The current integration branch is `codex/mac1-integration`, based on main with both Macs and Windows 1 merged. The synchronous worker protocols remain unchanged. Repair routes are mounted with a held runtime until trusted startup supplies the real service; see [current integration status](INTEGRATION_STATUS.md).
+The current Mac 1 handoff branch is `codex/mac1-guard-readiness`, based on main including Mac 2 PR #10. See [the exact readiness handoff](MAC_1_READINESS_HANDOFF.md). The synchronous worker protocols remain unchanged. Repair routes are mounted with a held runtime until trusted startup supplies the real service; see [current integration status](INTEGRATION_STATUS.md).
 
 ## Gemma interface
 
@@ -22,7 +22,7 @@ model_chat = app.state.model_queue.chat
 
 Return shape is the Ollama result, including `result["message"]`, optional `message["tool_calls"]` and runtime timing fields. Parse tool arguments using your own typed tool registry and permitted actions. Do not log raw bodies/hidden reasoning. `ModelUnavailable` is a fixed safe exception; propagate cancellation normally.
 
-Settings: exact `gemma4:e4b-it-q4_K_M`, loopback only, 4,096 context and 512 output tokens initially. One bounded queue serialises calls, with 16 waiting slots. Privacy inspection uses `foreground`; existing repair calls default to `background`. Foreground work overtakes waiting background work; each class keeps FIFO order. An active Ollama call is not preempted. A privacy deadline still holds the request if active work takes too long. Queue capacity/closure failures raise `ModelUnavailable`; canceled waiting calls are removed before any HTTP request. Do not hold a separate queue/inference lock while calling the privacy guard: its contextual inspection uses the same model internally. Larger budgets need coordination and measurement.
+Settings: exact `gemma4:e4b-it-q4_K_M`, loopback only, 4,096 context, 512 privacy / 1,024 tool output tokens, temperature 0 and thinking disabled. One bounded queue serialises calls, with 16 waiting slots. Privacy inspection uses `foreground`; existing repair calls default to `background`. Foreground work overtakes waiting background work; each class keeps FIFO order. An active Ollama call is not preempted. A privacy deadline still holds the request if active work takes too long. Queue capacity/closure failures raise `ModelUnavailable`; canceled waiting calls are removed before any HTTP request. Do not hold a separate queue/inference lock while calling the privacy guard: its contextual inspection uses the same model internally. Larger budgets need coordination and measurement.
 
 Reuse your existing `devguard.agent.mac1_bridge.Mac1ModelBridge`; its `inspect()` and `chat()` calls match this client. Construct it on the running app loop using the installed runtime metadata. If the model/digest is missing, hold repair startup/readiness rather than invent metadata or prevent the privacy server from starting.
 
@@ -92,7 +92,7 @@ guard_port = RepairGuardBridge(
 
 Accepted purposes are exactly `snapshot_source`, `test_evidence`, `tool_result` and `patch_export`. It returns an ALLOW/SANITIZE candidate after the guard's final scanner check, removes its transient preview record, and raises fixed-code `RepairError` on unavailable/held/oversize/timeout checks. Timeout cancels the scheduled inspection. Calling it from the app loop is rejected to avoid deadlock. No second model client or event loop is created.
 
-This port approves local worker input; it does not transmit to an external receiver. Preserve your existing byte-for-byte equality requirement for source snapshots and patch exports. A changed source/patch stays held; sanitized diagnostic text may be used locally. Three cross-thread tests cover cleaned output, unavailable/scope holds and cancellation; actual Gemma classification remains pending.
+This port approves local worker input; it does not transmit to an external receiver. Preserve your existing byte-for-byte equality requirement for source snapshots and patch exports. A changed source/patch stays held; sanitized diagnostic text may be used locally. Three cross-thread tests cover cleaned output, unavailable/scope holds and cancellation; four synthetic real Gemma reference-delivery cases passed; wider accuracy and installed-client coverage remain unverified.
 
 ## Operator-auth dependency
 
@@ -129,7 +129,7 @@ Do not call blocking `sanitize()` or `next_action()` on the app event loop. Keep
 
 `app.state.repair_event_sink(event) -> int` is now the synchronous, thread-safe constrained adapter for Mac 2's event dictionary. Pass it as `RepairService(event_sink=...)`. It reconstructs canonical metadata and discards supplied prose/raw payloads/evidence. The CLI persists it in private `.devguard/audit.sqlite3` with 5,000-event retention; test/embed `create_app()` defaults to in-memory unless an audit store is supplied. Storage failures raise fixed `AuditUnavailable`; Mac 2's existing sink handler holds/pauses work.
 
-`create_app(settings, ..., repair_factory=async_factory)` now owns lifecycle initialization and mounts your router once. The trusted async factory receives `app` and returns your actual `RepairService`, reusing the exported model/guard/auth/audit ports. The supplied optional demo factory registers only the cart manifest, verifies a pinned installed Docker image, requires the real model digest and starts paused. `POST /repair/initialize` can retry that same configuration after prerequisites become ready. No model-selected root or image is accepted. Model calls are canceled on shutdown, the worker is paused/joined and audit storage is closed afterward. Real Docker/model trials remain pending.
+`create_app(settings, ..., repair_factory=async_factory)` now owns lifecycle initialization and mounts your router once. The trusted async factory receives `app` and returns your actual `RepairService`, reusing the exported model/guard/auth/audit ports. The supplied optional demo factory registers only the cart manifest, verifies a pinned installed Docker image, requires the real model digest and starts paused. `POST /repair/initialize` can retry that same configuration after prerequisites become ready. No model-selected root or image is accepted. The worker is paused and shutdown acknowledgement is checked before guard/audit resources close, with model-call cancellation and a second bounded drain if needed. See the handoff for real local trial scope and Mac 2 final evidence ownership.
 
 ## Protected source reads
 

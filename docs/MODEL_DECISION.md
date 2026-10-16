@@ -1,6 +1,6 @@
 # Model decision: one Gemma 4 E4B
 
-Decision date: 16 October 2026. Selected for implementation; not benchmarked by this project.
+Decision date: 16 October 2026. Selected for implementation; limited synthetic local trials are recorded in [the current handoff](MAC_1_READINESS_HANDOFF.md), not a comparative accuracy benchmark.
 
 ## Selection
 
@@ -40,7 +40,7 @@ Fast detector findings cannot be downgraded by Gemma. Reject invalid offsets, un
 
 First shorten evidence, correct tool templates, bound output and move independent test execution to the other Mac. If the selected model still cannot run acceptably, record the failed trial and explicitly revise the decision with the team. A short GPU trial can run the same E4B package after capacity checks. A hosted Gemma API variant is a separate model/deployment decision with different data handling and quota; it is not an automatic fallback.
 
-Setup has begun. Ollama client/server 0.40.4 respond locally; no model is currently loaded. The selected E4B Q4 download is in progress. Compatibility and inference/tool behaviour remain unverified until the download finishes and the smoke test runs.
+The exact Q4 download is complete on Mac 1. Ollama 0.40.4 passed the native-tool smoke test and four synthetic reference-delivery checks. The current handoff records the actual digest/settings, earlier failures and remaining validation limits.
 
 Both Macs must use the exact tag. If a Mac is downloading the generic `gemma4:e4b` and shows a 9.5 GB package, stop that terminal pull with Ctrl+C and run `ollama pull gemma4:e4b-it-q4_K_M`. Ollama lists the explicit Q4 package at approximately 6.6 GB total; its main model blob is about 5.5 GB, so that blob's progress is not whole-package progress. The backend checks the exact installed tag and later records its real digest; do not alias a different package to bypass those checks. The generic package is the same model family, but its alternate runtime/quantisation has not been validated by this project.
 

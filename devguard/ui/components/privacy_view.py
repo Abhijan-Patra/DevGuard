@@ -5,6 +5,8 @@ Renders decision, redacted finding codes, safe preview, and delivery receipts
 per docs/API_CONTRACT.md and docs/tasks/WINDOWS_1_DASHBOARD.md.
 """
 
+import json
+from pathlib import Path
 from typing import Any, Dict
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError
@@ -27,20 +29,52 @@ def render_privacy_view(client: BaseDevGuardClient) -> None:
 
     with col1:
         st.subheader("Submit Text for Evaluation")
+
+        # Load predefined scenarios from Member 4 evals if present
+        cases_file = Path(__file__).resolve().parent.parent.parent.parent / "evals" / "cases" / "privacy_cases.json"
+        scenarios = []
+        if cases_file.exists():
+            try:
+                with open(cases_file, "r", encoding="utf-8") as f:
+                    scenarios = json.load(f)
+            except Exception:
+                scenarios = []
+
+        scenario_map = {f"[{s['id']}] {s['scenario_name']}": s for s in scenarios}
+        scenario_options = ["Custom Input"] + list(scenario_map.keys())
+
+        selected_label = st.selectbox(
+            "Load Predefined Test Scenario",
+            options=scenario_options,
+            index=0,
+            help="Select a synthetic scenario from the Member 4 evaluation suite to prefill inputs.",
+        )
+
+        preset = scenario_map.get(selected_label, {})
+        default_task = preset.get("task", "Diagnose authentication exception in login handler")
+        default_surface = preset.get("surface", "explicit_prompt")
+        default_dest = preset.get("destination_id", "local-preview")
+        default_text = preset.get(
+            "synthetic_input",
+            "ValueError at auth/login.py:42: Auth failed for user customer_alpha@example.invalid with token ghp_ABC123secretKEY456",
+        )
+        surface_options = ["explicit_prompt", "tool_result", "file_read", "clipboard"]
+        surface_index = surface_options.index(default_surface) if default_surface in surface_options else 0
+
         with st.form("privacy_eval_form"):
             project_id = st.text_input("Project ID", value="project-demo-core")
-            task = st.text_input("Active Task Context", value="Diagnose authentication exception in login handler")
+            task = st.text_input("Active Task Context", value=default_task)
             surface = st.selectbox(
                 "Interception Surface",
-                options=["explicit_prompt", "tool_result", "file_read", "clipboard"],
-                index=0,
+                options=surface_options,
+                index=surface_index,
                 help="Surface category authenticated by adapter or submitted by operator.",
             )
-            destination_id = st.text_input("Configured Destination", value="local-preview")
+            destination_id = st.text_input("Configured Destination", value=default_dest)
             content_version = st.number_input("Content Version", min_value=1, value=7, step=1)
             text_input = st.text_area(
                 "Text Payload to Inspect",
-                value="ValueError at auth/login.py:42: Auth failed for user customer_alpha@example.invalid with token ghp_ABC123secretKEY456",
+                value=default_text,
                 height=130,
                 help="Sensitive strings are inspected locally and never logged or sent externally.",
             )

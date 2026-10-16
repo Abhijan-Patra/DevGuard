@@ -69,7 +69,8 @@ class OllamaClient:
             "stream": False,
             "think": False,
             "keep_alive": "5m",
-            "options": {"num_ctx": 4096, "num_predict": 512},
+            "options": {"num_ctx": 4096, "num_predict": 1024 if tools else 512,
+                        "temperature": 0},
         }
         if tools:
             payload["tools"] = tools
