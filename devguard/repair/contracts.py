@@ -68,6 +68,7 @@ class Run:
     verification: str | None = None
     reason_code: str | None = None
     model: dict[str, str] = field(default_factory=dict)
+    completed_tools: list[str] = field(default_factory=list)
     cancel: Event = field(default_factory=Event, repr=False)
 
     def view(self) -> dict[str, Any]:

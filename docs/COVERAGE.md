@@ -1,6 +1,6 @@
 # Integration coverage and honest claims
 
-The table reflects the Mac 1 implementation branch. Move a complete path to VERIFIED only with installed client/runtime versions and end-to-end evidence. A plan or fixture is not evidence. Mac 2's separate worker branch is not yet mounted into this server.
+The table reflects the combined integration branch. Move a complete path to VERIFIED only with installed client/runtime versions and end-to-end evidence. A plan or fixture is not evidence. Mac 2's routes are now mounted with explicit unavailable/paused startup states; live model/verifier proof is pending.
 
 | Path | Planned control | Initial status / limit |
 |---|---|---|
@@ -14,7 +14,7 @@ The table reflects the Mac 1 implementation branch. Move a complete path to VERI
 | Claude Code prompt/tool integration | Optional if a Mac owner has a usable client | UNIMPLEMENTED; no new subscription required for MVP |
 | Antigravity | Development assistant for Windows members | UNSUPPORTED as a protected runtime client until separately integrated |
 | DevGuard guarded file/log tools | Scope enforcement and pre-delivery redaction | PARTIAL; protected-file utility and worker guard bridge tested; actual tool/client integration pending |
-| Independent backend repair | Source/logs/diffs/named probes/tests | UNINTEGRATED; Mac 2 worker branch exists, live inference/verifier trial pending; no screenshot dependency |
+| Independent backend repair | Source/logs/diffs/named probes/tests | PARTIAL; worker routes/lifecycle and UI contracts tested with injected inference/verifier ports; actual model/Docker trial pending; no screenshot dependency |
 | Screenshots and recordings | Not used | UNSUPPORTED by design |
 | Pre-commit scanner | Optional configured commit path | UNIMPLEMENTED; bypassable, not complete history remediation |
 

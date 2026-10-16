@@ -52,6 +52,7 @@ class DockerVerifier:
             "--mount",
             f"type=bind,src={spec.trusted_tests},dst=/checks,readonly",
             "--env=PYTHONDONTWRITEBYTECODE=1",
+            "--env=PYTHONPYCACHEPREFIX=/tmp/pycache",
             "--env=PYTHONPATH=/workspace",
             "--env=PYTEST_DISABLE_PLUGIN_AUTOLOAD=1",
             "--env=HOME=/tmp",
@@ -62,7 +63,9 @@ class DockerVerifier:
             "-q",
             "-p",
             "no:cacheprovider",
-            "--tb=short",
+            "--tb=line",
+            "--disable-warnings",
+            "--no-header",
             f"/checks/test_{name}.py",
         ]
 

@@ -35,9 +35,9 @@ def render_fixture_banner(is_fixture: bool) -> None:
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.2rem;">🟢</span>
                     <div>
-                        <strong style="color: #28a745; font-size: 0.95rem;">LIVE MODE — CONNECTED TO FASTAPI BACKEND</strong>
+                        <strong style="color: #28a745; font-size: 0.95rem;">LIVE MODE — AUTHORITATIVE API RESPONSES ONLY</strong>
                         <div style="font-size: 0.85rem; color: #c3e6cb;">
-                            Displaying authoritative decisions from DevGuard runtime and local Gemma 4 E4B model.
+                            Connection and model readiness are checked separately. Unavailable checks stay held.
                         </div>
                     </div>
                 </div>

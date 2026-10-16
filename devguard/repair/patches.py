@@ -1,7 +1,10 @@
 """One-file candidates for an atomic first implementation; originals stay in memory."""
 
 import difflib
-import fcntl
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 import os
 import tempfile
 import threading
@@ -145,11 +148,11 @@ class PatchStore:
             if lock_dir.is_symlink():
                 raise RepairError("SYMLINK_DENIED")
             lock_dir.mkdir(mode=0o700, exist_ok=True)
-            fd = os.open(
-                lock_dir / "apply.lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600
-            )
+            flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
+            fd = os.open(lock_dir / "apply.lock", flags, 0o600)
             with os.fdopen(fd, "w") as lock:
-                fcntl.flock(lock, fcntl.LOCK_EX)
+                if fcntl is not None:
+                    fcntl.flock(lock, fcntl.LOCK_EX)
                 try:
                     live = {
                         name: read_source(spec.root, name)

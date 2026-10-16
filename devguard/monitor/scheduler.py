@@ -58,3 +58,7 @@ class Scheduler:
         thread = self._thread
         if thread:
             thread.join(timeout)
+
+    def stopped(self) -> bool:
+        with self._lock:
+            return self._thread is None or not self._thread.is_alive()

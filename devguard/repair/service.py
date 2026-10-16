@@ -32,12 +32,14 @@ class RepairService:
         verifier: VerifierPort,
         runtime_root: Path,
         event_sink,
+        readiness_check=None,
     ):
         self.model, self.guard, self.verifier = model, guard, verifier
         self.runtime_root = runtime_root.absolute()
         if not callable(event_sink):
             raise RepairError("AUDIT_UNAVAILABLE")
         self.event_sink = event_sink
+        self.readiness_check = readiness_check or (lambda: {})
         self.projects: dict[str, ProjectSpec] = {}
         self.incidents: dict[str, dict] = {}
         self.runs: dict[str, Run] = {}
@@ -46,9 +48,15 @@ class RepairService:
         self._lock = threading.RLock()
         self._execution_lock = threading.Lock()
         self._dedupe: dict[tuple, str] = {}
+        self._closed = False
+
+    def _assert_open(self) -> None:
+        if self._closed:
+            raise RepairError("WORKER_CLOSED")
 
     def register_project(self, spec: ProjectSpec) -> None:
         """Trusted supervisor configuration only; not exposed as a model tool."""
+        self._assert_open()
         if spec.project_id in self.projects:
             raise RepairError("PROJECT_ALREADY_REGISTERED")
         self.projects[spec.project_id] = spec
@@ -63,6 +71,7 @@ class RepairService:
         self, project_id: str, signal: str, source_revision: str | None = None
     ) -> dict:
         with self._lock:
+            self._assert_open()
             spec = self._project(project_id)
             if signal not in spec.test_names:
                 raise RepairError("TEST_DENIED")
@@ -89,6 +98,7 @@ class RepairService:
 
     def queue(self, incident_id: str) -> Run:
         with self._lock:
+            self._assert_open()
             if incident_id not in self.incidents:
                 raise RepairError("NOT_FOUND")
             for run in self.runs.values():
@@ -161,13 +171,64 @@ class RepairService:
         if current:
             self.cancel(current)
 
+    def integration_ready(self) -> bool:
+        """Trusted startup reports verified capabilities; HTTP cannot enable them."""
+        try:
+            flags = self.readiness_check()
+            return all(
+                flags.get(name) is True
+                for name in (
+                    "foreground_priority",
+                    "durable_events",
+                    "worker_lifecycle",
+                    "trusted_verifier",
+                )
+            )
+        except Exception:
+            return False
+
+    def enter_idle(self) -> None:
+        self._assert_open()
+        if not self.integration_ready():
+            raise RepairError("INTEGRATION_NOT_READY")
+        with self._lock:
+            for run in self.runs.values():
+                if run.state in {"QUEUED", "WAITING_FOR_RESOURCES"}:
+                    self.scheduler.enqueue(run.run_id)
+            self.scheduler.enter_idle()
+
+    def shutdown(self, timeout: float = 30) -> bool:
+        """Call via asyncio.to_thread before closing the app's guard/model/audit."""
+        with self._lock:
+            self._closed = True
+            self.scheduler.pause()
+            for run in self.runs.values():
+                run.cancel.set()
+        self.scheduler.join(timeout)
+        if not self.scheduler.stopped():
+            return False
+        for run in self.runs.values():
+            if run.state not in TERMINAL or run.state == "READY_FOR_REVIEW":
+                run.state = "CANCELED"
+        for candidate in self.patches.candidates.values():
+            candidate.originals.clear()
+            candidate.replacements.clear()
+            if candidate.state == "READY_FOR_REVIEW":
+                candidate.state = "REJECTED"
+        return True
+
     def execute(self, run_id: str) -> None:
         with self._execution_lock:
             run = self.get_run(run_id)
             if run.state in TERMINAL:
                 return
+            run.reason_code = None
             snapshot = None
             try:
+                if not self.integration_ready():
+                    run.reason_code = "INTEGRATION_NOT_READY"
+                    self._state(run, "WAITING_FOR_RESOURCES")
+                    return
                 if run.cancel.is_set():
                     raise RepairError("CANCELED")
                 spec = self._project(run.project_id)
@@ -197,6 +258,7 @@ class RepairService:
                 }
 
                 def completed(tool: str) -> None:
+                    run.completed_tools.append(tool)
                     if tool == "propose_patch":
                         self._state(run, "PATCHING_SANDBOX")
                     self._event(
@@ -262,6 +324,7 @@ class RepairService:
                     snapshot.close()
 
     def apply(self, candidate_id: str, **kwargs) -> dict:
+        self._assert_open()
         candidate = self.patches.get(candidate_id)
         run = self.get_run(candidate.run_id)
         self.patch_view(candidate_id)

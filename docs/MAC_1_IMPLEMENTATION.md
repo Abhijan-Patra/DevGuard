@@ -1,5 +1,7 @@
 # Mac 1 implementation handoff
 
+Historical Mac 1 milestone. The later [combined integration status](INTEGRATION_STATUS.md) supersedes its branch/storage/repair-mount status.
+
 Branch: `codex/mac1-guard`. Pull request: [DevGuard #1](https://github.com/Abhijan-Patra/DevGuard/pull/1). Status on 16 October 2026: backend controls implemented; Gemma download independent and still pending at validation; native clipboard capture remains OFF.
 
 ## Implemented

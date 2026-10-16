@@ -2,7 +2,7 @@
 
 ## Current scope
 
-This repository began as a planning/handoff package. The Mac 1 branch now has privacy APIs, Gitleaks, validated redaction/release controls, protected-file utilities and an opt-in macOS text clipboard service. Capture is OFF until explicit local consent. Real Gemma classification, client delivery and native capture end-to-end behaviour remain unverified; repair is still Mac 2 work. Read docs/MAC_1_IMPLEMENTATION.md for actual validation. Earlier external Qwen-first/screen-capture proposals are superseded.
+The guard, required opt-in macOS text clipboard service, Windows dashboard and Mac 2 repair routes are integrated. Read docs/INTEGRATION_STATUS.md for actual checks, trusted startup and remaining gates. Capture starts OFF; repair starts unavailable or paused. The CLI persists bounded redacted audit metadata, while candidates/clipboard/work state remain transient. Real Gemma accuracy, Docker repair and installed-client interception are not verified.
 
 ## Fixed decisions
 

@@ -1,6 +1,6 @@
 # Shared API and event contract v1
 
-Owner: Mac 1. Mac 2 and both Windows owners implement against this document. Guard, event and clipboard routes now exist on the Mac 1 branch. Project registration, saved-file scan and repair routes remain proposed. The implemented Pydantic schemas live in `devguard/schemas/guard.py`; executable usage and limitations are in [MAC_1_IMPLEMENTATION.md](MAC_1_IMPLEMENTATION.md). Change the version for incompatible fields.
+Owner: Mac 1. Mac 2 and both Windows owners implement against this document. Guard, event and clipboard routes now exist on the Mac 1 branch. Repair routes are mounted through the trusted integration runtime; general project registration and saved-file scanning remain proposed. The implemented Pydantic schemas live in `devguard/schemas/guard.py`; executable usage and limitations are in [MAC_1_IMPLEMENTATION.md](MAC_1_IMPLEMENTATION.md). Change the version for incompatible fields.
 
 ## Conventions
 
@@ -108,6 +108,10 @@ Windows 1 builds views from examples and synthetic events under a persistent FIX
 - `local-preview` is the only default destination. It returns no outgoing delivery; `/deliver` holds unless trusted server code enrols a receiver. There is no API to register arbitrary URLs.
 - Optional `DEVGUARD_ADAPTER_TOKEN` is distinct from the operator token and can evaluate/deliver only its own request IDs. It cannot inspect operator findings or change capture state. Native actions also require a loopback operator request.
 - Validation errors omit original values; oversized HTTP bodies return 413. The source text limit is 32 KiB, while the first contextual inspector holds serialised task/text input above 2 KiB rather than silently truncating it.
-- Audit events currently use bounded in-memory SQLite; they reset with the process. They contain redacted metadata only. Findings are transient in-memory decisions, not a persistent project tracker; project filtering is not implemented yet.
+- The CLI uses private persistent SQLite with 5,000-event retention. `create_app` defaults to in-memory audit storage for explicit test/embed use unless a store is injected. Only constrained redacted metadata persists; raw previews/clipboard/candidate/work state never persist. Findings are transient in-memory decisions, not a persistent project tracker; project filtering is not implemented yet.
 - Native capture starts OFF and observes future copies after consent. It does not inspect the clipboard that was already present at enable time.
 - Delivery/owner/replay logic has synthetic boundary tests; real model decisions and a real coding-client receiver remain unverified. Do not infer those from a successful backend response.
+
+## Integrated repair setup
+
+`GET /incidents` returns `{ "incidents": [], "repair": { "configured": false, "available": false, "state": "UNAVAILABLE", "reason_code": "REPAIR_NOT_CONFIGURED" } }` until trusted startup configures a real service. `GET /status` includes `repair` and `audit` metadata. Existing mutation/run/patch routes remain operator-only and return a held dependency error when unconfigured. `POST /repair/initialize` retries the startup-supplied configuration; no request can choose a root or verifier image. See [integration status](INTEGRATION_STATUS.md).

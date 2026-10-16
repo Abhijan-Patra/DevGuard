@@ -2,7 +2,7 @@
 
 Branch: `codex/mac1-guard`; PR [#1](https://github.com/Abhijan-Patra/DevGuard/pull/1). The queue, guard and auth instances are available after `create_app(settings)` through `app.state`. This file describes actual code, not a guessed worker protocol.
 
-Mac 2's pushed `codex/mac2-worker` README, `contracts.py`, `Mac1ModelBridge` and `RepairService` have now been inspected. The synchronous worker protocols remain unchanged. Repair code is not yet merged/mounted in this branch.
+The current integration branch is `codex/mac1-integration`, based on main with both Macs and Windows 1 merged. The synchronous worker protocols remain unchanged. Repair routes are mounted with a held runtime until trusted startup supplies the real service; see [current integration status](INTEGRATION_STATUS.md).
 
 ## Gemma interface
 
@@ -127,7 +127,9 @@ Do not call blocking `sanitize()` or `next_action()` on the app event loop. Keep
 
 ## Events and integration gates
 
-`app.state.audit.add(kind, state, *, request_id=None, content_version=None, reason_codes=()) -> int` and `.events(after=0) -> dict` exist, but this is bounded **in-memory** metadata storage, not your requested durable `event_sink(event)` port. Do not pass `audit.add` directly as that sink: signatures differ. A constrained, thread-safe repair event adapter and durable-store handling remain integration work. Keep the scheduler paused until that adapter and trusted project/verifier configuration are wired and checked. Foreground inference priority is now implemented; cross-thread worker/lifecycle integration remains pending.
+`app.state.repair_event_sink(event) -> int` is now the synchronous, thread-safe constrained adapter for Mac 2's event dictionary. Pass it as `RepairService(event_sink=...)`. It reconstructs canonical metadata and discards supplied prose/raw payloads/evidence. The CLI persists it in private `.devguard/audit.sqlite3` with 5,000-event retention; test/embed `create_app()` defaults to in-memory unless an audit store is supplied. Storage failures raise fixed `AuditUnavailable`; Mac 2's existing sink handler holds/pauses work.
+
+`create_app(settings, ..., repair_factory=async_factory)` now owns lifecycle initialization and mounts your router once. The trusted async factory receives `app` and returns your actual `RepairService`, reusing the exported model/guard/auth/audit ports. The supplied optional demo factory registers only the cart manifest, verifies a pinned installed Docker image, requires the real model digest and starts paused. `POST /repair/initialize` can retry that same configuration after prerequisites become ready. No model-selected root or image is accepted. Model calls are canceled on shutdown, the worker is paused/joined and audit storage is closed afterward. Real Docker/model trials remain pending.
 
 ## Protected source reads
 
