@@ -1,0 +1,82 @@
+{
+  "run": {
+    "run_id": "run-aff494b36a9140b0bdc6370b6f208107",
+    "incident_id": "incident-f1a5abf621114c4d93ea0f55be9aaf42",
+    "project_id": "demo-cart",
+    "state": "BLOCKED",
+    "candidate_id": null,
+    "baseline": "FAIL",
+    "verification": null,
+    "reason_code": "INVALID_MODEL_ACTION",
+    "model": {
+      "name": "gemma4:e4b-it-q4_K_M",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+    },
+    "completed_tools": [
+      "read_allowed_file",
+      "run_named_test",
+      "read_allowed_file"
+    ]
+  },
+  "applied_to_original_repository": false,
+  "queued_cancellation": {
+    "state": "CANCELED",
+    "candidate_created": false
+  },
+  "model_runtime": {
+    "server_ready": true,
+    "server_version": "0.40.5",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+  },
+  "audit_event_count": 13,
+  "guard_checks": [
+    {
+      "surface": "file_read",
+      "input_bytes": 184,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "file_read",
+      "input_bytes": 482,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 1386,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 309,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 1442,
+      "decision": "ALLOW",
+      "reason_codes": []
+    },
+    {
+      "surface": "tool_result",
+      "input_bytes": 621,
+      "decision": "SANITIZE",
+      "reason_codes": [
+        "PERSONAL_DATA"
+      ]
+    }
+  ],
+  "worker_stopped": true,
+  "original_source_unchanged": true,
+  "trusted_tests_unchanged": true,
+  "audit_reopen_event_count": 13,
+  "elapsed_seconds": 39.42,
+  "evidence_scope": "Measured real local Gemma + guard + restricted Docker; public synthetic cart only. Metadata export; not a runtime answer.",
+  "implementation_revision": "e02172b + then-uncommitted trial changes, before the response-format recovery was added",
+  "measurement_date": "2026-10-16"
+}

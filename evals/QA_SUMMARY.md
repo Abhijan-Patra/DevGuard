@@ -1,46 +1,25 @@
-# DevGuard Evaluation & QA Summary Report
+# DevGuard QA status — 16 October 2026
 
-**Owner:** Member 4 (Windows 2 - Scenarios, QA & Demo)  
-**Branch:** `codex/windows-qa`  
-**Compliance Standard:** AGENTS.md, API_CONTRACT.md, EVALUATION.md  
+Catalogue reporting is separate from real-model experiments. This command does not run the scenarios or mark any pass. Mac 2 continues Windows 2's assigned QA/demo scope.
 
----
+| Catalogue file | Cases |
+|---|---:|
+| clipboard_cases | 6 |
+| privacy_cases | 7 |
+| repair_cases | 8 |
+| withheld_variants | 5 |
 
-## 1. Executive Summary
+**Registry:** 26 unique records; UNRUN 26, PASS 0, FAIL 0, BLOCKED 0. Catalogue IDs/statuses match the registry. Withheld inputs remain outside runtime prompts/tuning. Fixture/schema tests do not execute these cases.
 
-| Metric | Count | Notes |
-| :--- | :---: | :--- |
-| **Total Test Scenarios** | **26** | Defined across 4 catalog files in `evals/cases/` |
-| **Execution Status: UNRUN** | **26** | Marked UNRUN per AGENTS.md invariant (synthetic data is not model proof) |
-| **Execution Status: PASS** | **0** | Requires live Mac 1 / Mac 2 execution harness |
-| **Execution Status: FAIL/BLOCKED** | **0** | Zero simulated failures |
-| **Withheld Evaluation Scenarios** | **5** | Kept out of model prompt tuning (`W01`–`W05`) |
+## Separate measured evidence
 
----
+- Integrated automated suite: **210 passed**, one existing dependency deprecation warning; pip check clean. These include mocked model/verifier ports and are not an accuracy benchmark.
+- Real Gemma/guard/API/Docker cart trial: baseline FAIL -> genuine patch -> independent PASS -> disposable approved apply -> idempotent repeat -> post-apply PASS; 46.07 s; original/tests unchanged and worker stopped. See [repair evidence](../devguard/repair/README.md).
+- Real stale/cancel trial: 409 STALE_SOURCE, concurrent edit preserved, state OBSOLETE; queued cancel produced no candidate; 42.19 s.
+- Mac 2 isolated named pasteboard: all 12 checks passed, 1.550 s copy-to-finding, no general clipboard access. See [metadata](results/mac2-private-pasteboard.json).
+- Mac 2 consented general clipboard combined input: HELD/REVIEW, cleaned-copy not executed; capture OFF. The failed input remains in [metadata](../devguard/repair/verification/mac2-system-clipboard-held.json).
+- Mac 2 real local reference receiver + five live views: PASS, replay held, 1.282 s synthetic privacy evaluation; see [metadata](results/mac2-live-dashboard.json). Mac 1 separately records its own [measurements](../docs/MAC_1_WINDOWS_1_COMPLETION.md).
 
-## 2. Breakdown by Category
+These experiments are not retrospectively assigned catalogue passes: some older catalogue test names/field names are conceptual and do not match the cart manifest. Preserve expected behavior and reconcile each mapping before future execution. No privacy precision/recall, full unseen evaluation, production recovery or installed-client interception result is claimed.
 
-| Category | File | Cases | Target Capabilities |
-| :--- | :--- | :---: | :--- |
-| **PRIVACY_GUARD** | `evals/cases/privacy_cases.json` | 7 | P01–P07: Credential detection, benign constants, confidential prose, customer PII stack trace, prompt injection override, path traversal, model timeout |
-| **CLIPBOARD** | `evals/cases/clipboard_cases.json` | 6 | C01–C06: Opt-in consent, counter deduplication, rapid copy overwrite, copy-cleaned cycle, oversize skip, unmanaged paste boundary |
-| **BACKEND_REPAIR** | `evals/cases/repair_cases.json` | 8 | B01–B08: Null item crash, quantity multiplication, empty cart, missing dependencies, stale 409 conflict, verifier immutability, idempotency, healthy backend |
-| **WITHHELD_VARIANTS** | `evals/cases/withheld_variants.json` | 5 | W01–W05: Custom delimitation secret, health PII in SQL comments, discount calculation, zero-width injection, off-by-one boundary |
-
----
-
-## 3. Demo Fixtures & Backend Oracles
-
-| Asset | Path | Intended Consumer | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Sample Events** | `demo/fixtures/sample_events.json` | Windows 1 (UI) | Contract v1 timeline presentation |
-| **Walkthrough Scenarios** | `demo/fixtures/demo_scenarios.json` | Judges / Operators | Rehearsable live demonstration steps |
-| **Repair Test Oracles** | `demo/fixtures/backend_oracles.json` | Mac 2 (Repair) | Ground-truth expected output specs |
-
----
-
-## 4. Current Gaps & Live Handoff Next Steps
-
-1. **Mac 1 Live Trial:** Run `gemma4:e4b-it-q4_K_M` trial against `privacy_cases.json`. Record actual TP/FP counts and token-to-decision latency in `evals/results/results_registry.json`.
-2. **Mac 2 Repair Sandbox:** Mount `trusted_tests/test_cart.py` against `backend_oracles.json` inside Docker container and execute baseline failure.
-3. **Windows 1 UI Connection:** Connect Streamlit client to live backend; test 409 stale conflict alert and copy-cleaned flow.
+See [runbook](../docs/DEMO_RUNBOOK.md), [evaluation](../docs/EVALUATION.md) and [submission text](../docs/SUBMISSION_FINAL.md). The newer mock server matches the response envelope, but remains simulated rehearsal data; matching a schema does not authenticate actual model execution.

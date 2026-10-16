@@ -1,0 +1,16 @@
+{
+  "measurement_date": "2026-10-16",
+  "scope": "Explicitly consented Mac 2 system clipboard; one new synthetic TypeError/cart log plus dummy api_key and reserved .invalid email",
+  "status": "HELD",
+  "state": "REVIEW",
+  "latency_seconds": 2.2,
+  "reason_codes": [
+    "CREDENTIAL",
+    "IRRELEVANT",
+    "PERSONAL_DATA",
+    "POLICY_BLOCK"
+  ],
+  "cleaned_copy_exercised": false,
+  "capture_disabled_after_test": true,
+  "limitations": "One combined input was held by the final scanner. This is not a cleaned-copy pass or broad accuracy measurement. No raw clipboard content exported."
+}

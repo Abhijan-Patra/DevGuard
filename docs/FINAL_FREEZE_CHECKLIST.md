@@ -1,99 +1,19 @@
-# DevGuard — Final Pre-Submission Freeze Checklist
+# DevGuard final review checklist — 16 October 2026
 
-**Owner:** Member 4 (Windows 2 — Scenarios, QA & Demo)  
-**Target Deadline:** 1 Hour Before Hackathon Submission Freeze  
-**Repository:** [https://github.com/Abhijan-Patra/DevGuard](https://github.com/Abhijan-Patra/DevGuard)  
+Mac 2 continues the assigned QA/demo handoff. Checked entries describe measured work; unchecked entries remain team actions.
 
----
+- [x] Integrated automated suite: **210 passed**; one existing Starlette/HTTPX deprecation warning. `pip check` clean.
+- [x] Mac 2 source Ruff/whitespace checks and new-commit Gitleaks scan passed; no private runtime files staged. This is a scoped scan, not certification of every repository commit.
+- [x] Exact Gemma package/digest recorded; context 4096, privacy/tool output 512/1024, temperature 0, thinking off. Inference refuses a different/missing digest.
+- [x] Real local Gemma/guard/API/Docker: baseline FAIL → genuine patch → independent PASS → approved disposable APPLIED → idempotent repeat → post-apply PASS; source/tests unchanged and worker stopped.
+- [x] Real stale apply returned 409 STALE_SOURCE, preserved the concurrent edit and marked the run OBSOLETE; queued cancellation created no candidate.
+- [x] Real local reference receiver got exactly the inspected bytes; replay held; all five live views rendered. Installed Codex interception is still unverified.
+- [x] Mac 2 isolated native pasteboard passed 12 checks without general clipboard access. Distinct general clipboard input was HELD; cleaned-copy did not run; capture confirmed OFF. Both results documented.
+- [x] Catalogue/registry audit found five missing withheld records; added metadata-only UNRUN entries. All **26** records remain UNRUN, unique IDs/statuses match and each record validates against its schema. No expected outcomes or withheld input were altered.
+- [x] Runbook/submission wording distinguishes actual experiments, fixture presentation and unverified paths. No placeholder video URL or 100% accuracy claim remains in current submission text.
+- [ ] Abhijan reviews and merges worker PR #16, including the trusted-verifier exception-reporting change as second Mac owner. All business assertions remain unchanged.
+- [ ] Abhijan reviews the separate QA continuation PR and reconciles any concurrent presentation edits.
+- [ ] Team opens the actual Live Mode dashboard and rehearses its current ready candidate. Keep the Mac awake, power connected, Docker/Ollama running, capture OFF unless fresh consent is given.
+- [ ] Team confirms the hackathon form's category fields, reviews the prepared text, adds a real recording only if required and submits before **4:30 PM IST**. Creating GitHub documents is not submitting the form.
 
-## 1. Repository Cleanliness & Secret Safety
-
-- [x] **No Private Secrets in Commits:**
-  - Verified with `git log` and ripgrep.
-  - All test fixtures use synthetic credentials (e.g., `ghp_synthetic_pat_...`, `.invalid` domains).
-- [x] **No Active Database Files Committed:**
-  - `.devguard/` directory is in `.gitignore`.
-  - No `audit.sqlite3`, `session-token`, or transient cache files in git status.
-- [x] **Working Tree Cleanliness:**
-  - No unstaged edits or residual test artifacts.
-  - All temporary files stored under ignored or temporary paths.
-- [x] **License Notice:**
-  - MIT License present in root `LICENSE` file.
-
----
-
-## 2. Model & Architecture Specifications
-
-- [x] **Model Pinned:**
-  - Ollama model digest: `gemma4:e4b-it-q4_K_M`
-  - Context size bounded: `num_ctx: 4096`
-  - Deterministic temperature: `temperature: 0`
-  - Output token budget: 512 (privacy prompts), 1024 (code repairs)
-  - Thinking parameter disabled: `think: false`
-- [x] **Dual Agent Priority Queue:**
-  - Foreground privacy gate runs with immediate priority over background repair jobs.
-- [x] **Fail-Closed Privacy Gate:**
-  - Any model unavailability, timeout, or invalid span holds the request (`decision: REVIEW`).
-  - No uninspected bytes delivered downstream.
-
----
-
-## 3. Evaluation & QA Coverage
-
-- [x] **Scenario Catalogue Complete (26 Scenarios):**
-  - `evals/cases/privacy_cases.json`: 7 cases (P01–P07)
-  - `evals/cases/clipboard_cases.json`: 6 cases (C01–C06)
-  - `evals/cases/repair_cases.json`: 8 cases (B01–B08)
-  - `evals/cases/withheld_variants.json`: 5 cases (W01–W05)
-- [x] **Results Registry & Honesty Invariant:**
-  - All 26 scenario records in `evals/results/results_registry.json` are marked `UNRUN` per AGENTS.md invariant.
-  - No invented or fabricated model benchmarks.
-- [x] **Automated Test Suite:**
-  - `python -m pytest tests/ui/ -v` passes **38/38 tests** without errors.
-  - Mac 1 full backend suite confirms **171/171 tests** passing on macOS M4 / Python 3.11.
-
----
-
-## 4. Live Demo & Presentation Tools
-
-- [x] **Port Standardization:**
-  - All endpoints and docs standardized to official port **8765** (`http://127.0.0.1:8765/api/v1`).
-- [x] **1-Click Launchers:**
-  - `demo/run_demo.ps1` (PowerShell launcher for Windows)
-  - `demo/run_demo.bat` (Batch launcher for Windows CMD)
-- [x] **Zero-Dependency Mock Live Server:**
-  - `demo/mock_live_server.py` runs standalone on port 8765 for offline demonstration rehearsal.
-- [x] **3-Minute Rehearsable Runbook:**
-  - `docs/DEMO_RUNBOOK.md` complete with timing, failure branches, and talking points.
-
----
-
-## 5. Submission Documents
-
-- [x] **Draft Submission:** `docs/SUBMISSION_DRAFT.md`
-- [x] **Final Submission Package:** `docs/SUBMISSION_FINAL.md`
-- [x] **Team Integration Handoff:** `docs/HANDOFF_WINDOWS_2.md`
-- [x] **QA Summary Report:** `evals/QA_SUMMARY.md`
-
----
-
-## 6. How the Team Finalizes & Submits
-
-1. **Verify Git Status:**
-   ```powershell
-   git status
-   ```
-2. **Run Final QA Report:**
-   ```powershell
-   python evals/runner.py --generate-report
-   ```
-3. **Run UI Test Suite:**
-   ```powershell
-   python -m pytest tests/ui/ -v
-   ```
-4. **Push Branch & Open PR:**
-   ```powershell
-   git push origin codex/windows-qa-freeze
-   ```
-5. **Paste Final Submission Text:**
-   Copy the contents of `docs/SUBMISSION_FINAL.md` directly into the hackathon submission form.
+Measured references: [repair](../devguard/repair/README.md), [evaluation](EVALUATION.md), [runbook](DEMO_RUNBOOK.md), [submission text](SUBMISSION_FINAL.md). The queued foreground priority does not preempt active inference; default model/clipboard/privacy limits can still hold requests.

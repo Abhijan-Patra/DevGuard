@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""DevGuard Member 4 Evaluation Runner & Status Reporter.
+"""DevGuard catalogue and registry status reporter; does not execute scenarios.
 
 Owner: Member 4 (Windows 2 - Scenarios & QA).
-Provides command-line evaluation reporting, scenario verification,
+Provides command-line catalogue consistency reporting,
 and live backend integration checks per docs/EVALUATION.md and AGENTS.md.
 """
 
@@ -29,66 +29,45 @@ def load_all_scenarios():
 
 
 def generate_qa_summary(scenarios):
-    total_cases = 0
-    categories = {}
-    status_counts = {"UNRUN": 0, "PASS": 0, "FAIL": 0, "BLOCKED": 0}
+    """Report catalogue/registry consistency; this does not execute scenarios."""
+    registry = json.loads((RESULTS_DIR / "results_registry.json").read_text())["results"]
+    expected = [case["id"] for cases in scenarios.values() for case in cases]
+    observed = [record["case_id"] for record in registry]
+    if (len(expected) != len(set(expected)) or len(observed) != len(set(observed))
+            or set(expected) != set(observed)):
+        raise ValueError("Catalogue and result registry IDs do not match uniquely")
+    statuses = {"UNRUN": 0, "PASS": 0, "FAIL": 0, "BLOCKED": 0}
+    by_id = {record["case_id"]: record for record in registry}
+    for cases in scenarios.values():
+        for case in cases:
+            status = by_id[case["id"]]["status"]
+            if status not in statuses or status != case.get("execution_status", "UNRUN"):
+                raise ValueError("Catalogue and result status disagree")
+            statuses[status] += 1
+    rows = "\n".join(f"| {name} | {len(cases)} |" for name, cases in sorted(scenarios.items()))
+    return f"""# DevGuard QA status — 16 October 2026
 
-    for group, case_list in scenarios.items():
-        for case in case_list:
-            total_cases += 1
-            cat = case.get("category", "OTHER")
-            categories[cat] = categories.get(cat, 0) + 1
-            status = case.get("execution_status", "UNRUN")
-            status_counts[status] = status_counts.get(status, 0) + 1
+Catalogue reporting is separate from real-model experiments. This command does not run the scenarios or mark any pass. Mac 2 continues Windows 2's assigned QA/demo scope.
 
-    summary_text = f"""# DevGuard Evaluation & QA Summary Report
+| Catalogue file | Cases |
+|---|---:|
+{rows}
 
-**Owner:** Member 4 (Windows 2 - Scenarios, QA & Demo)  
-**Branch:** `codex/windows-qa`  
-**Compliance Standard:** AGENTS.md, API_CONTRACT.md, EVALUATION.md  
+**Registry:** {len(registry)} unique records; UNRUN {statuses['UNRUN']}, PASS {statuses['PASS']}, FAIL {statuses['FAIL']}, BLOCKED {statuses['BLOCKED']}. Catalogue IDs/statuses match the registry. Withheld inputs remain outside runtime prompts/tuning. Fixture/schema tests do not execute these cases.
 
----
+## Separate measured evidence
 
-## 1. Executive Summary
+- Integrated automated suite: **210 passed**, one existing dependency deprecation warning; pip check clean. These include mocked model/verifier ports and are not an accuracy benchmark.
+- Real Gemma/guard/API/Docker cart trial: baseline FAIL -> genuine patch -> independent PASS -> disposable approved apply -> idempotent repeat -> post-apply PASS; 46.07 s; original/tests unchanged and worker stopped. See [repair evidence](../devguard/repair/README.md).
+- Real stale/cancel trial: 409 STALE_SOURCE, concurrent edit preserved, state OBSOLETE; queued cancel produced no candidate; 42.19 s.
+- Mac 2 isolated named pasteboard: all 12 checks passed, 1.550 s copy-to-finding, no general clipboard access. See [metadata](results/mac2-private-pasteboard.json).
+- Mac 2 consented general clipboard combined input: HELD/REVIEW, cleaned-copy not executed; capture OFF. The failed input remains in [metadata](../devguard/repair/verification/mac2-system-clipboard-held.json).
+- Mac 2 real local reference receiver + five live views: PASS, replay held, 1.282 s synthetic privacy evaluation; see [metadata](results/mac2-live-dashboard.json). Mac 1 separately records its own [measurements](../docs/MAC_1_WINDOWS_1_COMPLETION.md).
 
-| Metric | Count | Notes |
-| :--- | :---: | :--- |
-| **Total Test Scenarios** | **{total_cases}** | Defined across 4 catalog files in `evals/cases/` |
-| **Execution Status: UNRUN** | **{status_counts.get('UNRUN', 0)}** | Marked UNRUN per AGENTS.md invariant (synthetic data is not model proof) |
-| **Execution Status: PASS** | **{status_counts.get('PASS', 0)}** | Requires live Mac 1 / Mac 2 execution harness |
-| **Execution Status: FAIL/BLOCKED** | **{status_counts.get('FAIL', 0) + status_counts.get('BLOCKED', 0)}** | Zero simulated failures |
-| **Withheld Evaluation Scenarios** | **5** | Kept out of model prompt tuning (`W01`–`W05`) |
+These experiments are not retrospectively assigned catalogue passes: some older catalogue test names/field names are conceptual and do not match the cart manifest. Preserve expected behavior and reconcile each mapping before future execution. No privacy precision/recall, full unseen evaluation, production recovery or installed-client interception result is claimed.
 
----
-
-## 2. Breakdown by Category
-
-| Category | File | Cases | Target Capabilities |
-| :--- | :--- | :---: | :--- |
-| **PRIVACY_GUARD** | `evals/cases/privacy_cases.json` | 7 | P01–P07: Credential detection, benign constants, confidential prose, customer PII stack trace, prompt injection override, path traversal, model timeout |
-| **CLIPBOARD** | `evals/cases/clipboard_cases.json` | 6 | C01–C06: Opt-in consent, counter deduplication, rapid copy overwrite, copy-cleaned cycle, oversize skip, unmanaged paste boundary |
-| **BACKEND_REPAIR** | `evals/cases/repair_cases.json` | 8 | B01–B08: Null item crash, quantity multiplication, empty cart, missing dependencies, stale 409 conflict, verifier immutability, idempotency, healthy backend |
-| **WITHHELD_VARIANTS** | `evals/cases/withheld_variants.json` | 5 | W01–W05: Custom delimitation secret, health PII in SQL comments, discount calculation, zero-width injection, off-by-one boundary |
-
----
-
-## 3. Demo Fixtures & Backend Oracles
-
-| Asset | Path | Intended Consumer | Purpose |
-| :--- | :--- | :--- | :--- |
-| **Sample Events** | `demo/fixtures/sample_events.json` | Windows 1 (UI) | Contract v1 timeline presentation |
-| **Walkthrough Scenarios** | `demo/fixtures/demo_scenarios.json` | Judges / Operators | Rehearsable live demonstration steps |
-| **Repair Test Oracles** | `demo/fixtures/backend_oracles.json` | Mac 2 (Repair) | Ground-truth expected output specs |
-
----
-
-## 4. Current Gaps & Live Handoff Next Steps
-
-1. **Mac 1 Live Trial:** Run `gemma4:e4b-it-q4_K_M` trial against `privacy_cases.json`. Record actual TP/FP counts and token-to-decision latency in `evals/results/results_registry.json`.
-2. **Mac 2 Repair Sandbox:** Mount `trusted_tests/test_cart.py` against `backend_oracles.json` inside Docker container and execute baseline failure.
-3. **Windows 1 UI Connection:** Connect Streamlit client to live backend; test 409 stale conflict alert and copy-cleaned flow.
+See [runbook](../docs/DEMO_RUNBOOK.md), [evaluation](../docs/EVALUATION.md) and [submission text](../docs/SUBMISSION_FINAL.md). The newer mock server matches the response envelope, but remains simulated rehearsal data; matching a schema does not authenticate actual model execution.
 """
-    return summary_text
 
 
 def check_live_health(base_url="http://127.0.0.1:8765/api/v1"):

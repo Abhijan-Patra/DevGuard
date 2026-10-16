@@ -1,143 +1,67 @@
-# Mac 2 implementation and integration handoff
+# Mac 2 repair implementation and measured handoff
 
-This branch implements the first repair worker and restrictive Codex hook adapter. It does not implement Mac 1's privacy classifier, model queue, shared schemas, clipboard service or application startup.
+The local Gemma repair loop reproduces the declared cart defect, produces a genuine model patch, passes independent Docker checks and returns an operator-reviewable candidate. Disposable application, repeated application and stale-source refusal were exercised through the actual API. These are small synthetic demonstrations, not a general repair benchmark.
 
-## Implemented
+## Actual verification — 16 October 2026
 
-- Explicit source-file snapshots including saved uncommitted changes, hashes, size limits, protected paths, symlink/hardlink rejection and private temporary storage.
-- Typed, bounded investigation tools: list approved files, read approved source, run a named check, propose a sandbox replacement and finish. Initial limits: eight actions, two patch proposals, 180-second investigation budget plus finite verifier runs. The model adapter must enforce its own request timeout.
-- Restricted Docker verifier: immutable image ID, no automatic pull, no network, non-root user, dropped capabilities, read-only source/tests/root, bounded memory/processes/output and timeout/cancellation cleanup. No host-shell fallback.
-- Independent baseline and final checks. Healthy or unreproduced failures never become successful patches.
-- Scanned single-file candidates, operator-only application, base checks over every captured source file, atomic file replacement, rejection and idempotency. Originals remain untouched until application.
-- Deduplicated incidents/runs, a single background worker, manual idle trigger, pause/cancellation and debounced monitoring of the approved source manifest.
-- Repair router matching the proposed `/api/v1` routes, with injected operator authorization and fixed redacted errors. It mounts in Mac 1's app.
-- Declared buggy FastAPI cart fixture and protected business-behaviour tests, including quantity multiplication, empty/null cart and validation.
+Host: Apple M4 Air / 16 GB; Python 3.12.14; Docker Desktop 4.95.0 / engine 29.8.2; Ollama 0.40.5; Gitleaks 8.30.1; PyObjC Cocoa 12.2.2; Streamlit 1.66.0. Exact model: `gemma4:e4b-it-q4_K_M`, digest `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c`. Shared settings: context 4096, privacy/tool output 512/1024, temperature 0, thinking off.
 
-This is an initial implementation, not a completed live Gemma repair demonstration. Unit tests deliberately inject fake ports to test authority/lifecycle boundaries. They are not evidence of model accuracy. The trusted demo checks intentionally fail against the buggy fixture.
+| Check | Measured result |
+|---|---|
+| Integrated suite after main `1099a86` + Mac 2 | **209 passed**, one existing Starlette/HTTPX deprecation warning; `pip check` clean. Fake unit-test ports are not model-accuracy evidence. |
+| Native continuation probe | Two genuine calls consumed fresh random host-generated integers; result 75, 7.14 s. No runtime answer lookup. |
+| Real disposable API apply on integrated code | Baseline FAIL → native Gemma investigation/patch → independent Docker PASS → READY_FOR_REVIEW → operator-approved disposable APPLIED → idempotent repeat → post-apply Docker PASS. **46.07 s**, 28 audit records survived reopening, worker stopped, original source/tests unchanged. [Metadata](verification/mac2-disposable-apply.json). |
+| Real queued cancellation + stale apply | Queued cancel created no candidate. A genuine candidate passed; after a concurrent disposable edit, apply returned **409 STALE_SOURCE**, preserved the edit and marked the run OBSOLETE. **42.19 s**, 25 audit records survived reopening, worker stopped, original source/tests unchanged. [Metadata](verification/mac2-stale-cancel.json). |
+| Actual HTTP backend + dashboard | Local backend generated a PASS candidate; the live repair view rendered its actual diff with zero exceptions. Candidate remained unapplied. State is transient after restart. |
+| Consented Mac 2 system clipboard test | **HELD/REVIEW**, final scanner POLICY_BLOCK; cleaned-copy was not exercised. Capture disabled and confirmed OFF. [Metadata](verification/mac2-system-clipboard-held.json). Mac 1 separately measured a passing input in [its evidence](../../docs/MAC_1_WINDOWS_1_COMPLETION.md). |
 
-## Recorded local verification — October 16, 2026
+Earlier repair attempts stopped on privacy holds. A later stale-trial attempt stopped on an invalid native model action after three tools; no patch was applied ([failure metadata](verification/mac2-format-hold.json)). One bounded response-format retry was then added and unit-checked; subsequent real successful runs needed **zero** such retries. Failures remain failures. No guard bypass, manual source fix or changed business assertion produced these results.
 
-- Apple M4 / 16 GB; Python 3.12.14; Docker Desktop 4.95.0, engine 29.8.2; Gitleaks 8.30.1 installed.
-- Full integrated suite against merged `main` at `831e008` plus this worker: **132 passed**, including the actual app/auth binding, inference-priority queue, installed Gitleaks fixture check and dashboard client tests. The Mac 2 suite also passes **82 tests** overlaid on Mac 1 integration commit `ca36284`. Model HTTP responses are mocked in these unit checks; native clipboard capture remains disabled.
-- Real restricted Docker run over an approved snapshot: **FAIL / exit 1**, **4 failed, 3 passed**, as required for the declared buggy cart baseline. All seven checks ran with no network and the prepared dependencies. No model was used and original source was unchanged.
-- Built local ARM64 verifier image: `sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7`. This ID is local, not a published registry image; other machines build/inspect their own image.
-- Actual serialized guard inputs for this Docker evidence measured **1,554 bytes** for baseline evidence and **1,620 bytes** for the named-test tool result, below the published 2,048-byte limit. Larger/different outputs can still hold.
-- Ruff checks and `git diff --check` passed. Pytest emits a dependency deprecation warning about Starlette's HTTPX TestClient.
+The trusted-test transport adjustment is `TestClient(app)` instead of `raise_server_exceptions=False`, exposing actual backend exceptions in guarded evidence. Inputs, expected responses and business assertions are unchanged. Both Mac owners must review before merge. Tests remain outside the model-writable snapshot.
 
-Real Gemma trial after the local download completed:
+## Implemented boundaries
 
-- Ollama server **0.40.5**, exact selected Q4 model digest `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c`; existing settings were 4,096 context, 512 output tokens and `think=false`.
-- The repository's real tool smoke test **passed**: one native `multiply` call, actual result **703**, used in the model's final response; **15.04 seconds** including the two model calls. This is a tool round trip, not an accuracy benchmark.
-- Two real, bounded repair attempts combined Mac 1 `ca36284` with this worker, the actual shared model/guard, private temporary durable audit and the pinned Docker verifier. Both **held**, with no candidate or original-source application. Attempt one reproduced baseline FAIL and completed `run_named_test`, then stopped with `GUARD_HELD`. Attempt two stopped before snapshot creation with `SOURCE_REQUIRES_SANITIZATION`; redacted instrumentation recorded the model's `SANITIZE / IRRELEVANT` decision on ordinary demo source. Both supervisors confirmed worker shutdown; original source and trusted tests were unchanged.
-- No guard policy was bypassed, no source was manually repaired and no test expectation changed to obtain a successful result. These attempts establish that the current privacy/repair combination is not yet reliable enough to demonstrate a successful repair.
+- Explicit source manifests include saved edits, hashes, limits and private disposable snapshots. Traversal, symlink/hardlink escapes and protected paths are rejected.
+- Typed tools list/read approved files, run enrolled checks, propose one-file sandbox replacements and finish. The task declares writable files; native call/result history omits arbitrary model prose and hidden reasoning.
+- Ten actions, two patches and a 180-second investigation budget, with finite model/verifier calls. At most one transport-format retry consumes that same budget. Typed-policy/path denials do not retry as format errors.
+- Prepared Docker image by immutable ID; no runtime pull/install, no network, non-root user, dropped capabilities, read-only root/tests and bounded resources/output/time. No host shell fallback or Docker socket inside the target.
+- Genuine failing baseline and independent final PASS required. Every model-bound result and exported diff passes the guard. Source/export bytes must remain exact; cleaned diagnostic evidence may be used locally.
+- The model edits approved snapshot source only. Original application requires operator approval, candidate/base hashes, scope checks and idempotency. Concurrent edits invalidate candidates. Single-file replacement is best-effort against unrelated editors; no multi-file transaction is claimed.
+- One supervised worker, queued cancellation, pause/manual idle, bounded retained state, saved-file monitor component and durable redacted metadata. Automatic OS-idle scheduling, general project enrollment and production probes remain unfinished. Sleeping laptops cannot repair overnight.
 
-Still unverified: a successful genuine Gemma repair, live coding-client interception and durable/supervised repair application integration. Priority queue behaviour passed unit checks; concurrent privacy/repair latency has not been measured. Passing unit checks or the simple model smoke test does not imply a live repair milestone.
+## Reproduce from the repository root
 
-## Local commands
-
-### Independent Mac 2 tool-loop verification
-
-The repair conversation now replays validated calls as native assistant `tool_calls` and returns guard-approved results with the `tool` role and matching `tool_name`. It omits arbitrary model prose/thinking. Call arguments and source remain only in the transient local conversation; no conversation dump is written to audit. This follows the actual native exchange already used by Mac 1's model smoke test.
-
-The agent also enforces named-test enrollment before calling any verifier implementation, requires a successfully guarded target-file read before a patch, and stops on unavailable checks or cancellation during a guard call. The independent final verifier and operator-only application still apply.
-
-On merged main `0dbc6ae` plus these changes, **136 backend/guard/model/storage/integration checks passed**, including nine new regression cases. Scoped Ruff and whitespace checks passed. These unit checks use declared fake ports; they do not measure model repair quality.
-
-An independent real transport probe is available:
+Install pinned backend dependencies with Python 3.12 and start Docker/Ollama. The measured local ARM64 image was `sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7`; other hosts build/inspect their own image.
 
 ```sh
+.venv/bin/python -m pytest tests -q
+.venv/bin/python -m pip check
+.venv/bin/ruff check --isolated --select E4,E7,E9,F,I devguard/agent devguard/monitor devguard/repair devguard/api/repair_routes.py integrations/codex integrations/local_dashboard.py demo/backend trusted_tests tests/backend
+.venv/bin/python demo/backend/build_runner.py
+docker image inspect devguard-runner:mac2 --format '{{.Id}}'
 .venv/bin/python -m devguard.agent.tool_smoke
 ```
 
-It uses the existing local Ollama client/bridge and selected pinned model. After the first real `read_probe` call, the host generates two random synthetic integers; the model must consume their native tool result and call `report_probe` with the computed sum. The adapter supplies no canned action or answer. The first measured run passed with **two native calls**, result **75**, **7.14 seconds**, using the digest recorded above. This probes transport/tool continuation with public synthetic data only; it is not a guard bypass or a successful bug-repair claim. The earlier full-repair privacy hold still requires Mac 1's review.
-
-From the repository root, use Python 3.12:
+Substitute the actual image ID below. The trial uses real model/guard/API/Docker ports on a disposable **public demo copy**; it never applies to the repository. Report files are new private 0600 files, refusing overwrite. Keep full local reports outside Git.
 
 ```sh
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r tests/backend/requirements-dev.lock
-.venv/bin/python -m pytest tests/backend -q
-.venv/bin/ruff check --isolated --select E4,E7,E9,F,I devguard/agent devguard/monitor devguard/repair devguard/api/repair_routes.py integrations/codex demo/backend trusted_tests tests/backend
-.venv/bin/python -m devguard.repair doctor
+.venv/bin/python -m devguard.repair.demo_trial --image-id sha256:ACTUAL_IMAGE_ID --exercise-apply --queued-cancel --report-file /tmp/devguard-apply-new.json
+.venv/bin/python -m devguard.repair.demo_trial --image-id sha256:ACTUAL_IMAGE_ID --exercise-stale --queued-cancel --report-file /tmp/devguard-stale-new.json
 ```
 
-The local development environment may use the desktop app's bundled Python 3.12 executable to create this venv. No shared root dependency configuration is changed. Mac 1 should reconcile the scoped lock file with the shared dependency lock.
-
-After Docker Desktop's first-run setup and engine startup:
+Persistent local demo (starts paused, capture OFF):
 
 ```sh
-.venv/bin/python demo/backend/build_runner.py
-docker image inspect devguard-runner:mac2 --format '{{.Id}}'
-.venv/bin/python -m devguard.repair baseline --image-id sha256:REPLACE_WITH_ACTUAL_IMAGE_ID
+.venv/bin/python -m devguard --port 8766 --demo-image-id sha256:ACTUAL_IMAGE_ID
+DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py
 ```
 
-The build helper sends only the Dockerfile and scoped dependency lock to Docker. Runtime does not install dependencies. A baseline `FAIL`/exit 1 is expected for this declared buggy demo; a Docker/setup error is not a reproduced application failure. Record the actual resolved image ID. Do not use `python:latest` as a runtime verifier image.
+8766 is a Mac 2 override preserving the existing SSH tunnel on 8765. The launcher reads the existing private local token into dashboard session memory without displaying it or giving it to the model. Use operator incident `demo-cart` / `cart`, investigate, then manual idle through the operator API. The mock server is rehearsal data, not actual execution. A healthy baseline correctly produces no repair.
 
-## Exact interfaces requested from Mac 1
+## Integration and remaining coverage
 
-Internal protocols live in `contracts.py`. They are provisional integration boundaries, not replacements for the shared schemas.
+`build_mac1_binding()` reuses the actual model queue, `RepairGuardBridge`, operator auth and durable event sink. Worker calls run off the app loop. The trusted factory returns the service; the app mounts the router once and supervises shutdown before guard/audit closure. Readiness derives from actual priority queue, durable audit, lifecycle and inspected verifier. HTTP/model inputs cannot enable it or choose roots/images. See [Mac 1 interfaces](../../docs/MAC_2_INTEGRATION.md) and [readiness handoff](../../docs/MAC_1_READINESS_HANDOFF.md).
 
-1. `GuardPort.sanitize(text: str, *, purpose: str) -> str`: approve/sanitize locally for `snapshot_source`, `test_evidence`, `tool_result` and `patch_export`; raise `RepairError` on held/unavailable checks. A SANITIZE response must return approved bytes, never an unvalidated preview. Source requiring sanitization is held before writing a snapshot; the worker also requires an unchanged approved patch diff for export/application.
-2. `ModelPort.metadata`: actual `{"name": "gemma4:e4b-it-q4_K_M", "digest": "<installed digest>"}`. `next_action(messages, tools) -> {"tool": name, "arguments": {...}}` calls the existing shared queue with a finite timeout. Normalize a genuine native function call into that object; do not use a fixture lookup. Honor foreground privacy priority in the shared queue. Do not return or persist hidden reasoning.
-3. A synchronous FastAPI `require_operator` dependency that rejects adapter/model scope. Mount `create_repair_router(service, require_operator)` once. The router does not create a second server or expose model tools that can call apply.
-4. `event_sink(event)` for durable redacted event storage and the existing events endpoint. This branch initially retains run/candidate state only in memory; restart does not resume or apply work. It caps retained runs at 64 and incidents at 256, then holds new work pending operator cleanup/restart. Event-store failures block work and pause the scheduler.
+Foreground privacy overtakes waiting background calls; active inference is not preempted. Concurrent latency has not been measured. Candidate/clipboard/source state is transient; restart does not resume/apply work.
 
-The selected model is the explicit `gemma4:e4b-it-q4_K_M` package and the API port is 8765. `devguard/agent/mac1_bridge.py` adapts Mac 1's asynchronous `inspect()` and `chat(messages, tools=...)` to the synchronous worker, using the same client/lock, checking the digest before each call and requiring one complete native tool call. There is no duplicate Ollama client or inference server.
-
-### Mac 1 application binding, checked against merged `main` at `831e008`
-
-The guard/scoped auth and `RepairGuardBridge` now exist. Read Mac 1's `docs/MAC_2_INTEGRATION.md`; the following helper uses its exact app-state ports without changing Mac 1's files:
-
-```python
-from devguard.repair.mac1_binding import build_mac1_binding
-
-# Inside the running app startup; trusted_verifier_specs is operator configuration.
-service, router = build_mac1_binding(
-    app,
-    loop=asyncio.get_running_loop(),
-    runtime_root=private_runtime_directory,
-    project_specs=trusted_verifier_specs,
-    readiness_check=verified_integration_capabilities,
-)
-app.include_router(router)  # Mac 1 owns mounting once.
-```
-
-The helper uses `app.state.model_queue`, the actual `RepairGuardBridge(app.state.guard, loop, RepairError)`, and `app.state.operator_auth`. A deferred model bridge performs no inference/readiness query during server startup; absent weights hold the later job without preventing privacy-server startup. Calls to guard/model ports and operator repair actions run off the app loop.
-
-`verified_integration_capabilities()` must return actual boolean values for `foreground_priority`, `durable_events`, `worker_lifecycle` and `trusted_verifier`. Default values are false. Missing gates cause HTTP 503 on Enter idle and WAITING_FOR_RESOURCES for attempted jobs; source/model execution does not begin. HTTP clients cannot set these flags. Do not turn them on merely to make a demonstration run.
-
-On Mac 1 integration commit `ca36284`, the default binding prefers the published, thread-safe `app.state.repair_event_sink`. It preserves the run/project associations through Mac 1's canonical `audit.add_repair()` writer. The older `Mac1AuditEventBridge` remains a fallback for `831e008`; it schedules only constrained kind/state records through the legacy writer, whose schema lacks run/project associations. Neither adapter forwards raw summaries or writes a competing schema. An in-memory default audit cannot satisfy the durability gate, even if a caller says it is durable. A custom durable, constrained sink can be supplied explicitly. Completed tool names remain in the run view.
-
-The newer `create_app(..., repair_factory=async_factory)` already mounts the repair router once. For that version, call this binding inside the trusted factory, return only `service`, and discard the returned router; do not mount a duplicate. The factory must supply the verified readiness callback. The current upstream `demo_repair_factory` constructs `RepairService` without that callback, so combining it with this worker correctly holds execution until Mac 1 connects these capabilities. Its lifecycle must call and check `service.shutdown()`, rather than only joining the scheduler. These owner integration steps are not silently enabled by this branch.
-
-Mac 1 must supervise shutdown before closing audit/model/guard resources: `stopped = await asyncio.to_thread(service.shutdown, 30)`. Check the returned result; false means the worker has not stopped and lifecycle readiness has not been established. Shutdown pauses/cancels work and clears retained original/replacement bytes once the worker stops. Do not start a second app/model server.
-
-Mac 1's bounded queue now prioritizes waiting foreground privacy requests over waiting background repairs; active inference is not preempted. `ca36284` adds private durable CLI audit storage; embedded apps still default to memory. Keep execution paused until durable audit handling, trusted image configuration and lifecycle wiring are verified, then report these capabilities through the readiness callback. The first contextual privacy budget is 2 KiB of serialized task/text; oversized evidence holds rather than silently truncating. Named Docker checks run every test, use one-line failure reports and omit warning/header noise. A separate temporary bytecode prefix prevents loading host bytecode caches with stale source paths.
-
-The live hold needs Mac 1 review of purpose-specific privacy/relevance handling. Snapshot source and exported patches require exact approved bytes; dropping comments as irrelevant prevents reproduction and violates that equality requirement. Preserve credential/confidential-data checks and held decisions. Review the relevance task/instructions for exact-source uses; do not replace the real guard with an unconditional approval or teach it a fixture-specific answer. Re-run the real trial after that general policy handling is corrected.
-
-Trusted application startup constructs a `RepairService`, registers `ProjectSpec` configurations and mounts the router. Registration comes from the operator-selected project, not model arguments or arbitrary UI roots. The demo registration helper is `demo.backend.config.demo_project(repository_root, image_id)`.
-
-An actual trial can use an operator-supplied integration factory returning that configured service:
-
-```sh
-.venv/bin/python -m devguard.repair trial --factory YOUR_TRUSTED_MODULE:create_service --project demo-cart --signal cart
-```
-
-`YOUR_TRUSTED_MODULE` is an integration placeholder, not a file supplied by this branch. The CLI never substitutes a fake or hosted model when integration is missing. Trial mode produces a review report, never applies a patch. Application requires the live operator API.
-
-## Run/application behaviour
-
-Create a named incident, queue investigation, then invoke the manual idle endpoint to drain background work. The scheduler initially starts paused. A foreground resume can pause and cancel heavy work; the shared model queue must prioritize guard requests.
-
-Only one changed source file is accepted initially, allowing atomic replacement. Changes to any captured dependency invalidate a candidate. A DevGuard lock coordinates DevGuard writers; editors that ignore that lock still have a narrow check/replace race. This is best-effort conflict protection, not a filesystem transaction against arbitrary concurrent applications. Multi-file transactions and persistent recovery are unfinished.
-
-Keep trusted tests, runtime policy, model adapter and tool definitions outside the model-writable source scope. The first demo writes only `cart.py`; `main.py` and tests remain fixed. Passing these tests establishes only their checked behaviour, not production correctness or resistance to arbitrary malicious Python instrumentation.
-
-Wire `SavedFileMonitor.tick()` into the supervisor lifecycle with configured project and signal. It creates signals after saved files settle; automatic OS-idle/resource heuristics, arbitrary production probes, additional log adapters and 24/7 hosting are later work. A sleeping/shut-down laptop cannot run overnight repairs.
-
-## Before claiming a live milestone
-
-Run real Gemma actions through the shared adapter, record actual digest/settings, reproduce the baseline inside Docker, verify the genuine patch with unchanged checks, inspect exports, demonstrate stale rejection and cancellation, then document the real result. Do not substitute unit-test fake ports or prewritten successful repairs into the demo.
-
-For the coding-client trial, see `integrations/codex/README.md`. Root README/planning status and shared coverage docs need an owner-reviewed update when this branch is integrated; they should not be interpreted as code verification.
+The [Codex adapter](../../integrations/codex/README.md) remains a restrictive prototype: installed-client interception/productive restricted workflows are unverified. Clipboard observation cannot prevent arbitrary pastes; local preview is not outbound delivery. Mac 1 separately measured a managed local reference receiver. Universal interception, perfect detection, Windows native capture and production recovery are not claimed.

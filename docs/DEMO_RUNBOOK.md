@@ -1,113 +1,47 @@
-# DevGuard — Live Demo Runbook & Presentation Guide
+# DevGuard live demo runbook — 16 October 2026
 
-**Owner:** Member 4 (Windows 2 - Scenarios, QA & Demo)  
-**Target:** Live Judges & Hackathon Presentation (3 to 5 minutes)  
-**Companion Fixtures:** `demo/fixtures/demo_scenarios.json`, `demo/fixtures/sample_events.json`, `demo/fixtures/backend_oracles.json`
+Mac 2 continues the assigned Windows 2 QA/demo work. Present actual Live Mode only when the real backend is available. Fixture Mode is an explicitly labelled rehearsal. The newer mock server matches the response envelope, but its data is still simulated; schema compatibility does not prove model execution. Use the actual backend for Live Mode.
 
----
+## Prepared Mac 2 setup
 
-## 1. Pre-Presentation Setup Checklist
+Open <http://127.0.0.1:8501>. The local launcher selects **Live Mode (FastAPI Backend)** and reads the existing private local operator token without displaying it. Backend: `http://127.0.0.1:8766/api/v1`. Port 8765 remains the existing SSH tunnel to Mac 1; do not replace that tunnel or copy another operator's token.
 
-Execute this checklist 15 minutes before the presentation starts:
+Keep the Mac awake and plugged in, Docker Engine running and Ollama available. The prepared repair candidate is transient: restarting the backend removes its run/candidate state. Audit metadata survives, but it cannot reconstruct or auto-apply a candidate. Do not restart a ready demo without time to rerun the genuine investigation.
 
-1. **Verify Local Model Status:**
-   ```powershell
-   ollama list
-   # Verify `gemma4:e4b-it-q4_K_M` is present and active
-   curl http://127.0.0.1:11434/api/tags
-   ```
-2. **Start DevGuard Backend:**
-   ```powershell
-   python -m devguard
-   # Confirm GET http://127.0.0.1:8765/api/v1/health returns {"status":"ok","model_ready":true}
-   ```
-3. **Launch Operator Dashboard:**
-   ```powershell
-   python -m streamlit run devguard/ui/app.py
-   # Opens in browser at http://localhost:8501
-   ```
-4. **Prepare Demo Repository Snapshot:**
-   - Ensure `demo/backend/cart.py` has the deliberate quantity multiplication defect:
-     `total += item['price']` instead of `total += item['quantity'] * item['price']`.
-   - Ensure `trusted_tests/test_cart.py` is unmodified.
-5. **Set Environment to LIVE or FIXTURE Mode:**
-   - If Ollama and FastAPI are running: Switch sidebar to **Live Mode** (`http://127.0.0.1:8765/api/v1`).
-   - If presenting offline without local GPU/Ollama: Keep default **Fixture Mode** with the persistent, honest disclaimer banner.
+If startup is required, run each command in a separate terminal from the repository root, substituting the actual inspected local image ID:
 
----
+```sh
+.venv/bin/python -m devguard --port 8766 --demo-image-id sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7
+DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py
+```
 
-## 2. 3-Minute Demo Presentation Script
+That image exists on the measured Mac 2; other machines build/inspect their own. Capture starts OFF and repair starts paused. Creating an incident/queued investigation and invoking manual idle are operator API actions, not a model power. See [repair commands](../devguard/repair/README.md).
 
-### Act 1: The Problem & Architecture (0:00 – 0:45)
-- **Speaker:** *"AI coding assistants supercharge development, but sending entire prompts, error logs, and clipboards to external cloud models leaks private credentials, customer PII, and internal architectural secrets. Traditional security tools are either post-hoc scanners or invasive screen loggers."*
-- **Visual:** Point to the DevGuard architecture banner in the UI.
-- **Speaker:** *"DevGuard introduces a dual-agent, local-first paradigm powered completely on-device by Gemma 4 E4B. First: a synchronous privacy gate that intercepts and sanitizes developer input before transmission. Second: a background repair agent that investigates code regressions in disposable Docker sandboxes using structured logs and tests—with zero screen recording or visual surveillance."*
+## Three-minute presentation
 
----
+1. **0:00–0:25 — Problem.** “Developers paste too much private context into coding assistants, and backend failures take time to investigate. DevGuard uses one local Gemma model to inspect supported text paths and investigate a bounded backend failure.” Show Live Mode and the actual model digest. Do not claim universal interception or broad accuracy.
+2. **0:25–1:05 — Privacy Gate.** In Custom Input, set task `Debug the HTTP 500 at cart.py:17`, destination `local-preview`, and declared synthetic text `password=synthetic-native-fixture-710938; HTTP 500 at cart.py:17.` Evaluate. Show the actual decision/reasons/preview. An approved cleaned preview should omit the dummy password while retaining diagnostic facts; if held, show the hold honestly. Do not replace the decision with a fixture. `local-preview` does not deliver externally; the separate managed-local-receiver experiment has a measured receipt and replay hold in the evidence.
+3. **1:05–1:25 — Native text workflow.** Show capture OFF and explain explicit opt-in, future-copy-only observation and version-checked cleaned copy. The isolated native test passed all 12 checks; the separate combined-email/api-key system test was HELD and cleaned-copy did not run. No fresh system clipboard trial is needed for this presentation. Never turn capture on silently or claim arbitrary paste prevention.
+4. **1:25–2:35 — Backend repair.** Open **Repair & Patches**, select the real `demo-cart` incident and show READY_FOR_REVIEW, baseline FAIL, independent PASS, completed native tools and the actual unified diff. The actual cart uses `unit_amount` and `quantity`; there is no `price` field in the runtime fixture. Explain that Gemma inspected evidence and modified a snapshot while the verifier remained outside its write authority. Leave repository apply for a deliberate operator decision; the disposable approved/idempotent apply already passed in 46.07 seconds.
+5. **2:35–3:00 — Evidence and boundaries.** Show the real stale receipt: 409 STALE_SOURCE, developer edit preserved, run OBSOLETE; queued cancellation created no candidate. End with local Gemma, MIT application code, a public repository, and the measured scope. Automatic OS-idle scheduling and installed Codex interception remain unfinished; laptop sleep stops work.
 
-### Act 2: Privacy Gate & Exact-Span Redaction (0:45 – 1:30)
-- **Action in UI:** Navigate to **🛡️ Privacy Gate** view.
-- **Input Text:** Paste synthetic diagnostic log from `demo/fixtures/demo_scenarios.json` (Scenario 1):
-  ```
-  ValueError at auth.py:54 in authenticate: Invalid credentials for user contact@enterprise.invalid with token ghp_synthetic_pat_1234567890abcdef. Please check why validation failed.
-  ```
-- **Click:** **Evaluate Privacy Gate**.
-- **Observable Outcome:**
-  - Decision: **`SANITIZE`** (Yellow Badge).
-  - Reason Codes: `[PERSONAL_DATA, CREDENTIAL]`.
-  - Safe Preview: `ValueError at auth.py:54 in authenticate: Invalid credentials for user [CUSTOMER_EMAIL_1] with token [REDACTED_SECRET_TOKEN_1]. Please check why validation failed.`
-- **Speaker:** *"Notice the precision: Gemma 4 and Gitleaks identify the customer email and token, replacing them with type-safe placeholders, while 100% of the debugging facts—the file path, line number, and exception class—remain intact. The assistant can fix the bug without ever seeing private bytes."*
+## Failure branches
 
----
+- Backend unavailable or incompatible: show the error, restore the actual backend, or switch visibly to Fixture Mode. Do not present the mock server as live inference.
+- Privacy REVIEW/BLOCK/timeout: demonstrate that the request remains held. The user may revise input; no hard-policy override exists.
+- Repair BLOCKED/UNRESOLVED: keep its reason and evidence. Do not paste a known repair into the runtime or weaken checks.
+- Applied/healthy demo: a healthy baseline correctly produces no candidate. Use the disposable trial below for another genuine run rather than resetting user edits.
+- Stale apply: preserve the concurrent edit; investigate a fresh snapshot. Never reset or force the old candidate.
 
-### Act 3: Opt-In Text Clipboard & Cleaned Copy (1:30 – 2:15)
-- **Action in UI:** Navigate to **📋 Text Clipboard** view.
-- **Speaker:** *"Developers constantly copy stack traces and database connection strings. DevGuard includes an opt-in text watcher for macOS."*
-- **Visual Cue:** Note the host status: Enrolled macOS host with Windows operator dashboard viewer.
-- **Simulate Clipboard Payload:** (Scenario 2 from `demo_scenarios.json`):
-  `DATABASE_URL="postgres://demo_admin:SuperSecretPass2026!@db.internal.invalid:5432/app_db"`
-- **Observable Outcome:**
-  - State: **`SENSITIVE`** (Warning badge).
-  - Safe Preview: `DATABASE_URL="postgres://demo_admin:REDACTED_PASSWORD_01@db.internal.invalid:5432/app_db"`
-- **Click:** **Copy Cleaned Text**.
-- **Speaker:** *"With one click, the sanitized string replaces the OS clipboard without triggering an infinite re-scan loop. The raw password is transiently wiped from memory."*
+## Repeatable measured commands
 
----
+```sh
+.venv/bin/python -m devguard.repair.demo_trial --image-id sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7 --exercise-apply --queued-cancel --report-file /tmp/devguard-demo-apply-new.json
+.venv/bin/python -m devguard.repair.demo_trial --image-id sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7 --exercise-stale --queued-cancel --report-file /tmp/devguard-demo-stale-new.json
+.venv/bin/python -m devguard.clipboard.smoke
+.venv/bin/python -m devguard.ui.smoke
+```
 
-### Act 4: Background Repair Agent & Stale Conflict Protection (2:15 – 3:00)
-- **Action in UI:** Navigate to **🔧 Repair & Patches** view.
-- **Incident:** `inc-demo-cart-01` ("Cart quantity calculation regression").
-- **Visual Cue:**
-  - Baseline Test Status: **FAILS** (`3 * 125 returned 125, expected 375`).
-  - Observation: Identified line 8 in `demo/backend/cart.py`.
-  - Sandbox Test Evidence: `pytest trusted_tests/test_cart.py (3/3 PASSED)`.
-  - Unified Diff:
-    ```diff
-    --- a/demo/backend/cart.py
-    +++ b/demo/backend/cart.py
-    @@ -6,3 +6,3 @@
-    -    total += item['price']
-    +    total += item['quantity'] * item['price']
-    ```
-- **Show Stale Protection:**
-  - Mention: *"If the developer concurrently edits `cart.py` while the patch was pending, the backend checks the base hash and immediately rejects application with HTTP 409 Conflict (`STALE_CONTENT`), preventing code loss."*
-- **Click:** **Apply Patch** (when base hash matches).
-- **Observable Outcome:** Patch state transitions to **`APPLIED`**. Working tree is verified clean.
+The first two use disposable public copies; they never apply to the repository. The default clipboard smoke uses an isolated named board and never touches the general clipboard. Do not add its optional system-clipboard flag without fresh explicit consent. Full local reports stay private; Git contains bounded metadata only.
 
----
-
-## 3. Failure & Contingency Procedures
-
-| Problem | Contingency Action | Talking Point |
-| :--- | :--- | :--- |
-| **Ollama connection drops during presentation** | UI displays clean `503 Service Unavailable` banner. Request is held safe (`REVIEW`). | *"This demonstrates our core fail-closed invariant: if the local model is offline, DevGuard halts delivery rather than leaking uninspected data."* |
-| **No local GPU available for demo** | Keep dashboard in **Fixture Mode**. | *"We are running under Fixture Mode, which displays synthetic contract data without pretending it is live model output."* |
-| **Host is Windows (Native capture unsupported)** | UI clearly displays `Windows (viewer only - local capture UNSUPPORTED)`. | *"We believe in honest capability boundaries: native clipboard interception is supported on macOS; Windows runs as an operator viewer."* |
-
----
-
-## 4. Key Takeaways for Judges
-1. **Real Gemma 4 E4B Utilization:** Efficient local quantization running on developer laptops without cloud telemetry.
-2. **Dual Capability:** Unified guard and repair workflows sharing an intelligent FIFO priority queue.
-3. **Zero Screen/Video Scraping:** Privacy-first design using structured code diffs, logs, and independent unit tests.
-4. **Honest Open-Source Engineering:** Explicit coverage matrices, strict error handling, and complete reproducibility.
+See [measured evaluation](EVALUATION.md), [repair evidence](../devguard/repair/README.md) and [submission text](SUBMISSION_FINAL.md). Keep local tokens/audit databases/model weights/snapshots out of screenshots, recordings, Git and messages.

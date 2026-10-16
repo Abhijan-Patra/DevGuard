@@ -88,7 +88,7 @@ def investigate(
     baseline_output: str,
     cancel: Event,
     on_tool,
-    max_steps: int = 8,
+    max_steps: int = 10,
     max_patches: int = 2,
     budget_seconds: float = 180,
 ) -> bool:
@@ -103,6 +103,7 @@ def investigate(
                     "task": "Investigate the failing named backend check and propose a correction.",
                     "test_name": test_name,
                     "allowed_files": list(spec.source_files),
+                    "writable_files": list(spec.writable_files),
                     "baseline": guard.sanitize(
                         baseline_output, purpose="test_evidence"
                     ),
@@ -113,13 +114,33 @@ def investigate(
     deadline = time.monotonic() + budget_seconds
     patches = 0
     read_paths: set[str] = set()
+    native_retries = 0
     for _ in range(max_steps):
         if cancel.is_set():
             raise RepairError("CANCELED")
         if time.monotonic() >= deadline:
             raise RepairError("RUN_BUDGET_EXHAUSTED")
         try:
-            action = Action.model_validate(model.next_action(messages, TOOLS))
+            proposed = model.next_action(messages, TOOLS)
+        except RepairError as error:
+            if error.code != "INVALID_MODEL_ACTION" or native_retries >= 1:
+                raise
+            native_retries += 1
+            # No invalid call is executed or replayed. This retry still consumes
+            # a model step and the same wall-clock budget; policy errors do not retry.
+            messages.append(
+                {
+                    "role": "user",
+                    "content": (
+                        "The previous response did not contain one complete native function call. "
+                        "Return exactly ONE supplied tool call with all required typed arguments. "
+                        "Do not return prose, multiple calls or a partial replacement."
+                    ),
+                }
+            )
+            continue
+        try:
+            action = Action.model_validate(proposed)
             args = TOOL_TYPES[action.tool].model_validate(action.arguments)
         except (ValidationError, TypeError, ValueError):
             raise RepairError("INVALID_MODEL_ACTION") from None

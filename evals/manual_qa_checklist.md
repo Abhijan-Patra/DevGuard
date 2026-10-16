@@ -87,9 +87,9 @@ This checklist guides manual quality assurance across the DevGuard operator inte
 
 ---
 
-## 3. Automated Dashboard Regression Coverage (38 Tests Passing)
+## 3. Automated dashboard regression coverage
 
-The Streamlit operator dashboard invariants requested in `docs/tasks/MAC_2_WINDOWS_2_CONTINUATION.md` are continuously automated and verified under `tests/ui/`:
+The current integrated suite passed 210 tests, including all 44 collected UI tests; these are separate from live model experiments. The Streamlit operator dashboard invariants requested in `docs/tasks/MAC_2_WINDOWS_2_CONTINUATION.md` are continuously automated and verified under `tests/ui/`:
 
 | Invariant / Check | Test Name | Result |
 | :--- | :--- | :---: |
