@@ -28,7 +28,7 @@ class ModelPort(Protocol):
         """Must include the selected explicit Q4 tag and a nonempty actual digest."""
         ...
 
-    def next_action(self, messages: list[dict[str, str]], tools: list[dict]) -> dict:
+    def next_action(self, messages: list[dict[str, Any]], tools: list[dict]) -> dict:
         """Call Mac 1's bounded shared queue; return one validated action object."""
         ...
 

@@ -6,6 +6,7 @@ then invoke from the repair worker thread. Privacy remains a separate required p
 
 import asyncio
 from concurrent.futures import TimeoutError as FutureTimeout
+from typing import Any
 
 from devguard.repair.contracts import SELECTED_MODEL, RepairError
 
@@ -31,7 +32,7 @@ class Mac1ModelBridge:
     def metadata(self) -> dict[str, str]:
         return dict(self._metadata)
 
-    def next_action(self, messages: list[dict[str, str]], tools: list[dict]) -> dict:
+    def next_action(self, messages: list[dict[str, Any]], tools: list[dict]) -> dict:
         try:
             if asyncio.get_running_loop() is self.loop:
                 raise RepairError("MODEL_CALL_REQUIRES_WORKER_THREAD")

@@ -7,6 +7,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from devguard.agent.tool_messages import append_tool_exchange
 from devguard.repair.contracts import (
     SELECTED_MODEL,
     GuardPort,
@@ -111,6 +112,7 @@ def investigate(
     ]
     deadline = time.monotonic() + budget_seconds
     patches = 0
+    read_paths: set[str] = set()
     for _ in range(max_steps):
         if cancel.is_set():
             raise RepairError("CANCELED")
@@ -138,9 +140,19 @@ def investigate(
                 "content": data.decode(),
             }
         elif isinstance(args, NamedTest):
+            if args.name not in spec.test_names:
+                raise RepairError("TEST_DENIED")
             check = verifier.run(snapshot.source, spec, args.name, cancel)
+            if cancel.is_set() or check.status == "CANCELED":
+                raise RepairError("CANCELED")
+            if check.status not in {"PASS", "FAIL"}:
+                raise RepairError("CHECK_UNAVAILABLE")
             result = {"status": check.status, "output": check.output}
         elif isinstance(args, Patch):
+            if args.path not in spec.writable_files:
+                raise RepairError("WRITE_DENIED")
+            if args.path not in read_paths:
+                raise RepairError("READ_BEFORE_PATCH_REQUIRED")
             if patches >= max_patches:
                 raise RepairError("PATCH_BUDGET_EXHAUSTED")
             replace_in_snapshot(
@@ -159,10 +171,15 @@ def investigate(
                 "tests": list(spec.test_names),
             }
         safe_result = guard.sanitize(json.dumps(result), purpose="tool_result")
-        # Omit action arguments: replacement/source bytes need not be echoed back to the model.
-        messages.append(
-            {"role": "assistant", "content": json.dumps({"tool": action.tool})}
+        if cancel.is_set():
+            raise RepairError("CANCELED")
+        if isinstance(args, ReadFile):
+            read_paths.add(args.path)
+        append_tool_exchange(
+            messages,
+            name=action.tool,
+            arguments=args.model_dump(),
+            result=safe_result,
         )
-        messages.append({"role": "user", "content": safe_result})
         on_tool(action.tool)
     raise RepairError("TOOL_BUDGET_EXHAUSTED")

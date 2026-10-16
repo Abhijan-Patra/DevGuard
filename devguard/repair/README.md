@@ -35,6 +35,22 @@ Still unverified: a successful genuine Gemma repair, live coding-client intercep
 
 ## Local commands
 
+### Independent Mac 2 tool-loop verification
+
+The repair conversation now replays validated calls as native assistant `tool_calls` and returns guard-approved results with the `tool` role and matching `tool_name`. It omits arbitrary model prose/thinking. Call arguments and source remain only in the transient local conversation; no conversation dump is written to audit. This follows the actual native exchange already used by Mac 1's model smoke test.
+
+The agent also enforces named-test enrollment before calling any verifier implementation, requires a successfully guarded target-file read before a patch, and stops on unavailable checks or cancellation during a guard call. The independent final verifier and operator-only application still apply.
+
+On merged main `0dbc6ae` plus these changes, **136 backend/guard/model/storage/integration checks passed**, including nine new regression cases. Scoped Ruff and whitespace checks passed. These unit checks use declared fake ports; they do not measure model repair quality.
+
+An independent real transport probe is available:
+
+```sh
+.venv/bin/python -m devguard.agent.tool_smoke
+```
+
+It uses the existing local Ollama client/bridge and selected pinned model. After the first real `read_probe` call, the host generates two random synthetic integers; the model must consume their native tool result and call `report_probe` with the computed sum. The adapter supplies no canned action or answer. The first measured run passed with **two native calls**, result **75**, **7.14 seconds**, using the digest recorded above. This probes transport/tool continuation with public synthetic data only; it is not a guard bypass or a successful bug-repair claim. The earlier full-repair privacy hold still requires Mac 1's review.
+
 From the repository root, use Python 3.12:
 
 ```sh
