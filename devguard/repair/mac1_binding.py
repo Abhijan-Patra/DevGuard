@@ -36,14 +36,23 @@ def build_mac1_binding(
         queue, guard, auth = state.model_queue, state.guard, state.operator_auth
     except AttributeError:
         raise RepairError("INTEGRATION_PORTS_UNAVAILABLE") from None
+    published_sink = False
     if event_sink is None:
-        event_sink = Mac1AuditEventBridge(state.audit, loop)
+        event_sink = getattr(state, "repair_event_sink", None)
+        published_sink = callable(event_sink)
+        if not published_sink:
+            event_sink = Mac1AuditEventBridge(state.audit, loop)
 
     def ready():
         flags = dict(readiness_check() if readiness_check else {})
         if isinstance(event_sink, Mac1AuditEventBridge):
             flags["durable_events"] = (
                 flags.get("durable_events") is True and event_sink.durable
+            )
+        elif published_sink:
+            flags["durable_events"] = (
+                flags.get("durable_events") is True
+                and getattr(state.audit, "durable", False) is True
             )
         return flags
 

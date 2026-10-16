@@ -59,3 +59,42 @@ def test_binding_rejects_missing_published_ports_without_inference(tmp_path):
             event_sink=lambda event: None,
             guard_bridge_factory=lambda *args: None,
         )
+
+
+@pytest.mark.parametrize("durable", [True, False])
+def test_binding_prefers_published_repair_sink_and_checks_its_durability(
+    spec, tmp_path, durable
+):
+    events = []
+    app = SimpleNamespace(
+        state=SimpleNamespace(
+            model_queue=object(),
+            guard=object(),
+            operator_auth=lambda: "operator",
+            repair_event_sink=events.append,
+            audit=SimpleNamespace(durable=durable),
+        )
+    )
+    service, _ = build_mac1_binding(
+        app,
+        loop=object(),
+        runtime_root=tmp_path / "runtime",
+        project_specs=(spec,),
+        readiness_check=lambda: dict.fromkeys(
+            (
+                "foreground_priority",
+                "durable_events",
+                "worker_lifecycle",
+                "trusted_verifier",
+            ),
+            True,
+        ),
+        guard_bridge_factory=lambda *args: object(),
+    )
+    incident = service.create_incident("demo", "cart")
+    run = service.queue(incident["incident_id"])
+    service._event(run, "run.state", "Repair state: QUEUED")
+    assert events[0]["run_id"] == run.run_id
+    assert events[0]["project_id"] == "demo"
+    assert service.integration_ready() is durable
+    assert service.model._bridge is None
