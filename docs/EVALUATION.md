@@ -4,7 +4,7 @@ Status: the 26 catalogue records remain UNRUN. Separate targeted real-model expe
 
 ## Measured experiments — 16 October 2026
 
-- Integrated main `1099a86` plus Mac 2 worker: **209 automated tests passed**; pip check clean. Unit tests use declared fake model/verifier ports and do not measure model accuracy.
+- Integrated main `679d3be` plus Mac 2 worker: **210 automated tests passed**; pip check clean. Unit tests use declared fake model/verifier ports and do not measure model accuracy.
 - Actual local Gemma + guard + API + restricted Docker: failing cart baseline, genuine source patch, independent PASS, approved application on a disposable public copy, idempotent repeat and post-apply PASS in **46.07 s**. Original repository/test hashes unchanged; worker stopped; 28 audit records survived reopening.
 - Separate actual stale/cancel trial: queued cancellation without candidate, then a passing model candidate, concurrent edit, **409 STALE_SOURCE**, edit preserved and run OBSOLETE in **42.19 s**. Full metadata and failed attempts: [repair verification](../devguard/repair/README.md).
 - Mac 2 isolated named pasteboard: all 12 lifecycle/copy checks passed; **1.550 s** copy-to-finding; no general clipboard access. [Metadata](../evals/results/mac2-private-pasteboard.json).
@@ -12,7 +12,7 @@ Status: the 26 catalogue records remain UNRUN. Separate targeted real-model expe
 - Mac 2 explicitly consented system clipboard input containing a combined synthetic trace/email/api-key was HELD/REVIEW by final policy scanning. Cleaned-copy was not exercised; capture was disabled afterward. This failure is preserved rather than replaced by the passing private-board input. [Metadata](../devguard/repair/verification/mac2-system-clipboard-held.json).
 - Mac 1's separate native/system clipboard and live reference-delivery/render checks are recorded in [owner evidence](MAC_1_WINDOWS_1_COMPLETION.md). No cross-host timings are pooled into an accuracy or latency benchmark.
 
-The real repair tests use `unit_amount`, `quantity`, and parameterized `test_cart_behavior`; older catalogue descriptions mention conceptual `price` fields and nonexistent test function names. Those entries need explicit mapping before execution. Expectations have not been changed to manufacture passes. A JSON schema/fixture check is not scenario execution. The mock server is rehearsal data and fails the actual live runtime contract; use labelled Fixture Mode for offline presentation.
+The real repair tests use `unit_amount`, `quantity`, and parameterized `test_cart_behavior`; older catalogue descriptions mention conceptual `price` fields and nonexistent test function names. Those entries need explicit mapping before execution. Expectations have not been changed to manufacture passes. A JSON schema/fixture check is not scenario execution. The newer mock server matches the live response envelope, but its data is still simulated and does not prove Gemma readiness or execution. Use labelled Fixture Mode for offline presentation; do not infer authenticity from schema compatibility.
 
 ## Case catalogue
 
@@ -79,4 +79,21 @@ All records are marked `synthetic_fixture: true` and `status: UNRUN` until execu
 P0 privacy/clipboard: real local model, real capture change, explicit cleaned-copy flow, one actual managed delivery with leakage inspection, benign case, crash/pending case and honest coverage view.
 
 P1 repair: at least one independent baseline failure, real model-selected evidence/tool actions, source patch, unchanged independent verifier passing, scan of exports and stale candidate rejection. If P1 is unfinished, say so in the submission.
+
+## Historical Mac 1 reference measurements (16 October 2026)
+
+On Apple Silicon M4 (16 GiB, Python 3.11.14, Ollama 0.40.4) using pinned model `gemma4:e4b-it-q4_K_M` (digest `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c`):
+- **Privacy Gate Reference Trials (4 samples):**
+  - Benign code snippet: **0.96s**
+  - High-entropy credential extraction: **1.31s**
+  - Contextual confidential prose analysis: **1.48s**
+  - Unrelated diagnostic context pruning: **1.29s**
+  - All four replay attempts successfully held (`decision: REVIEW`).
+- **Autonomous Docker Sandbox Repair Trial:** **38.24s**
+  - Native tool conversation, baseline failure reproduced in Docker, Gemma patch synthesized, immutable test verifier passed, candidate transitioned to `READY_FOR_REVIEW`.
+- **Automated Test Assertions:**
+  - **171 Passed** across Mac 1/Mac 2 backend, repair, guard, and storage test suites.
+  - **38 Passed** across Windows operator UI rendering, mock live server, and QA harness.
+
+The historical counts above are from the owner handoff, not the current integrated checkout. The current full suite passed 210 tests, including its 44 collected UI tests. All 26 catalogue records remain UNRUN; update each only after its exact scenario is executed with evidence, without requiring or implying completion of the entire dataset.
 

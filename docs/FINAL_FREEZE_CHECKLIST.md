@@ -2,7 +2,7 @@
 
 Mac 2 continues the assigned QA/demo handoff. Checked entries describe measured work; unchecked entries remain team actions.
 
-- [x] Integrated automated suite: **209 passed**; one existing Starlette/HTTPX deprecation warning. `pip check` clean.
+- [x] Integrated automated suite: **210 passed**; one existing Starlette/HTTPX deprecation warning. `pip check` clean.
 - [x] Mac 2 source Ruff/whitespace checks and new-commit Gitleaks scan passed; no private runtime files staged. This is a scoped scan, not certification of every repository commit.
 - [x] Exact Gemma package/digest recorded; context 4096, privacy/tool output 512/1024, temperature 0, thinking off. Inference refuses a different/missing digest.
 - [x] Real local Gemma/guard/API/Docker: baseline FAIL → genuine patch → independent PASS → approved disposable APPLIED → idempotent repeat → post-apply PASS; source/tests unchanged and worker stopped.

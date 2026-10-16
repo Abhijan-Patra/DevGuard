@@ -1,6 +1,6 @@
 # DevGuard live demo runbook — 16 October 2026
 
-Mac 2 continues the assigned Windows 2 QA/demo work. Present actual Live Mode only when the real backend is available. Fixture Mode is an explicitly labelled rehearsal. The mock server is not real Gemma execution and is rejected by the current live-contract check.
+Mac 2 continues the assigned Windows 2 QA/demo work. Present actual Live Mode only when the real backend is available. Fixture Mode is an explicitly labelled rehearsal. The newer mock server matches the response envelope, but its data is still simulated; schema compatibility does not prove model execution. Use the actual backend for Live Mode.
 
 ## Prepared Mac 2 setup
 
