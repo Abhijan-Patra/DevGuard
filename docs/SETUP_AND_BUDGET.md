@@ -19,7 +19,7 @@ ollama show gemma4:e4b-it-q4_K_M
 ollama run gemma4:e4b-it-q4_K_M
 ```
 
-Record actual model digest/backend and settings. Package tags may change. The first setup check now confirms the client/server at 0.40.4 with the selected Q4 model downloading. Installed weights and inference performance are still pending. Do not promise that startup is already complete.
+Record actual model digest/backend and settings. Package tags may change. Mac 1 now has the exact Q4 package installed, with real tool/reference-receiver trials recorded in [the current handoff](MAC_1_READINESS_HANDOFF.md). No extra model download or cloud GPU is required for the next local trial.
 
 For clipboard integration, evaluate a compatible macOS native bridge for NSPasteboard, with consent and permission failure handling. Keep capture platform code separate from classification so the service can be tested with synthetic text.
 

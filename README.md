@@ -2,7 +2,7 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: privacy/clipboard APIs, the dashboard and Mac 2's repair routes are now wired together. The CLI persists redacted audit metadata; capture starts OFF and repair stays unavailable/paused until trusted model/verifier configuration is ready. The combined suite passes 132 tests. Real Gemma inference, Docker repair and coding-client delivery remain unverified. See [integration status](docs/INTEGRATION_STATUS.md) for checks and remaining gates.
+Status: privacy/clipboard APIs, dashboard and Mac 2 repair routes are integrated. Capture starts OFF. The Mac 1 guard/readiness handoff passes 171 tests with merged PR #10, and four real Gemma synthetic cases passed through a managed local reference receiver. Mac 2 owns the final repair/demo and installed-client proof. See [current handoff](docs/MAC_1_READINESS_HANDOFF.md) and [integration status](docs/INTEGRATION_STATUS.md).
 
 DevGuard inspects supported prompts, file access, tool results and copied text; it also investigates reproducible backend failures and prepares independently tested patches in a disposable workspace. Clipboard capture is a required, opt-in feature. Bug diagnosis uses source, structured logs, diffs, named API probes and tests; it does not depend on screenshots or screen recordings.
 

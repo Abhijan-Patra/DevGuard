@@ -19,6 +19,7 @@ class RepairRuntime:
         self.factory = factory
         self.service = None
         self.reason = 'REPAIR_NOT_CONFIGURED'
+        self.lifecycle_managed = False
         self._initializing = asyncio.Lock()
 
     async def initialize(self, app):
@@ -56,7 +57,11 @@ class RepairRuntime:
 
     async def join(self):
         if self.service is not None:
-            await asyncio.to_thread(self.service.scheduler.join, 30)
+            stopped = await asyncio.to_thread(self.service.shutdown, 30)
+            if not stopped:
+                return False
+        self.lifecycle_managed = False
+        return True
 
     def incidents(self):
         if self.service is None:
@@ -124,7 +129,18 @@ def demo_repair_factory(repository_root: Path, image_id: str):
             model=Mac1ModelBridge(app.state.model_queue, loop, runtime),
             guard=RepairGuardBridge(app.state.guard, loop, RepairError),
             verifier=verifier, runtime_root=repository_root/'.devguard'/'repair',
-            event_sink=app.state.repair_event_sink)
+            event_sink=app.state.repair_event_sink,
+            readiness_check=lambda: {
+                'foreground_priority': (
+                    app.state.model_queue.queue.PRIORITIES.get('foreground', 10)
+                    < app.state.model_queue.queue.PRIORITIES.get('background', 0)
+                    and not app.state.model_queue.queue.status()['closed']),
+                'durable_events': app.state.audit.durable is True,
+                'worker_lifecycle': app.state.repair.lifecycle_managed is True,
+                # The image inspection above and fixed demo manifest are trusted
+                # startup checks, never flags supplied by an HTTP/model request.
+                'trusted_verifier': True,
+            })
         service.register_project(demo_project(repository_root, image_id))
         return service
     return create

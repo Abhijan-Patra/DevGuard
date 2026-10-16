@@ -2,8 +2,10 @@
 
 import asyncio
 from pathlib import Path
+from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
+import pytest
 
 from devguard.api.app import create_app
 from devguard.clipboard.native import UnsupportedClipboard
@@ -91,3 +93,36 @@ def test_real_worker_ports_bridge_audit_and_display_client_without_touching_orig
             expected_base_revision=patch['base_revision'],idempotency_key='test-only',approved=True)
         assert approved['state']=='APPLIED' and (root/'cart.py').read_text()=='VALUE = 2\n'
     assert services[0].scheduler.paused
+    assert services[0].scheduler.stopped()
+    assert services[0]._closed
+
+
+@pytest.mark.parametrize('first_drain_stops', [True, False])
+def test_shutdown_waits_for_worker_acknowledgement_before_clearing_resources(tmp_path, first_drain_stops):
+    audit = AuditStore(tmp_path/'private'/'audit.sqlite3')
+    observed = []
+    async def factory(app):
+        # An actual service is required by startup. No work/model is executed;
+        # the injected shutdown result exercises the resource-order boundary.
+        from devguard.repair.service import RepairService
+        service = RepairService(model=object(), guard=object(), verifier=object(),
+            runtime_root=tmp_path/'work', event_sink=app.state.repair_event_sink)
+        original_shutdown = service.shutdown
+        def shutdown(timeout):
+            assert app.state.guard.records.get('sentinel') is not None
+            assert audit.events()['events'] == []
+            closed = app.state.model_queue.queue.status()['closed']
+            observed.append(closed)
+            if not first_drain_stops and len(observed) == 1:
+                return False
+            return original_shutdown(timeout)
+        service.shutdown = shutdown
+        app.state.guard.records['sentinel'] = SimpleNamespace(candidate=None, deadline=float('inf'))
+        return service
+    app = create_app(Settings(TOKEN), audit=audit, repair_factory=factory,
+        clipboard_adapter=UnsupportedClipboard())
+    with TestClient(app):
+        assert app.state.repair.lifecycle_managed
+    assert observed == ([False] if first_drain_stops else [False, True])
+    assert not app.state.repair.lifecycle_managed
+    assert not app.state.guard.records
