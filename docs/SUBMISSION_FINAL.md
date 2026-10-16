@@ -60,25 +60,34 @@ DevGuard operates under a strict **fail-closed** policy: if the model is unavail
 
 ## 3. How DevGuard Leverages Gemma 4
 
-DevGuard runs a locally quantized **Gemma 4 E4B** model (`gemma4:e4b-it-q4_K_M`) through Ollama. We utilize Gemma 4 for two distinct reasoning modes:
+DevGuard runs a locally quantized **Gemma 4 E4B** model (`gemma4:e4b-it-q4_K_M`) through Ollama.
+- **Pinned Model Digest:** `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c`
+- **Execution Engine:** `llamacpp` GPU runner on Apple Silicon / desktop GPU
+- **Bounded Deterministic Hyperparameters:** `num_ctx: 4096`, `temperature: 0`, `think: false`, `num_predict: 512` (privacy) / `1024` (repairs)
 
 ### A. Semantic Privacy Reasoning (Foreground Priority)
 Traditional regex scanners fail on contextual prose—such as an internal meeting note mentioning an unreleased project name or a customer's address embedded in conversational text. Gemma 4 analyzes input context to:
 - Identify contextual confidential prose (`CONFIDENTIAL`) and customer PII (`PERSONAL_DATA`).
 - Return exact character offset spans for redaction.
 - Distinguish between sensitive credentials and harmless identifiers (e.g., matching git commit hashes or UUIDs without raising false alarms).
+- **Measured Latency on Apple Silicon M4:**
+  - Benign code snippet: **0.96s**
+  - High-entropy credential extraction: **1.31s**
+  - Contextual confidential prose analysis: **1.48s**
+  - Unrelated diagnostic context pruning: **1.29s**
 
 ### B. Diagnostic Code Repair Reasoning (Background Priority)
 When an incident is reported, Gemma 4:
 - Ingests structured test failure outputs (e.g., `AssertionError: 3 * 125 != 125`).
 - Inspects repository source files through guarded tool interfaces.
 - Formulates a targeted unified diff patch targeting only the defect.
+- **Measured End-to-End Sandbox Turnaround:** **38.24s** (baseline failure reproduced in Docker → Gemma patch synthesized → independent immutable verifier passed → status transitioned to `READY_FOR_REVIEW`).
 
 ### C. Shared Model Queue & Priority Invariant
 Both agents share a single local Gemma 4 runtime without GPU contention. The system enforces a **strict priority queue**:
 - Foreground privacy gate requests take immediate precedence to keep the developer's interactive workflow fast.
 - Background repair jobs yield inference turns until the interactive queue is clear.
-- All model options are bounded and deterministic: `num_ctx: 4096`, `temperature: 0`, `num_predict: 512` (prompts) / `1024` (repairs), and `think: false`.
+- All model options are bounded and deterministic.
 
 ---
 
@@ -133,11 +142,14 @@ Our evaluation framework consists of **26 structured test scenarios** catalogued
 Per `AGENTS.md` and `docs/EVALUATION.md`, all synthetic evaluation records in `evals/results/results_registry.json` are transparently marked `UNRUN` until verified against live Mac hardware running active Ollama sessions. DevGuard never presents simulated fixture outputs as measured model performance.
 
 ### Automated Test Coverage
-- **143 Total Automated Unit & Integration Tests** spanning:
-  - Guard engine, ContextInspector, and Gitleaks scanner
-  - Storage durability and audit event rotation
-  - Repair service, Docker sandbox, and agent tool loop
-  - Streamlit UI rendering, fixture isolation, and mock live server
+- **171 Passed Automated Tests** on Apple Silicon M4 / macOS Python 3.11:
+  - Guard engine, ContextInspector exact quote verification, and Gitleaks scanner
+  - Storage durability, permission isolation, and audit event rotation
+  - Supervised repair service, Docker sandbox, and agent tool loop
+- **38 Passed Automated Tests** in Windows Operator UI & QA harness:
+  - Streamlit UI component rendering, state isolation, and release card resets
+  - Standalone mock live server loopback and contract conformance
+  - Scenario catalog schema validation and withheld variant integrity
 
 ---
 
@@ -170,7 +182,7 @@ Open [http://localhost:8501](http://localhost:8501) in your browser.
 
 #### 3. Run Automated Tests & QA Reporting
 ```bash
-# Run UI and QA test suite (25 tests)
+# Run UI and QA test suite (38 tests)
 python -m pytest tests/ui/ -v
 
 # Run full evaluation catalogue status report

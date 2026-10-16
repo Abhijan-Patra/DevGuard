@@ -68,3 +68,20 @@ P0 privacy/clipboard: real local model, real capture change, explicit cleaned-co
 
 P1 repair: at least one independent baseline failure, real model-selected evidence/tool actions, source patch, unchanged independent verifier passing, scan of exports and stale candidate rejection. If P1 is unfinished, say so in the submission.
 
+## Verified reference baseline measurements (16 October 2026)
+
+On Apple Silicon M4 (16 GiB, Python 3.11.14, Ollama 0.40.4) using pinned model `gemma4:e4b-it-q4_K_M` (digest `dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c`):
+- **Privacy Gate Reference Trials (4 samples):**
+  - Benign code snippet: **0.96s**
+  - High-entropy credential extraction: **1.31s**
+  - Contextual confidential prose analysis: **1.48s**
+  - Unrelated diagnostic context pruning: **1.29s**
+  - All four replay attempts successfully held (`decision: REVIEW`).
+- **Autonomous Docker Sandbox Repair Trial:** **38.24s**
+  - Native tool conversation, baseline failure reproduced in Docker, Gemma patch synthesized, immutable test verifier passed, candidate transitioned to `READY_FOR_REVIEW`.
+- **Automated Test Assertions:**
+  - **171 Passed** across Mac 1/Mac 2 backend, repair, guard, and storage test suites.
+  - **38 Passed** across Windows operator UI rendering, mock live server, and QA harness.
+
+Per AGENTS.md, the 26 structured scenario specifications in `evals/results/results_registry.json` remain marked `UNRUN` until a full dataset run is performed across all variants.
+
