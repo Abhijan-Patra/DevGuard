@@ -2,7 +2,17 @@
 
 One repository; four separate clones and branches. Never share Codex/Antigravity credentials. Do not work inside another person's live checkout.
 
-## Assignments
+## Active reassignment — 16 October 2026
+
+The Windows assistants exhausted their quotas. At Abhijan's request:
+
+- **Mac 1 / Abhijan, in the dashboard continuation chat, takes Windows 1's scope:** `devguard/ui/`, `tests/ui/`, `docs/UI_NOTES.md`. Use the isolated `codex/windows1-continuation` branch. Mac 1's existing guard/model/integration chat continues separately; preserve its active edits.
+- **Mac 2 takes Windows 2's scope in addition to its existing backend work:** `evals/cases/`, `evals/results/`, `demo/fixtures/`, `docs/DEMO_RUNBOOK.md`, `docs/EVALUATION.md`, `docs/SUBMISSION_DRAFT.md`. Use a separate `codex/mac2-qa-continuation` branch for the QA/demo slice. Start with [the continuation handoff](tasks/MAC_2_WINDOWS_2_CONTINUATION.md).
+- Windows 1 and Windows 2 pause implementation to avoid duplicate edits. Existing integrated work is retained; these are continuation assignments.
+
+This recorded assignment does not mean a remote Mac 2 session has received or started it. No Mac 2 chat was accessible from the dashboard continuation chat; deliver the linked handoff to that Mac. Shared-schema, dependency, trusted-verifier and apply reviews still follow the rules below.
+
+## Original assignments (superseded for the Windows scopes)
 
 | Member | Branch to create when coding starts | Owned implementation paths |
 |---|---|---|

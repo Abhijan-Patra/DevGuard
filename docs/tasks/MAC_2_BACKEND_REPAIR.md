@@ -2,6 +2,10 @@
 
 Branch: `codex/mac2-worker` when implementation starts. All tasks here are backend/execution logic; neither Windows member owns these decisions.
 
+## Added QA/demo assignment — 16 October 2026
+
+Mac 2 also takes over the Windows 2 scope. Read [the continuation handoff](MAC_2_WINDOWS_2_CONTINUATION.md) and [Windows 2 task](WINDOWS_2_QA_DEMO.md). Keep QA/demo changes on `codex/mac2-qa-continuation`, separate from active backend changes; record real measurements only.
+
 ## Ownership
 
 `devguard/api/repair_routes.py`, `devguard/agent/`, `devguard/monitor/`, `devguard/repair/`, `integrations/`, `demo/backend/`, `trusted_tests/`, `tests/backend/`. Mac 1 owns API startup, shared schemas/auth and privacy/model infrastructure. Agree function signatures before crossing paths.

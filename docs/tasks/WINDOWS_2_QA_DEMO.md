@@ -1,6 +1,6 @@
 # Member 4 — Windows / Antigravity: scenarios, QA and demo
 
-Branch: `codex/windows-qa` when implementation starts. This role supplies useful parallel specifications and presentation materials without owning backend/execution logic.
+**Current owner (16 October 2026): Mac 2, on `codex/mac2-qa-continuation`, because the Windows 2 assistant quota is exhausted. Continue the existing case catalogue and docs using [the continuation handoff](MAC_2_WINDOWS_2_CONTINUATION.md). Original branch: `codex/windows-qa`. This role supplies useful parallel specifications and presentation materials without owning backend/execution logic.
 
 ## Ownership
 

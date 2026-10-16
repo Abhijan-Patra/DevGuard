@@ -55,3 +55,119 @@ def test_live_mode_never_loads_fixture_results_and_displays_held_evaluation(monk
         assert app.session_state['last_eval_result']['decision']=='REVIEW'
         assert app.session_state['last_eval_result']['safe_preview'] is None
         assert not app.session_state['last_eval_result'].get('simulated')
+
+
+def _button(app, label):
+    return next(button for button in app.button if label in button.label)
+
+
+def test_failed_replacement_evaluation_clears_previous_release_card(monkeypatch):
+    client = ui_client.FixtureDevGuardClient()
+    monkeypatch.setattr(client, 'is_fixture_mode', lambda: False)
+    evaluate = client.evaluate_privacy
+
+    def evaluated(**kwargs):
+        result = evaluate(**kwargs)
+        result.pop('simulated')
+        return result
+
+    monkeypatch.setattr(client, 'evaluate_privacy', evaluated)
+    monkeypatch.setattr(ui_client, 'HttpDevGuardClient', lambda **kwargs: client)
+    app = AppTest.from_file(APP, default_timeout=15).run()
+    app.sidebar.radio[0].set_value('Live Mode (FastAPI Backend)').run()
+    # Use synthetic responses to exercise display state, not model accuracy.
+    _button(app, 'Evaluate with DevGuard').click().run()
+    assert any('Authorize Delivery' in button.label for button in app.button)
+
+    def unavailable(**kwargs):
+        raise ui_client.ServiceUnavailableError()
+
+    monkeypatch.setattr(client, 'evaluate_privacy', unavailable)
+    _button(app, 'Evaluate with DevGuard').click().run()
+    assert not app.exception
+    assert app.error
+    assert 'last_eval_result' not in app.session_state
+    assert not app.metric
+    assert not any('Authorize Delivery' in button.label for button in app.button)
+
+
+@pytest.mark.parametrize('status,decision', [
+    ('CHECKING', 'ALLOW'), ('FAILED', 'SANITIZE'), ('EXPIRED', 'ALLOW'),
+    (None, 'ALLOW'), ('READY', 'LOCAL_ONLY'),
+])
+def test_incomplete_or_local_only_evaluations_offer_no_release(status, decision):
+    from copy import deepcopy
+    from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
+
+    app = AppTest.from_file(APP, default_timeout=15).run()
+    result = deepcopy(SYNTHETIC_PRIVACY_EVALUATION)
+    result['decision'] = decision
+    if status is None:
+        result.pop('status')
+    else:
+        result['status'] = status
+    app.session_state['last_eval_result'] = result
+    app.run()
+    assert not app.exception
+    assert not any('Authorize Delivery' in button.label for button in app.button)
+
+
+def test_fixture_delivery_does_not_leak_into_new_dashboard_session():
+    from devguard.ui.fixtures import SYNTHETIC_PRIVACY_EVALUATION
+
+    app = AppTest.from_file(APP, default_timeout=15).run()
+    _button(app, 'Authorize Delivery').click().run()
+    assert app.session_state['last_eval_result']['delivered'] is True
+    assert SYNTHETIC_PRIVACY_EVALUATION['delivered'] is False
+    fresh = AppTest.from_file(APP, default_timeout=15).run()
+    assert not fresh.exception
+    assert any('Authorize Delivery' in button.label for button in fresh.button)
+
+
+def _component_app(module, function):
+    return AppTest.from_string(
+        f'from devguard.ui.client import FixtureDevGuardClient\n'
+        f'from devguard.ui.components.{module} import {function}\n'
+        f'{function}(FixtureDevGuardClient())', default_timeout=15,
+    )
+
+
+@pytest.mark.parametrize('response,acknowledged', [
+    ({'copied': True, 'content_version': 15}, True),
+    ({'copied': False, 'content_version': 14}, False),
+    ({}, False),
+])
+def test_cleaned_copy_displays_only_acknowledged_returned_version(monkeypatch, response, acknowledged):
+    monkeypatch.setattr(ui_client.FixtureDevGuardClient, 'copy_cleaned_clipboard',
+                        lambda self, expected_version: response)
+    app = _component_app('clipboard_view', 'render_clipboard_view').run()
+    _button(app, 'Copy Cleaned Text').click().run()
+    assert not app.exception
+    if acknowledged:
+        assert any('version is 15' in item.value for item in app.success)
+    else:
+        assert not app.success
+        assert any('COPY_NOT_ACKNOWLEDGED' in item.value for item in app.error)
+
+
+@pytest.mark.parametrize('action,label,error', [
+    ('apply_patch', 'Apply Patch', 'PATCH_NOT_APPLIED'),
+    ('reject_patch', 'Reject Candidate', 'PATCH_NOT_REJECTED'),
+])
+def test_patch_actions_do_not_report_unacknowledged_success(monkeypatch, action, label, error):
+    monkeypatch.setattr(ui_client.FixtureDevGuardClient, action, lambda *args, **kwargs: {})
+    app = _component_app('incident_view', 'render_incident_view').run()
+    _button(app, label).click().run()
+    assert not app.exception
+    assert not app.success
+    assert any(error in item.value for item in app.error)
+
+
+def test_capture_disable_requires_backend_acknowledgement(monkeypatch):
+    monkeypatch.setattr(ui_client.FixtureDevGuardClient, 'is_fixture_mode', lambda self: False)
+    monkeypatch.setattr(ui_client.FixtureDevGuardClient, 'disable_clipboard', lambda self: {})
+    app = _component_app('clipboard_view', 'render_clipboard_view').run()
+    _button(app, 'Disable Capture').click().run()
+    assert not app.exception
+    assert not any(item.value == 'Capture disabled.' for item in app.info)
+    assert any('CAPTURE_NOT_DISABLED' in item.value for item in app.error)
