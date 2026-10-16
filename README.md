@@ -2,15 +2,15 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: proposed implementation and team handoff. This repository currently contains planning documents, not a working application. No repair, privacy or performance results have been established yet.
+Status: implementation has started with a local readiness API and Ollama adapter. Privacy enforcement, native clipboard capture and backend repair are not implemented yet. Model download and inference verification are still pending; no privacy or repair results have been established.
 
 DevGuard inspects supported prompts, file access, tool results and copied text; it also investigates reproducible backend failures and prepares independently tested patches in a disposable workspace. Clipboard capture is a required, opt-in feature. Bug diagnosis uses source, structured logs, diffs, named API probes and tests; it does not depend on screenshots or screen recordings.
 
 ## Decisions
 
-- **One model:** Gemma 4 E4B through Ollama, initially `gemma4:e4b`. Different task prompts share one model and inference queue.
+- **One model:** Gemma 4 E4B through Ollama, using the explicit local Q4 tag `gemma4:e4b-it-q4_K_M`. Different task prompts share one model and inference queue.
 - **Priority:** privacy and clipboard workflow first; backend repair next. Both are part of the product, with explicit milestones.
-- **Backend:** Python 3.12, FastAPI, Pydantic, SQLite, Gitleaks, watchdog, psutil, pytest/HTTPX, Ruff and restricted Docker jobs.
+- **Backend target:** Python 3.11+, FastAPI, Pydantic, SQLite, Gitleaks, watchdog, psutil, pytest/HTTPX, Ruff and restricted Docker jobs. Only the API/Ollama foundation is implemented so far.
 - **Dashboard:** Streamlit, initially using labelled fixtures. It displays backend decisions and never owns security decisions.
 - **Tracks:** target Best Use of Gemma 4; maintain public open-source code for the open-source AI track. Confirm multiple-category and local-model eligibility with the organiser.
 - **Licence:** MIT for this repository's original material. Model weights and dependencies retain their own licences.
@@ -51,4 +51,4 @@ Both Mac owners own all backend, model, enforcement and repair logic. Windows wo
 
 Observing a clipboard or saved file is detection. Preventing a supported request requires a synchronous gate before delivery. Clipboard capture does not intercept every paste, and a standalone MCP server does not control an assistant's other tools. See coverage before making claims.
 
-The first engineering step is the measured model/tool trial and an actual guarded request. Installation instructions are in the setup document; application start commands will be added when executable code exists.
+The [getting-started guide](docs/GETTING_STARTED.md) contains the actual foundation startup and model smoke-test commands. The first privacy milestone remains an actual guarded request; readiness endpoints alone do not protect content.

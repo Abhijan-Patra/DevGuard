@@ -16,7 +16,7 @@ Clipboard capture is required and optimised. Screen capture, screen recording, v
 
 ## 2. Fixed model choice
 
-Use **Gemma 4 E4B through Ollama**, initially `gemma4:e4b`, for contextual privacy analysis, task relevance, bounded investigation and patch proposals. Use separate structured task prompts and one inference queue; do not run multiple specialist models. Rules and tests remain ordinary code.
+Use **Gemma 4 E4B through Ollama**, initially `gemma4:e4b-it-q4_K_M`, for contextual privacy analysis, task relevance, bounded investigation and patch proposals. Use separate structured task prompts and one inference queue; do not run multiple specialist models. Rules and tests remain ordinary code.
 
 This selection prioritises the Gemma event track, local processing and integration simplicity. No project-specific comparison proves it best for all tasks. Complete the [model trial](MODEL_DECISION.md) before committing to performance claims. Do not silently switch to Qwen or a hosted model when a task fails.
 
