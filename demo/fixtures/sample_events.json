@@ -1,0 +1,77 @@
+[
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-001",
+    "timestamp": "2026-10-16T12:00:01Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "clipboard.changed",
+    "state": "CHECKING",
+    "severity": "INFO",
+    "redacted_summary": "macOS clipboard change detected (counter: 104, size: 142 bytes). Running fast pattern scanner.",
+    "evidence_refs": ["finding-clip-104a"],
+    "content_version": 104,
+    "capture_host_id": "mac-m4-workstation"
+  },
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-002",
+    "timestamp": "2026-10-16T12:00:02Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "clipboard.decision",
+    "state": "SENSITIVE",
+    "severity": "WARNING",
+    "redacted_summary": "Sensitive API token detected in clipboard. Cleaned preview prepared. Raw original held transiently in memory.",
+    "evidence_refs": ["finding-clip-104a"],
+    "content_version": 104,
+    "capture_host_id": "mac-m4-workstation"
+  },
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-003",
+    "timestamp": "2026-10-16T12:00:15Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "guard.decision",
+    "state": "READY",
+    "severity": "WARNING",
+    "redacted_summary": "Evaluated prompt for task 'Diagnose the login exception'. Decision: SANITIZE. Replaced 1 email and 1 token.",
+    "evidence_refs": ["finding-demo-email-01", "finding-demo-pat-01"],
+    "request_id": "req-demo-privacy-101",
+    "content_version": 1
+  },
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-004",
+    "timestamp": "2026-10-16T12:01:00Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "run.state",
+    "state": "INVESTIGATING",
+    "severity": "INFO",
+    "redacted_summary": "Background repair run started for regression in demo/backend/cart.py. Inspecting source and logs.",
+    "evidence_refs": ["inc-demo-cart-01"],
+    "run_id": "run-demo-repair-201"
+  },
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-005",
+    "timestamp": "2026-10-16T12:01:45Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "verification.completed",
+    "state": "READY_FOR_REVIEW",
+    "severity": "INFO",
+    "redacted_summary": "Sandboxed test suite trusted_tests/test_cart.py PASSED (3/3 tests) on candidate patch.",
+    "evidence_refs": ["patch-demo-cart-301"],
+    "run_id": "run-demo-repair-201"
+  },
+  {
+    "schema_version": "v1",
+    "event_id": "evt-live-demo-006",
+    "timestamp": "2026-10-16T12:02:10Z",
+    "project_id": "project-demo-ecommerce",
+    "kind": "patch.state",
+    "state": "APPLIED",
+    "severity": "INFO",
+    "redacted_summary": "Operator approved and applied candidate patch patch-demo-cart-301 to working tree. Base hash verified.",
+    "evidence_refs": ["patch-demo-cart-301"],
+    "run_id": "run-demo-repair-201"
+  }
+]
