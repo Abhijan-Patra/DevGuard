@@ -74,6 +74,12 @@ def service_for(spec, tmp_path, *, model=None, guard=None, verifier=None):
         verifier=verifier or FakeVerifier("FAIL", "PASS"),
         runtime_root=tmp_path / "private-runtime",
         event_sink=events.append,
+        readiness_check=lambda: {
+            "foreground_priority": True,
+            "durable_events": True,
+            "worker_lifecycle": True,
+            "trusted_verifier": True,
+        },
     )
     service.register_project(spec)
     return service, events
@@ -318,6 +324,8 @@ def test_docker_command_restricts_execution_and_has_no_shell(spec, monkeypatch):
         "--security-opt=no-new-privileges",
         "--user=65534:65534",
         "--pull=never",
+        "--env=PYTHONPYCACHEPREFIX=/tmp/pycache",
+        "--tb=line",
     ]:
         assert flag in command
     assert all("docker.sock" not in arg for arg in command)
@@ -365,8 +373,11 @@ def test_source_guard_holds_before_snapshot_or_verifier(spec, tmp_path):
     assert not (tmp_path / "private-runtime").exists()
 
 
-def test_audit_failure_blocks_and_pauses_without_raw_error(spec, tmp_path):
+@pytest.mark.parametrize("ready", [True, False])
+def test_audit_failure_blocks_and_pauses_without_raw_error(spec, tmp_path, ready):
     service, _ = service_for(spec, tmp_path)
+    if not ready:
+        service.readiness_check = lambda: {}
 
     def broken_sink(event):
         raise OSError("synthetic-private-storage-detail")
@@ -376,3 +387,30 @@ def test_audit_failure_blocks_and_pauses_without_raw_error(spec, tmp_path):
     assert (run.state, run.reason_code) == ("BLOCKED", "AUDIT_UNAVAILABLE")
     assert service.scheduler.paused
     assert not (tmp_path / "private-runtime").exists()
+
+
+def test_missing_integration_gates_hold_jobs_and_scheduler(spec, tmp_path):
+    service, _ = service_for(spec, tmp_path)
+    service.readiness_check = lambda: {"foreground_priority": True}
+    incident = service.create_incident("demo", "cart")
+    run = service.queue(incident["incident_id"])
+    with pytest.raises(RepairError, match="INTEGRATION_NOT_READY"):
+        service.enter_idle()
+    service.execute(run.run_id)
+    assert run.state == "WAITING_FOR_RESOURCES"
+    assert run.reason_code == "INTEGRATION_NOT_READY"
+    assert service.scheduler.paused
+    assert not (tmp_path / "private-runtime").exists()
+
+
+def test_shutdown_cancels_pending_work_and_prevents_reopening(spec, tmp_path):
+    service, _ = service_for(spec, tmp_path)
+    incident = service.create_incident("demo", "cart")
+    run = service.queue(incident["incident_id"])
+    assert service.shutdown(timeout=1)
+    assert service.scheduler.paused
+    assert run.state == "CANCELED"
+    with pytest.raises(RepairError, match="WORKER_CLOSED"):
+        service.enter_idle()
+    with pytest.raises(RepairError, match="WORKER_CLOSED"):
+        service.queue(incident["incident_id"])

@@ -1,11 +1,8 @@
 """Contract tests for the published Mac 1 async client shape; no real inference."""
 
-import asyncio
-import threading
-
 import pytest
 
-from devguard.agent.mac1_bridge import Mac1ModelBridge
+from devguard.agent.mac1_bridge import DeferredMac1ModelBridge, Mac1ModelBridge
 from devguard.repair.contracts import SELECTED_MODEL, RepairError
 
 RUNTIME = {
@@ -13,24 +10,6 @@ RUNTIME = {
     "model": SELECTED_MODEL,
     "model_digest": "synthetic-unit-test-digest",
 }
-
-
-@pytest.fixture
-def loop():
-    event_loop = asyncio.new_event_loop()
-    started = threading.Event()
-
-    def run():
-        event_loop.call_soon(started.set)
-        event_loop.run_forever()
-
-    thread = threading.Thread(target=run)
-    thread.start()
-    started.wait(timeout=2)
-    yield event_loop
-    event_loop.call_soon_threadsafe(event_loop.stop)
-    thread.join(timeout=2)
-    event_loop.close()
 
 
 class FakeAsyncMac1Client:
@@ -91,3 +70,18 @@ def test_bridge_requires_one_complete_native_action(loop, response):
 def test_bridge_refuses_uninstalled_model(loop):
     with pytest.raises(RepairError, match="MODEL_NOT_PINNED"):
         Mac1ModelBridge(FakeAsyncMac1Client(), loop, {**RUNTIME, "model_ready": False})
+
+
+def test_deferred_bridge_does_not_query_missing_model_during_startup(loop):
+    client = FakeAsyncMac1Client(runtime={**RUNTIME, "model_ready": False})
+    bridge = DeferredMac1ModelBridge(client, loop)
+    assert bridge._bridge is None
+    assert client.calls == 0
+    with pytest.raises(RepairError, match="MODEL_NOT_PINNED"):
+        _ = bridge.metadata
+
+
+def test_deferred_bridge_pins_actual_runtime_on_first_worker_call(loop):
+    bridge = DeferredMac1ModelBridge(FakeAsyncMac1Client(), loop)
+    assert bridge.next_action([], []) == {"tool": "list_allowed_files", "arguments": {}}
+    assert bridge.metadata["digest"] == RUNTIME["model_digest"]
