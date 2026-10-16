@@ -57,7 +57,7 @@ Catalogue reporting is separate from real-model experiments. This command does n
 
 ## Separate measured evidence
 
-- Integrated automated suite: **210 passed**, one existing dependency deprecation warning; pip check clean. These include mocked model/verifier ports and are not an accuracy benchmark.
+- Integrated automated suite: **223 passed**, one existing dependency deprecation warning; pip check clean. These include mocked model/verifier ports and are not an accuracy benchmark.
 - Real Gemma/guard/API/Docker cart trial: baseline FAIL -> genuine patch -> independent PASS -> disposable approved apply -> idempotent repeat -> post-apply PASS; 46.07 s; original/tests unchanged and worker stopped. See [repair evidence](../devguard/repair/README.md).
 - Real stale/cancel trial: 409 STALE_SOURCE, concurrent edit preserved, state OBSOLETE; queued cancel produced no candidate; 42.19 s.
 - Mac 2 isolated named pasteboard: all 12 checks passed, 1.550 s copy-to-finding, no general clipboard access. See [metadata](results/mac2-private-pasteboard.json).

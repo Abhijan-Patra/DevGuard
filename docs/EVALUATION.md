@@ -4,7 +4,7 @@ Status: the 26 catalogue records remain UNRUN. Separate targeted real-model expe
 
 ## Measured experiments — 16 October 2026
 
-- Integrated main `679d3be` plus Mac 2 worker: **210 automated tests passed**; pip check clean. Unit tests use declared fake model/verifier ports and do not measure model accuracy.
+- Integrated main `4b2991d` plus Mac 2 worker: **223 automated tests passed**; pip check clean. Unit tests use declared fake model/verifier ports and do not measure model accuracy.
 - Actual local Gemma + guard + API + restricted Docker: failing cart baseline, genuine source patch, independent PASS, approved application on a disposable public copy, idempotent repeat and post-apply PASS in **46.07 s**. Original repository/test hashes unchanged; worker stopped; 28 audit records survived reopening.
 - Separate actual stale/cancel trial: queued cancellation without candidate, then a passing model candidate, concurrent edit, **409 STALE_SOURCE**, edit preserved and run OBSOLETE in **42.19 s**. Full metadata and failed attempts: [repair verification](../devguard/repair/README.md).
 - Mac 2 isolated named pasteboard: all 12 lifecycle/copy checks passed; **1.550 s** copy-to-finding; no general clipboard access. [Metadata](../evals/results/mac2-private-pasteboard.json).
@@ -13,6 +13,8 @@ Status: the 26 catalogue records remain UNRUN. Separate targeted real-model expe
 - Mac 1's separate native/system clipboard and live reference-delivery/render checks are recorded in [owner evidence](MAC_1_WINDOWS_1_COMPLETION.md). No cross-host timings are pooled into an accuracy or latency benchmark.
 
 The real repair tests use `unit_amount`, `quantity`, and parameterized `test_cart_behavior`; older catalogue descriptions mention conceptual `price` fields and nonexistent test function names. Those entries need explicit mapping before execution. Expectations have not been changed to manufacture passes. A JSON schema/fixture check is not scenario execution. The newer mock server matches the live response envelope, but its data is still simulated and does not prove Gemma readiness or execution. Use labelled Fixture Mode for offline presentation; do not infer authenticity from schema compatibility.
+
+The published modern dashboard `7ceb706` was also checked against the prepared real backend: all six views rendered without exceptions/errors, and the actual READY_FOR_REVIEW/PASS diff remained visible. No capture or apply action was requested. [Metadata](../evals/results/mac2-modern-dashboard.json).
 
 ## Case catalogue
 
@@ -95,5 +97,5 @@ On Apple Silicon M4 (16 GiB, Python 3.11.14, Ollama 0.40.4) using pinned model `
   - **171 Passed** across Mac 1/Mac 2 backend, repair, guard, and storage test suites.
   - **38 Passed** across Windows operator UI rendering, mock live server, and QA harness.
 
-The historical counts above are from the owner handoff, not the current integrated checkout. The current full suite passed 210 tests, including its 44 collected UI tests. All 26 catalogue records remain UNRUN; update each only after its exact scenario is executed with evidence, without requiring or implying completion of the entire dataset.
+The historical counts above are from the owner handoff, not the current integrated checkout. The current full suite passed 223 tests, including its 57 collected UI tests. All 26 catalogue records remain UNRUN; update each only after its exact scenario is executed with evidence, without requiring or implying completion of the entire dataset.
 
