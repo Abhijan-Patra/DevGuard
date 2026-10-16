@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
 import re
 import secrets
 import sys
@@ -38,6 +39,9 @@ def exercise_api(
     *,
     timeout: float = 300,
     exercise_apply: bool = False,
+    exercise_stale: bool = False,
+    queued_cancel: bool = False,
+    stale_edit=None,
     on_state=None,
 ):
     """Uses only operator routes; never installs a fake model or bypasses a hold."""
@@ -54,6 +58,15 @@ def exercise_api(
     incident = request(
         "POST", "/incidents", {"project_id": "demo-cart", "signal": "cart"}
     )
+    cancel_report = None
+    if queued_cancel:
+        pending = request(
+            "POST", "/incidents/" + incident["incident_id"] + "/investigate", {}, 202
+        )
+        canceled = request("POST", "/runs/" + pending["run_id"] + "/cancel", {})
+        if canceled["state"] != "CANCELED" or canceled.get("candidate_id"):
+            raise RepairError("TRIAL_CANCEL_FAILED")
+        cancel_report = {"state": canceled["state"], "candidate_created": False}
     queued = request(
         "POST", "/incidents/" + incident["incident_id"] + "/investigate", {}, 202
     )
@@ -80,6 +93,8 @@ def exercise_api(
             raise RepairError("TRIAL_TIMEOUT")
         time.sleep(0.2)
     report = {"run": state, "applied_to_original_repository": False}
+    if cancel_report:
+        report["queued_cancellation"] = cancel_report
     if state["state"] == "READY_FOR_REVIEW":
         try:
             patch = request("GET", "/patches/" + state["candidate_id"])
@@ -88,7 +103,7 @@ def exercise_api(
             report["candidate_export"] = {"status": "HELD", "reason_code": error.code}
             return report
         report["candidate"] = patch
-        if exercise_apply:
+        if exercise_apply or exercise_stale:
             body = {
                 "approved": True,
                 "expected_candidate_hash": patch["candidate_hash"],
@@ -96,12 +111,24 @@ def exercise_api(
                 "idempotency_key": "disposable-trial-" + secrets.token_hex(12),
             }
             path = "/patches/" + state["candidate_id"] + "/apply"
-            applied = request("POST", path, body)
-            repeated = request("POST", path, body)
-            report["disposable_apply"] = {
-                "state": applied["state"],
-                "idempotent_repeat": repeated["state"] == "APPLIED",
-            }
+            if exercise_stale:
+                if stale_edit is None:
+                    raise RepairError("INVALID_TRIAL_CONFIG")
+                expected_hash, current_hash = stale_edit()
+                denied = request("POST", path, body, 409)
+                report["stale_apply"] = {
+                    "http_status": 409,
+                    "reason_code": denied.get("error", {}).get("code"),
+                    "concurrent_edit_preserved": current_hash() == expected_hash,
+                    "run_after_attempt": request("GET", "/runs/" + run_id)["state"],
+                }
+            else:
+                applied = request("POST", path, body)
+                repeated = request("POST", path, body)
+                report["disposable_apply"] = {
+                    "state": applied["state"],
+                    "idempotent_repeat": repeated["state"] == "APPLIED",
+                }
     request("POST", "/scheduler/pause", {})
     return report
 
@@ -111,8 +138,13 @@ def trial(
     *,
     docker: str = "docker",
     exercise_apply: bool = False,
+    exercise_stale: bool = False,
+    queued_cancel: bool = False,
     on_state=None,
 ) -> dict:
+    started = time.monotonic()
+    if exercise_apply and exercise_stale:
+        raise RepairError("INVALID_TRIAL_CONFIG")
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
         raise RepairError("IMAGE_NOT_PINNED")
     repository = Path(__file__).resolve().parents[2]
@@ -209,15 +241,39 @@ def trial(
                         stopped.append(ok)
 
         app.router.lifespan_context = supervised
+
+        def stale_edit():
+            path = source / "cart.py"
+            data = (
+                read_source(source, "cart.py")
+                + b"\n# concurrent disposable operator edit\n"
+            )
+            path.write_bytes(data)
+            return hashlib.sha256(data).hexdigest(), lambda: hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+
         with TestClient(app) as client:
             if not app.state.repair.status()["available"]:
                 raise RepairError(app.state.repair.status()["reason_code"])
             report = exercise_api(
-                client, token, exercise_apply=exercise_apply, on_state=on_state
+                client,
+                token,
+                exercise_apply=exercise_apply,
+                exercise_stale=exercise_stale,
+                queued_cancel=queued_cancel,
+                stale_edit=stale_edit,
+                on_state=on_state,
             )
             report["model_runtime"] = app.state.trial_runtime
             report["audit_event_count"] = len(audit.events()["events"])
             report["guard_checks"] = observations
+            report["native_format_failures"] = getattr(
+                services[0].model, "format_failures", 0
+            )
+            report["last_native_action_issue"] = getattr(
+                services[0].model, "last_action_issue", None
+            )
             if report.get("disposable_apply"):
                 from threading import Event
 
@@ -235,6 +291,7 @@ def trial(
             report["audit_reopen_event_count"] = len(reopened.events()["events"])
         finally:
             reopened.close()
+        report["elapsed_seconds"] = round(time.monotonic() - started, 2)
         return report
 
 
@@ -242,10 +299,26 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image-id", required=True)
     parser.add_argument("--docker", default="docker")
-    parser.add_argument(
+    exercises = parser.add_mutually_exclusive_group()
+    exercises.add_argument(
         "--exercise-apply",
         action="store_true",
         help="Exercise approved/idempotent apply only on the disposable public demo copy",
+    )
+    exercises.add_argument(
+        "--exercise-stale",
+        action="store_true",
+        help="Verify concurrent-edit rejection on the disposable copy",
+    )
+    parser.add_argument(
+        "--queued-cancel",
+        action="store_true",
+        help="Verify queued cancellation before the genuine repair run",
+    )
+    parser.add_argument(
+        "--report-file",
+        type=Path,
+        help="Write a new private evidence file; refuses to overwrite existing files",
     )
     args = parser.parse_args()
     try:
@@ -253,10 +326,22 @@ def main() -> int:
             args.image_id,
             docker=args.docker,
             exercise_apply=args.exercise_apply,
+            exercise_stale=args.exercise_stale,
+            queued_cancel=args.queued_cancel,
             on_state=lambda state: print(
                 json.dumps({"progress": state}), file=sys.stderr, flush=True
             ),
         )
+        if args.report_file:
+            with os.fdopen(
+                os.open(
+                    args.report_file,
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                    0o600,
+                ),
+                "w",
+            ) as stream:
+                json.dump(report, stream, indent=2)
         print(json.dumps(report, indent=2))
         succeeded = (
             report["run"]["state"] == "READY_FOR_REVIEW"
@@ -267,6 +352,14 @@ def main() -> int:
         )
         if args.exercise_apply:
             succeeded = succeeded and report.get("post_apply_verification") == "PASS"
+        if args.exercise_stale:
+            stale = report.get("stale_apply", {})
+            succeeded = (
+                succeeded
+                and stale.get("reason_code") == "STALE_SOURCE"
+                and stale.get("concurrent_edit_preserved") is True
+                and stale.get("run_after_attempt") == "OBSOLETE"
+            )
         return 0 if succeeded else 2
     except Exception as error:
         code = (

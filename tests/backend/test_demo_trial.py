@@ -89,3 +89,35 @@ def test_later_export_hold_is_reported_without_claiming_a_delivered_patch(trial_
     }
     assert "candidate" not in report
     assert service.scheduler.paused
+
+
+def test_trial_proves_queued_cancel_then_still_runs_genuine_investigation(trial_api):
+    client, service = trial_api
+    report = exercise_api(client, TOKEN, timeout=3, queued_cancel=True)
+    assert report["queued_cancellation"] == {
+        "state": "CANCELED",
+        "candidate_created": False,
+    }
+    assert report["run"]["state"] == "READY_FOR_REVIEW"
+    assert len(service.runs) == 2
+    assert len(service.model.messages) == 3
+
+
+def test_trial_stale_check_keeps_concurrent_operator_edit(trial_api, spec):
+    client, _ = trial_api
+
+    def edit():
+        path = spec.root / "cart.py"
+        path.write_text("# new concurrent operator edit\n")
+        return path.read_text(), path.read_text
+
+    report = exercise_api(
+        client, TOKEN, timeout=3, exercise_stale=True, stale_edit=edit
+    )
+    assert report["stale_apply"] == {
+        "http_status": 409,
+        "reason_code": "STALE_SOURCE",
+        "concurrent_edit_preserved": True,
+        "run_after_attempt": "OBSOLETE",
+    }
+    assert (spec.root / "cart.py").read_text() == "# new concurrent operator edit\n"

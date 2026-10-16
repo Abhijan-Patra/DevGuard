@@ -306,11 +306,11 @@ def test_guard_sanitizes_all_model_bound_tool_evidence(spec, tmp_path):
 
 
 def test_tool_step_budget_is_enforced(spec, tmp_path):
-    model = FakeModel(*[{"tool": "list_allowed_files", "arguments": {}}] * 9)
+    model = FakeModel(*[{"tool": "list_allowed_files", "arguments": {}}] * 11)
     service, _ = service_for(spec, tmp_path, model=model)
     run = run_once(service)
     assert run.reason_code == "TOOL_BUDGET_EXHAUSTED"
-    assert len(model.messages) == 8
+    assert len(model.messages) == 10
 
 
 def test_docker_command_restricts_execution_and_has_no_shell(spec, monkeypatch):

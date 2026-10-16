@@ -5,6 +5,7 @@ import json
 import pytest
 
 from devguard.agent.tool_messages import append_tool_exchange
+from devguard.repair.contracts import RepairError
 from tests.backend.test_repair import (
     FakeGuard,
     FakeModel,
@@ -134,3 +135,41 @@ def test_tool_history_copies_nested_arguments_without_model_prose():
     )
     assert messages[0]["content"] == ""
     assert "thinking" not in messages[0]
+
+
+def test_one_native_transport_format_failure_can_recover_without_executing_it(
+    spec, tmp_path
+):
+    class RecoveringModel(FakeModel):
+        failed = False
+
+        def next_action(self, messages, tools):
+            if not self.failed:
+                self.failed = True
+                raise RepairError("INVALID_MODEL_ACTION")
+            return super().next_action(messages, tools)
+
+    model = RecoveringModel(*fake_actions())
+    service, _ = service_for(spec, tmp_path, model=model)
+    result = run_once(service)
+    assert result.state == "READY_FOR_REVIEW"
+    assert len(result.completed_tools) == 2
+    assert "exactly ONE" in model.messages[0][-1]["content"]
+
+
+def test_repeated_native_transport_format_failure_stops_without_fake_actions(
+    spec, tmp_path
+):
+    class BrokenFormat(FakeModel):
+        attempts = 0
+
+        def next_action(self, messages, tools):
+            self.attempts += 1
+            raise RepairError("INVALID_MODEL_ACTION")
+
+    model = BrokenFormat()
+    service, _ = service_for(spec, tmp_path, model=model)
+    result = run_once(service)
+    assert (result.state, result.reason_code) == ("BLOCKED", "INVALID_MODEL_ACTION")
+    assert model.attempts == 2
+    assert result.completed_tools == []

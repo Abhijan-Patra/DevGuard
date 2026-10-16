@@ -25,7 +25,7 @@ from main import app
     ],
 )
 def test_cart_behavior(payload, expected):
-    with TestClient(app, raise_server_exceptions=False) as client:
+    with TestClient(app) as client:
         response = client.post("/cart/total", json=payload)
     assert response.status_code == 200
     assert response.json() == {"total_minor": expected}

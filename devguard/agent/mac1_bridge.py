@@ -27,6 +27,8 @@ class Mac1ModelBridge:
             raise RepairError("MODEL_NOT_PINNED")
         self.client, self.loop, self.timeout = client, loop, timeout
         self._metadata = {"name": SELECTED_MODEL, "digest": runtime["model_digest"]}
+        self.format_failures = 0
+        self.last_action_issue = None
 
     @property
     def metadata(self) -> dict[str, str]:
@@ -51,14 +53,24 @@ class Mac1ModelBridge:
                 raise RepairError("MODEL_CHANGED")
             response = await self.client.chat(messages, tools=tools)
             if response.get("done_reason") == "length":
+                self.format_failures += 1
+                self.last_action_issue = "TRUNCATED"
                 raise RepairError("INVALID_MODEL_ACTION")
             calls = response.get("message", {}).get("tool_calls", [])
             if not isinstance(calls, list) or len(calls) != 1:
+                self.format_failures += 1
+                self.last_action_issue = (
+                    "MULTIPLE_CALLS"
+                    if isinstance(calls, list) and len(calls) > 1
+                    else "MISSING_CALL"
+                )
                 raise RepairError("INVALID_MODEL_ACTION")
             function = calls[0].get("function", {})
             if not isinstance(function, dict) or not isinstance(
                 function.get("arguments"), dict
             ):
+                self.format_failures += 1
+                self.last_action_issue = "INVALID_ARGUMENTS"
                 raise RepairError("INVALID_MODEL_ACTION")
             return {"tool": function.get("name"), "arguments": function["arguments"]}
 
@@ -105,6 +117,14 @@ class DeferredMac1ModelBridge:
     @property
     def metadata(self) -> dict[str, str]:
         return self._get().metadata
+
+    @property
+    def format_failures(self) -> int:
+        return self._bridge.format_failures if self._bridge else 0
+
+    @property
+    def last_action_issue(self):
+        return self._bridge.last_action_issue if self._bridge else None
 
     def next_action(self, messages, tools):
         return self._get().next_action(messages, tools)
