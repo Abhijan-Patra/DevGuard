@@ -6,6 +6,7 @@ and operator apply/reject controls per docs/API_CONTRACT.md and docs/tasks/WINDO
 """
 
 from typing import Any, Dict
+from uuid import uuid4
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError, StaleContentError
 
@@ -32,6 +33,12 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
     st.caption("Inspect background repair runs, isolated verification results, and review candidate diffs.")
 
     try:
+        if not client.is_fixture_mode():
+            readiness = client.get_status().get("repair", {})
+            if not readiness.get("available"):
+                st.info("Repair is unavailable: " + str(readiness.get("reason_code", "NOT_CONFIGURED")))
+                st.caption("The privacy and clipboard services remain available. Configure the pinned verifier image on the Mac before starting repair.")
+                return
         incidents = client.get_incidents()
     except DevGuardError as e:
         st.error(f"Failed to load incidents [{e.code}]: {e}")
@@ -79,7 +86,7 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
 
         st.metric("Run State", run_state)
         st.markdown(f"**State:** :{state_color}[**{run_state}**]")
-        st.markdown(f"**Model:** `{run_data.get('model_name')}` (Digest: `{run_data.get('model_digest', 'unpinned')[:16]}...`)")
+        st.markdown(f"**Model:** `{run_data.get('model_name') or 'not pinned'}` (Digest: `{(run_data.get('model_digest') or 'unpinned')[:16]}`)")
 
         verification = run_data.get("verification", {})
         if verification:
@@ -122,7 +129,14 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
             with col_apply:
                 if st.button("✅ Apply Patch to Local Source", use_container_width=True):
                     try:
-                        resp = client.apply_patch(patch_id, expected_hash=patch.get("base_hash", ""))
+                        key = "apply-key:" + patch_id + ":" + str(patch.get("candidate_hash"))
+                        if key not in st.session_state:
+                            st.session_state[key] = str(uuid4())
+                        resp = client.apply_patch(patch_id,
+                            expected_hash=(patch.get("base_hash", "") if client.is_fixture_mode()
+                                           else patch.get("candidate_hash", "")),
+                            expected_base_revision=patch.get("base_revision") or patch.get("base_hash"),
+                            idempotency_key=st.session_state[key], approved=True)
                         st.success(f"Patch applied successfully: {resp.get('message', 'Applied')}")
                         st.rerun()
                     except StaleContentError as err:

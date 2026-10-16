@@ -6,6 +6,7 @@ supporting both declared synthetic fixtures and live FastAPI backend endpoints.
 """
 
 import streamlit as st
+from devguard.config import MODEL
 
 from devguard.ui.client import (
     BaseDevGuardClient,
@@ -33,9 +34,11 @@ def get_client() -> BaseDevGuardClient:
     """Instantiates and caches the active client in Streamlit session state."""
     mode = st.session_state.get("app_mode", "Fixture Mode (Simulated)")
     if mode == "Fixture Mode (Simulated)":
-        return FixtureDevGuardClient()
+        if "fixture_client" not in st.session_state:
+            st.session_state["fixture_client"] = FixtureDevGuardClient()
+        return st.session_state["fixture_client"]
     else:
-        base_url = st.session_state.get("backend_url", "http://127.0.0.1:8000/api/v1")
+        base_url = st.session_state.get("backend_url", "http://127.0.0.1:8765/api/v1")
         token = st.session_state.get("session_token", "")
         return HttpDevGuardClient(base_url=base_url, token=token or None)
 
@@ -54,15 +57,19 @@ def main() -> None:
             index=0 if st.session_state.get("app_mode") != "Live Mode (FastAPI Backend)" else 1,
             help="Fixture mode runs against declared synthetic scenarios without a running backend.",
         )
+        if st.session_state.get("app_mode") != mode:
+            st.session_state.pop("last_eval_result", None)
         st.session_state["app_mode"] = mode
 
         if mode == "Live Mode (FastAPI Backend)":
             st.markdown("#### Backend Connection")
             backend_url = st.text_input(
                 "Base URL",
-                value=st.session_state.get("backend_url", "http://127.0.0.1:8000/api/v1"),
+                value=st.session_state.get("backend_url", "http://127.0.0.1:8765/api/v1"),
                 help="Base endpoint prefix per API_CONTRACT.md",
             )
+            if st.session_state.get("backend_url") != backend_url:
+                st.session_state.pop("last_eval_result", None)
             st.session_state["backend_url"] = backend_url
 
             session_token = st.text_input(
@@ -71,13 +78,21 @@ def main() -> None:
                 value=st.session_state.get("session_token", ""),
                 help="Bearer token kept in session memory only; never logged or saved to Git.",
             )
+            if st.session_state.get("session_token") != session_token:
+                st.session_state.pop("last_eval_result", None)
             st.session_state["session_token"] = session_token
 
-            client = get_client()
+            try:
+                client = get_client()
+            except DevGuardError as error:
+                st.error(str(error))
+                st.stop()
             if st.button("🔌 Test Connection", use_container_width=True):
                 try:
                     health = client.get_health()
-                    st.success(f"Connected! Model: {health.get('model_name', 'Gemma')}")
+                    st.success("Authenticated API connection established.")
+                    if not health.get("model_ready"):
+                        st.warning("Gemma is unavailable; contextual privacy checks remain held.")
                 except DevGuardError as e:
                     st.error(f"Connection Error [{e.code}]: {e}")
         else:
@@ -102,8 +117,8 @@ def main() -> None:
         try:
             health_info = client.get_health()
             st.markdown(f"**Status:** `{health_info.get('status', 'unknown')}`")
-            st.markdown(f"**Model:** `{health_info.get('model_name', 'gemma4:e4b')}`")
-            st.caption(f"Digest: `{health_info.get('model_digest', 'unpinned')[:20]}...`")
+            st.markdown(f"**Model:** `{health_info.get('model_name') or MODEL}`")
+            st.caption(f"Digest: `{(health_info.get('model_digest') or 'unpinned')[:20]}`")
         except Exception:
             st.caption("Readiness check unavailable")
 

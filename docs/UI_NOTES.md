@@ -23,7 +23,7 @@ The DevGuard UI is an operator-facing presentation dashboard built with [Streaml
 ### Prerequisites
 Install dependencies:
 ```powershell
-python -m pip install streamlit httpx pytest
+python -m pip install -e '.[dev,ui]'
 ```
 
 ### Start Command
@@ -40,15 +40,15 @@ By default, the dashboard opens at `http://localhost:8501`.
 ### A. Fixture Mode (Default)
 - **Banner:** `⚠️ FIXTURE MODE — SIMULATED PRESENTATION DATA`
 - **Purpose:** Enables offline UI development, operator walkthroughs, and manual acceptance testing without requiring an active Ollama server or running FastAPI instance.
-- **Client:** [`FixtureDevGuardClient`](file:///c:/Users/HP/OneDrive/Documents/Coding%20related/Projects/DevGuard/devguard/ui/client.py) loads declared synthetic scenarios from [`fixtures.py`](file:///c:/Users/HP/OneDrive/Documents/Coding%20related/Projects/DevGuard/devguard/ui/fixtures.py).
+- **Client:** [`FixtureDevGuardClient`](../devguard/ui/client.py) loads declared synthetic scenarios from [`fixtures.py`](../devguard/ui/fixtures.py).
 
 ### B. Live Mode (FastAPI Backend)
-- **Banner:** `🟢 LIVE MODE — CONNECTED TO FASTAPI BACKEND`
-- **Purpose:** Connects to the local DevGuard API backend (`/api/v1`) powered by local Gemma 4 E4B (`gemma4:e4b`).
+- **Banner:** `LIVE MODE — AUTHORITATIVE API RESPONSES ONLY`
+- **Purpose:** Connects to the local DevGuard API backend (`/api/v1`) powered by local Gemma 4 E4B (`gemma4:e4b-it-q4_K_M`).
 - **Configuration (Sidebar):**
-  - **Base URL:** `http://127.0.0.1:8000/api/v1`
+  - **Base URL:** `http://127.0.0.1:8765/api/v1`
   - **Operator Session Token:** Bearer token for authenticated operator endpoints. Kept in memory only.
-  - **Test Connection:** Queries `GET /health` to verify server readiness and model digest.
+  - **Test Connection:** Queries authenticated `GET /status` to check API access and actual model readiness/digest.
 
 ---
 
@@ -91,3 +91,7 @@ python -m pytest tests/ui/ -v
 - **Mac 1 (Abhijan / Backend Guard):** Streamlit dependency pin request submitted (`streamlit>=1.35`). When backend `/guard/evaluate`, `/clipboard/status`, and `/coverage` are active, switch UI to Live Mode and configure session token.
 - **Mac 2 (Repair & Tests):** Sandbox patch review and incident endpoints conform to `GET /runs/{id}` and `POST /patches/{id}/apply`.
 - **Windows 2 (QA & Scenarios):** Synthetic fixtures in `devguard/ui/fixtures.py` can be extended with scenarios from `evals/cases/` and `demo/fixtures/`.
+
+## Mac 1 integration follow-up
+
+The dashboard is integrated on `codex/mac1-integration`. Live mode uses actual backend payloads and never displays fallback fixture decisions. Fixture state remains isolated and labelled. The local Streamlit config binds to loopback and disables usage telemetry. Native enable requires an explicit consent checkbox on the capture Mac. Server-side credentials never enter requests to arbitrary remote hosts. Refer to [measured integration status](INTEGRATION_STATUS.md) for tests, dependency snapshots and remaining live gates.

@@ -14,7 +14,7 @@ FIXTURE_BANNER_TEXT = "FIXTURE MODE — simulated presentation data (not an actu
 SYNTHETIC_HEALTH: Dict[str, Any] = {
     "status": "ok",
     "model_ready": True,
-    "model_name": "gemma4:e4b",
+    "model_name": "gemma4:e4b-it-q4_K_M",
     "model_digest": "sha256:e4b_synthetic_pinned_trial_digest",
     "backend_version": "0.1.0-synthetic-fixture",
     "mode": "fixture",
@@ -23,7 +23,7 @@ SYNTHETIC_HEALTH: Dict[str, Any] = {
 SYNTHETIC_STATUS: Dict[str, Any] = {
     "worker_id": "worker-synthetic-mac1",
     "model_state": "READY",
-    "model_name": "gemma4:e4b",
+    "model_name": "gemma4:e4b-it-q4_K_M",
     "clipboard_watcher": "ACTIVE_SIMULATED",
     "enrolled_host": "mac-local-workstation-01",
     "windows_native_capture": "UNSUPPORTED",
@@ -140,7 +140,7 @@ SYNTHETIC_COVERAGE: List[Dict[str, Any]] = [
     {
         "capability": "Independent backend repair",
         "client": "Local Gemma 4 E4B",
-        "client_version": "gemma4:e4b",
+        "client_version": "gemma4:e4b-it-q4_K_M",
         "status": "UNIMPLEMENTED",
         "verified_at": None,
         "evidence_ref": None,
@@ -226,7 +226,7 @@ SYNTHETIC_RUN: Dict[str, Any] = {
     "run_id": "run-synthetic-502",
     "incident_id": "inc-synthetic-102",
     "state": "READY_FOR_REVIEW",
-    "model_name": "gemma4:e4b",
+    "model_name": "gemma4:e4b-it-q4_K_M",
     "model_digest": "sha256:e4b_synthetic_pinned_trial_digest",
     "safe_observations": [
         "Identified missing exist_ok=True and directory pre-check in CacheManager.load()",

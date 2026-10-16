@@ -5,6 +5,7 @@ Renders structured, redacted timeline events per docs/API_CONTRACT.md.
 """
 
 from typing import Any, Dict
+from html import escape
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError
 
@@ -41,15 +42,15 @@ def render_events_view(client: BaseDevGuardClient) -> None:
             default=[],
         )
 
-    filtered = [e for e in events if e.get("severity") in selected_severities] if selected_severities else events
+    filtered = [e for e in events if str(e.get("severity", "info")).upper() in selected_severities] if selected_severities else events
 
     for ev in reversed(filtered):
-        sev = ev.get("severity", "INFO")
+        sev = str(ev.get("severity", "info")).upper()
         color = SEVERITY_COLORS.get(sev, "gray")
-        kind = ev.get("kind", "event")
-        ts = ev.get("timestamp", "")
-        summary = ev.get("redacted_summary", "(No summary)")
-        state = ev.get("state", "")
+        kind = escape(str(ev.get("kind", "event")))
+        ts = escape(str(ev.get("timestamp", "")))
+        summary = escape(str(ev.get("redacted_summary", "(No summary)")))
+        state = escape(str(ev.get("state", "")))
 
         with st.container():
             st.markdown(
