@@ -8,6 +8,9 @@ per docs/COVERAGE.md and docs/tasks/WINDOWS_1_DASHBOARD.md.
 from typing import Any, Dict, List
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError
+from devguard.ui.design import heading
+from pathlib import Path
+import json
 
 
 STATUS_COLORS = {
@@ -20,8 +23,8 @@ STATUS_COLORS = {
 
 
 def render_coverage_view(client: BaseDevGuardClient) -> None:
-    st.header("📊 Integration Coverage & Capabilities")
-    st.caption("Verified vs planned integration paths and honest architectural boundaries.")
+    heading('Capabilities, with clear boundaries.','See what is implemented, what has been exercised, and which paths remain unsupported.','DEVGUARD / COVERAGE')
+    _recorded_evidence()
 
     try:
         entries = client.get_coverage()
@@ -73,3 +76,22 @@ def render_coverage_view(client: BaseDevGuardClient) -> None:
                 st.markdown(f"**Verification Evidence:** `{evidence}`")
             else:
                 st.caption("No live verification evidence attached yet.")
+
+
+def _recorded_evidence():
+    with st.expander('Recorded Mac 1 verification · individual trials, not continuous monitoring'):
+        st.caption('Recorded on 16 October 2026 using declared synthetic data. These reports do not establish broad accuracy, universal paste blocking or installed-client interception.')
+        root=Path(__file__).resolve().parents[3]/'docs/evidence'
+        dashboard_report='mac1-modern-dashboard.json' if (root/'mac1-modern-dashboard.json').is_file() else 'mac1-live-dashboard.json'
+        for name,title in [('mac1-system-clipboard.json','Native macOS clipboard'),
+                           (dashboard_report,'Live API, Gemma and reference delivery')]:
+            path=root/name
+            if not path.is_file():continue
+            try:data=json.loads(path.read_text())
+            except (OSError,ValueError):continue
+            st.markdown('**'+title+' · '+str(data.get('status','UNKNOWN'))+'**')
+            st.caption(data.get('scope','Recorded synthetic trial'))
+            checks=data.get('checks',{})
+            if checks:
+                st.write(f"{sum(value is True for value in checks.values())} / {len(checks)} recorded checks passed.")
+            st.json(data,expanded=False)

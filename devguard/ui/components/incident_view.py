@@ -9,6 +9,7 @@ from typing import Any, Dict
 from uuid import uuid4
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient, DevGuardError, StaleContentError
+from devguard.ui.design import heading
 
 
 RUN_STATE_COLORS = {
@@ -29,23 +30,18 @@ RUN_STATE_COLORS = {
 
 
 def render_incident_view(client: BaseDevGuardClient) -> None:
-    st.header("🔧 Incident Investigation & Sandboxed Repair")
-    st.caption("Inspect background repair runs, isolated verification results, and review candidate diffs.")
+    heading('Backend repair workspace','Run named checks in an isolated snapshot. Review verified changes before touching original files.','DEVGUARD / REPAIRS')
 
     try:
-        if not client.is_fixture_mode():
-            readiness = client.get_status().get("repair", {})
-            if not readiness.get("available"):
-                st.info("Repair is unavailable: " + str(readiness.get("reason_code", "NOT_CONFIGURED")))
-                st.caption("The privacy and clipboard services remain available. Configure the pinned verifier image on the Mac before starting repair.")
-                return
+        readiness = client.get_status().get('repair',{})
+        if not _render_worker_controls(client,readiness):return
         incidents = client.get_incidents()
     except DevGuardError as e:
         st.error(f"Failed to load incidents [{e.code}]: {e}")
         return
 
     if not incidents:
-        st.info("No active or historical incidents found.")
+        st.info("No incidents yet. Queue an investigation above for a project and named check registered by trusted startup.")
         return
 
     incident_titles = [f"{inc.get('incident_id')}: {inc.get('title')}" for inc in incidents]
@@ -53,8 +49,17 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
         "Select Incident to Inspect",
         options=range(len(incidents)),
         format_func=lambda i: incident_titles[i],
+        index=next((i for i,item in enumerate(incidents)
+                    if item.get('incident_id')==st.session_state.get('repair_selected_incident')),0),
     )
     incident = incidents[selected_idx]
+    if st.button('Investigate selected incident',use_container_width=False):
+        try:
+            result=client.investigate_incident(incident['incident_id'])
+            if not result.get('run_id'):raise DevGuardError('Run was not acknowledged',code='RUN_NOT_QUEUED')
+            st.session_state['repair_notice']='Investigation queued. Enter idle to allow background work.'
+            st.rerun()
+        except DevGuardError as error:st.error(f'{error.code}: {error}')
 
     col_details, col_run = st.columns([1, 1])
 
@@ -94,6 +99,21 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
             v_evidence = verification.get("test_evidence")
             if v_evidence:
                 st.caption(f"Evidence: `{v_evidence}`")
+
+        baseline=run_data.get('baseline')
+        if baseline:st.caption('Reproduced baseline: '+baseline)
+        if run_data.get('reason_code'):st.warning('Run held: '+run_data['reason_code'])
+        tools=run_data.get('completed_tools',[])
+        if tools:
+            st.markdown('**Completed tools**')
+            st.write(' → '.join(tools))
+        if run_state not in {'READY_FOR_REVIEW','APPLIED','UNRESOLVED','BLOCKED','CANCELED','OBSOLETE','REJECTED'}:
+            if st.button('Cancel this run'):
+                try:
+                    result=client.cancel_run(run_id)
+                    if result.get('run_id')!=run_id:raise DevGuardError('Cancellation was not acknowledged',code='CANCEL_NOT_ACKNOWLEDGED')
+                    st.info('Cancellation requested. Refresh to see the worker acknowledgement.')
+                except DevGuardError as error:st.error(f'{error.code}: {error}')
 
         observations = run_data.get("safe_observations", [])
         if observations:
@@ -160,3 +180,57 @@ def render_incident_view(client: BaseDevGuardClient) -> None:
             st.success("✅ This patch has been APPLIED to local source revision.")
         elif patch_status == "REJECTED":
             st.error("❌ This patch candidate was REJECTED by operator.")
+
+
+def _render_worker_controls(client,readiness):
+    available=readiness.get('available') is True
+    c1,c2,c3=st.columns([2,1,1])
+    with c1:
+        state=readiness.get('state','UNAVAILABLE')
+        st.markdown('**Worker · '+state.replace('_',' ').title()+'**')
+        st.caption('Manual idle trigger. Active model calls are not preempted by queue priority.')
+    with c2:
+        if st.button('Enter idle',disabled=not available,use_container_width=True):
+            try:
+                response=client.set_repair_idle(True)
+                if response.get('paused') is not False:raise DevGuardError('Idle was not acknowledged',code='IDLE_NOT_ACKNOWLEDGED')
+                st.session_state['repair_notice']='Idle execution enabled for queued work.'
+                st.rerun()
+            except DevGuardError as error:st.error(f'{error.code}: {error}')
+    with c3:
+        if st.button('Pause repairs',disabled=not available,use_container_width=True):
+            try:
+                response=client.set_repair_idle(False)
+                if response.get('paused') is not True:raise DevGuardError('Pause was not acknowledged',code='PAUSE_NOT_ACKNOWLEDGED')
+                st.session_state['repair_notice']='Repairs paused. Active work has been asked to cancel.'
+                st.rerun()
+            except DevGuardError as error:st.error(f'{error.code}: {error}')
+    if 'repair_notice' in st.session_state:st.info(st.session_state.pop('repair_notice'))
+    if not available:
+        st.warning('Repair unavailable: '+str(readiness.get('reason_code','NOT_CONFIGURED')))
+        st.caption('Start the backend with a pinned verifier image. Privacy and clipboard controls remain independent.')
+        if readiness.get('configured') and st.button('Retry repair initialization'):
+            try:
+                response=client.initialize_repair()
+                if response.get('available') is not True:raise DevGuardError('Repair remains unavailable',code='REPAIR_UNAVAILABLE')
+                st.rerun()
+            except DevGuardError as error:st.error(f'{error.code}: {error}')
+        return False
+    with st.expander('New investigation',expanded=False):
+        with st.form('new_investigation'):
+            left,right=st.columns(2)
+            with left:project=st.text_input('Registered project ID',value='demo-cart')
+            with right:signal=st.text_input('Named check',value='cart')
+            st.caption('Only projects and checks enrolled at trusted backend startup can run. No arbitrary roots or shell commands.')
+            submit=st.form_submit_button('Queue investigation',type='primary')
+        if submit:
+            try:
+                incident=client.create_incident(project,signal)
+                if not incident.get('incident_id'):raise DevGuardError('Incident was not acknowledged',code='INCIDENT_NOT_CREATED')
+                result=client.investigate_incident(incident['incident_id'])
+                if not result.get('run_id'):raise DevGuardError('Run was not acknowledged',code='RUN_NOT_QUEUED')
+                st.session_state['repair_notice']='Investigation queued. Enter idle to allow background work.'
+                st.session_state['repair_selected_incident']=incident['incident_id']
+                st.rerun()
+            except DevGuardError as error:st.error(f'{error.code}: {error}')
+    return True
