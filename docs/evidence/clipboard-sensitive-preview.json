@@ -1,0 +1,262 @@
+{
+  "timestamp": "2026-10-21T11:40:31.481268+00:00",
+  "scope": "Real pinned Gemma/Gitleaks and private named NSPasteboard; declared synthetic examples",
+  "general_clipboard_accessed": false,
+  "runtime": {
+    "server_ready": true,
+    "server_version": "0.40.6",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "reason_code": "MODEL_READY"
+  },
+  "results": [
+    {
+      "case": "ordinary",
+      "state": "CLEAR_FOR_CAPTURE_SCOPE",
+      "preview_kind": "APPROVED",
+      "approved_preview_available": true,
+      "display_preview_available": true,
+      "can_copy_cleaned": true,
+      "passed": true,
+      "elapsed_seconds": 2.238
+    },
+    {
+      "case": "credential_only",
+      "state": "SENSITIVE",
+      "preview_kind": "SANITIZED",
+      "approved_preview_available": true,
+      "display_preview_available": true,
+      "can_copy_cleaned": true,
+      "passed": true,
+      "elapsed_seconds": 2.513,
+      "native_copy_matches_approved_preview": true
+    },
+    {
+      "case": "mixed",
+      "state": "SENSITIVE",
+      "preview_kind": "SANITIZED",
+      "approved_preview_available": true,
+      "display_preview_available": true,
+      "can_copy_cleaned": true,
+      "passed": true,
+      "elapsed_seconds": 2.112
+    },
+    {
+      "case": "confidential",
+      "state": "REVIEW",
+      "preview_kind": "WITHHELD",
+      "approved_preview_available": false,
+      "display_preview_available": true,
+      "can_copy_cleaned": false,
+      "passed": true,
+      "elapsed_seconds": 2.73,
+      "held_copy_rejected": true
+    }
+  ],
+  "disabled_and_cleared": true,
+  "audit_omits_synthetic_secret": true,
+  "privacy_calibration": {
+    "base": {
+      "timestamp": "2026-10-21T11:40:41.362210+00:00",
+      "scope": "Real pinned local Gemma and Gitleaks; unchanged original synthetic catalogue P01-P05",
+      "runtime": {
+        "server_ready": true,
+        "server_version": "0.40.6",
+        "model": "gemma4:e4b-it-q4_K_M",
+        "model_ready": true,
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "reason_code": "MODEL_READY"
+      },
+      "results": [
+        {
+          "case_id": "P01",
+          "expected_decision": "SANITIZE",
+          "actual_decision": "SANITIZE",
+          "reason_codes": [
+            "CREDENTIAL"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 2.337,
+          "external_delivery": false
+        },
+        {
+          "case_id": "P02",
+          "expected_decision": "ALLOW",
+          "actual_decision": "ALLOW",
+          "reason_codes": [],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 2.35,
+          "external_delivery": false
+        },
+        {
+          "case_id": "P03",
+          "expected_decision": "REVIEW",
+          "actual_decision": "REVIEW",
+          "reason_codes": [
+            "CONFIDENTIAL"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": false,
+          "elapsed_seconds": 2.754,
+          "external_delivery": false
+        },
+        {
+          "case_id": "P04",
+          "expected_decision": "SANITIZE",
+          "actual_decision": "SANITIZE",
+          "reason_codes": [
+            "CREDENTIAL",
+            "PERSONAL_DATA"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 2.174,
+          "external_delivery": false
+        },
+        {
+          "case_id": "P05",
+          "expected_decision": "BLOCK",
+          "actual_decision": "BLOCK",
+          "reason_codes": [
+            "CREDENTIAL",
+            "PROMPT_INJECTION"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": false,
+          "elapsed_seconds": 0.024,
+          "external_delivery": false
+        }
+      ],
+      "catalogue_unchanged": true,
+      "perfect_accuracy_claimed": false,
+      "independent_accuracy_benchmark": false
+    },
+    "variants": {
+      "timestamp": "2026-10-21T11:40:55.484805+00:00",
+      "scope": "Real pinned local Gemma and Gitleaks; declared synthetic calibration variants",
+      "runtime": {
+        "server_ready": true,
+        "server_version": "0.40.6",
+        "model": "gemma4:e4b-it-q4_K_M",
+        "model_ready": true,
+        "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+        "reason_code": "MODEL_READY"
+      },
+      "results": [
+        {
+          "case_id": "V01",
+          "expected_decision": "ALLOW",
+          "actual_decision": "ALLOW",
+          "reason_codes": [],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.941,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V02",
+          "expected_decision": "SANITIZE",
+          "actual_decision": "SANITIZE",
+          "reason_codes": [
+            "CREDENTIAL"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.859,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V03",
+          "expected_decision": "REVIEW",
+          "actual_decision": "REVIEW",
+          "reason_codes": [
+            "CONFIDENTIAL"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": false,
+          "elapsed_seconds": 2.556,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V04",
+          "expected_decision": "BLOCK",
+          "actual_decision": "BLOCK",
+          "reason_codes": [
+            "CREDENTIAL",
+            "PROMPT_INJECTION"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": false,
+          "elapsed_seconds": 0.031,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V05",
+          "expected_decision": "ALLOW",
+          "actual_decision": "ALLOW",
+          "reason_codes": [],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.896,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V06",
+          "expected_decision": "SANITIZE",
+          "actual_decision": "SANITIZE",
+          "reason_codes": [
+            "PERSONAL_DATA"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.908,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V07",
+          "expected_decision": "SANITIZE",
+          "actual_decision": "SANITIZE",
+          "reason_codes": [
+            "CREDENTIAL"
+          ],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.866,
+          "external_delivery": false
+        },
+        {
+          "case_id": "V08",
+          "expected_decision": "ALLOW",
+          "actual_decision": "ALLOW",
+          "reason_codes": [],
+          "decision_matches_expectation": true,
+          "expected_reasons_present": true,
+          "approved_preview_available": true,
+          "elapsed_seconds": 1.861,
+          "external_delivery": false
+        }
+      ],
+      "catalogue_unchanged": true,
+      "perfect_accuracy_claimed": false,
+      "independent_accuracy_benchmark": false
+    }
+  }
+}

@@ -71,6 +71,8 @@ Internal model proposals contain classification/reason codes and `{start,end,rep
 
 Native enable/copy actions are local-operator-only and target the capture host; a remotely connected Windows UI displays status and cannot silently read or replace another machine's clipboard. The capture host must explicitly confirm these actions. Frontend fixture mode simulates them visibly and has no native access.
 
+Clipboard status additionally returns `display_preview` and `preview_kind` (`APPROVED`, `SANITIZED`, `WITHHELD`, or null). `safe_preview` remains the approved candidate only. A held result has `safe_preview: null`, `can_copy_cleaned: false`, and a constant whole-copy display marker; the marker is never a candidate or copy authorization. OFF/pending/skipped states have no display preview. Copy actions continue to require the exact approved content version.
+
 Clipboard states: OFF, CHECKING, SENSITIVE, REVIEW, CLEAR_FOR_CAPTURE_SCOPE, SKIPPED, ERROR. Include `capture_host_id`, `content_version`, `state`, `enabled`, `redacted_summary`, `finding_ids`, `can_copy_cleaned`. Never return original text, raw history or a reversible map. Copy-cleaned is not model delivery.
 
 ## Repair endpoints

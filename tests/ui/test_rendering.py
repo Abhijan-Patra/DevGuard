@@ -180,6 +180,23 @@ def test_capture_disable_requires_backend_acknowledgement(monkeypatch):
     assert any('CAPTURE_NOT_DISABLED' in item.value for item in app.error)
 
 
+@pytest.mark.parametrize('held', [False, True])
+def test_sensitive_clipboard_displays_placeholder_and_only_approved_copy_action(monkeypatch, held):
+    marker = '[SENSITIVE_CONTENT_REMOVED]' if held else '[CREDENTIAL_1]'
+    monkeypatch.setattr(ui_client.FixtureDevGuardClient, 'get_clipboard_status', lambda self: {
+        'capture_host_id': 'synthetic-host', 'enabled': True,
+        'state': 'REVIEW' if held else 'SENSITIVE', 'content_version': 7,
+        'safe_preview': None if held else marker, 'display_preview': marker,
+        'preview_kind': 'WITHHELD' if held else 'SANITIZED', 'can_copy_cleaned': not held,
+    })
+    app = _component_app('clipboard_view', 'render_clipboard_view').run()
+    assert not app.exception
+    assert any(item.value == marker for item in app.code)
+    assert any('Copy Cleaned Text' in button.label for button in app.button) is not held
+    if held:
+        assert any('not an approved cleaned copy' in item.value for item in app.warning)
+
+
 def test_unverified_live_backend_stops_before_input_or_action_controls(monkeypatch):
     client = ui_client.FixtureDevGuardClient()
     monkeypatch.setattr(client, 'is_fixture_mode', lambda: False)

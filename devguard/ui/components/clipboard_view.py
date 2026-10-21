@@ -102,9 +102,13 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
             st.info("Content was SKIPPED (non-text or exceeded 32 KiB text budget). Never labeled safe.")
         else:
             safe_preview = status_data.get("safe_preview", "")
-            if safe_preview:
-                st.markdown("**Safe Redacted Preview:**")
-                st.code(safe_preview, language="text")
+            display_preview = status_data.get('display_preview', safe_preview)
+            held = status_data.get('preview_kind') == 'WITHHELD'
+            if display_preview is not None and display_preview != '':
+                st.markdown("**Content hidden — inspection held:**" if held else "**Safe Redacted Preview:**")
+                st.code(display_preview, language="text")
+                if held:
+                    st.warning('The entire copy is hidden. This marker is not an approved cleaned copy. Copy new text to inspect again.')
             else:
                 st.info("No text preview available.")
 
@@ -113,7 +117,7 @@ def render_clipboard_view(client: BaseDevGuardClient) -> None:
                 st.markdown(f"**Detector Summary:** {summary}")
 
             can_copy = status_data.get("can_copy_cleaned", False)
-            if can_copy and safe_preview:
+            if can_copy and safe_preview and not held:
                 st.markdown("---")
                 if st.button(f"📋 Copy Cleaned Text (v{version})", use_container_width=True):
                     try:
