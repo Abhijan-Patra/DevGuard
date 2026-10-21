@@ -548,10 +548,11 @@ async function refreshRun(force = false) {
   state.run = await api("/runs/" + encodeURIComponent(incident.active_run_id));
   if (!state.run.candidate_id) {
     state.patch = null;
-  } else if (force || state.patch?.candidate_id !== state.run.candidate_id || state.patch?.state !== state.run.state) {
+  } else if (force || state.patch?.candidate_id !== state.run.candidate_id || state.patchRunState !== state.run.state) {
     // Keep the approved display while unchanged. Apply still revalidates on
     // the server; ordinary polling must not repeatedly invoke Gemma on a diff.
     state.patch = await api('/patches/' + encodeURIComponent(state.run.candidate_id));
+    state.patchRunState = state.run.state;
   }
 }
 async function navigate(target = null) {
