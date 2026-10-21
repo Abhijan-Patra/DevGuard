@@ -157,3 +157,65 @@ def test_oversize_binary_and_expired_copy_are_never_declared_safe():
         assert not guard.records
         await clipboard.disable()
     asyncio.run(run())
+
+
+def test_sensitive_copy_returns_placeholder_preview_and_copy_uses_only_approved_bytes():
+    async def run():
+        clipboard, adapter, guard, _ = setup()
+        await clipboard.enable(consent=True)
+        adapter.copy('password=synthetic-clipboard-credential-982401')
+        await clipboard.poll_once(); await settle(clipboard)
+        status=clipboard.status()
+        assert status['state']=='SENSITIVE' and status['preview_kind']=='SANITIZED'
+        assert status['display_preview']==status['safe_preview']
+        assert '[CREDENTIAL_1]' in status['display_preview']
+        assert 'synthetic-clipboard-credential' not in str(status)
+        assert status['can_copy_cleaned'] and adapter.writes==0
+        await clipboard.copy_cleaned(status['content_version'])
+        assert adapter.text==status['safe_preview'] and adapter.writes==1
+        await clipboard.disable()
+        assert clipboard.status()['display_preview'] is None
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize('decision',[Decision.REVIEW,Decision.BLOCK,Decision.LOCAL_ONLY])
+def test_held_sensitive_copy_shows_whole_copy_marker_without_granting_copy_authority(decision):
+    async def run():
+        class HeldInspector:
+            async def inspect(self,text,task):
+                return ModelProposal(decision=decision,spans=[])
+        clipboard,adapter,guard,_=setup(HeldInspector())
+        await clipboard.enable(consent=True)
+        adapter.copy('password=synthetic-hidden-clipboard-502938; private prose')
+        await clipboard.poll_once();await settle(clipboard)
+        status=clipboard.status()
+        assert status['safe_preview'] is None and not status['can_copy_cleaned']
+        assert status['display_preview']=='[SENSITIVE_CONTENT_REMOVED]'
+        assert status['preview_kind']=='WITHHELD' and 'private prose' not in str(status)
+        with pytest.raises(GuardError,match='CLIPBOARD_INSPECTION_HELD'):
+            await clipboard.copy_cleaned(status['content_version'])
+        assert adapter.writes==0
+        await clipboard.disable()
+    asyncio.run(run())
+
+
+def test_expiry_hides_old_approved_preview_and_new_copy_clears_display_marker():
+    async def run():
+        now=[0]
+        clipboard,adapter,guard,_=setup(clock=lambda:now[0])
+        await clipboard.enable(consent=True)
+        adapter.copy('password=synthetic-expiring-copy-378401')
+        await clipboard.poll_once();await settle(clipboard)
+        assert clipboard.status()['preview_kind']=='SANITIZED'
+        now[0]=61
+        expired=clipboard.status()
+        assert expired['display_preview']=='[INSPECTION_EXPIRED]'
+        assert expired['safe_preview'] is None and not expired['can_copy_cleaned']
+        adapter.copy('new ordinary public text')
+        await clipboard.poll_once()
+        assert clipboard.status()['display_preview'] is None
+        await settle(clipboard)
+        assert clipboard.status()['display_preview']=='new ordinary public text'
+        assert clipboard.status()['preview_kind']=='APPROVED'
+        await clipboard.disable()
+    asyncio.run(run())

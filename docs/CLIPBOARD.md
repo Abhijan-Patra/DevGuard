@@ -34,6 +34,10 @@ Initial raw-text lifetime target: no more than 60 seconds and no longer than nee
 
 Expose current version, capture host, supported scope and last redacted finding. No stale state may be presented as describing a new copy. CLEAR_FOR_CAPTURE_SCOPE means no issue detected in that inspected text; it is not proof that all sensitive data is absent or that a paste was intercepted.
 
+Sensitive copies show placeholders instead of an empty inspected-copy panel. An approved sanitized preview replaces detected values with tokens such as `[CREDENTIAL_1]`, preserving approved surrounding text. Pre-scan placeholders contain no original value; Gemma still inspects the remaining text normally.
+
+For held or failed inspections, the display masks the **entire copy** with `[SENSITIVE_CONTENT_REMOVED]` or `[CONTENT_WITHHELD]`; expiry shows `[INSPECTION_EXPIRED]`. These display-only markers do not authorize copying or delivery. The API keeps `safe_preview` null and `can_copy_cleaned` false in those cases. Capture OFF, a new pending inspection and skipped content clear the previous display. See [synthetic native trial evidence](evidence/clipboard-sensitive-preview.json).
+
 ## Cleaned-copy and guarded-send actions
 
 **Copy cleaned text** is explicit. It verifies expected clipboard version, copies the validated cleaned bytes, records only metadata and suppresses the watcher's own resulting change event. Reject version mismatch with a conflict and leave new content alone. Avoid an unbounded self-scan loop.

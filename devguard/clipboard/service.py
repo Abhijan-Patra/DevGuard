@@ -5,7 +5,7 @@ import contextlib
 import time
 
 from devguard.guard.engine import GuardError
-from devguard.schemas.guard import Decision, GuardInput, MAX_TEXT_BYTES
+from devguard.schemas.guard import Category, Decision, GuardInput, MAX_TEXT_BYTES
 
 
 class ClipboardService:
@@ -30,11 +30,23 @@ class ClipboardService:
         if self._request_id:
             with contextlib.suppress(GuardError):
                 record = self.guard.get(self._request_id, "clipboard")
+        preview = record.candidate if record else None
+        kind = ('SANITIZED' if record.decision == Decision.SANITIZE else 'APPROVED') if preview is not None else None
+        display = preview
+        if self.enabled and preview is None and self.state in {'SENSITIVE', 'REVIEW', 'ERROR'}:
+            # Display-only marker, never an approved candidate or copy authority.
+            # Mask the whole copy: partial scanner output may still contain
+            # contextual facts when the model holds/fails. No original is kept.
+            display = ('[INSPECTION_EXPIRED]' if self.summary == 'INSPECTION_EXPIRED' else
+                       '[SENSITIVE_CONTENT_REMOVED]' if record and set(record.reasons).intersection(Category)
+                       else '[CONTENT_WITHHELD]')
+            kind = 'WITHHELD'
         return {
             "capture_host_id": "local-host", "supported": self.adapter.available,
             "enabled": self.enabled, "state": self.state, "content_version": self.version,
             "redacted_summary": self.summary,
-            "safe_preview": record.candidate if record else None,
+            "safe_preview": preview,
+            "display_preview": display, "preview_kind": kind,
             "finding_ids": [record.request_id] if record else [],
             "can_copy_cleaned": bool(record and record.candidate is not None and self.enabled),
         }
