@@ -1,0 +1,18 @@
+include LICENSE THIRD_PARTY_NOTICES.md README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md SUPPORT.md
+include AGENTS.md .gitignore
+include requirements*.txt
+recursive-include devguard/resources *
+recursive-include docs *.md *.json
+recursive-include scripts *.sh *.py devguard-local
+recursive-include demo *.py Dockerfile *.md
+recursive-include trusted_tests *.py
+recursive-include evals *.py *.json *.md
+recursive-include integrations *.py *.md
+recursive-include tests *.py *.lock
+recursive-include .github *.yml *.yaml *.md
+exclude .env
+prune .devguard
+prune .venv
+prune build
+prune dist
+global-exclude __pycache__ *.py[cod] *.sqlite3 *.gguf *.safetensors

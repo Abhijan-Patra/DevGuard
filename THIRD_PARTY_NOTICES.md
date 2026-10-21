@@ -1,6 +1,6 @@
 # Sources and third-party notices
 
-Original repository material is under MIT. External model weights, tools and dependencies are not relicensed by that file. No model weights or third-party source are bundled in this documentation package. Before distributing a runtime/image, preserve the actual selected packages' licence/NOTICE requirements.
+Original repository material is under MIT. External model weights, tools and dependencies are not relicensed by that file. No model weights or vendored third-party source are bundled in this release. Python packages, model weights and verifier dependencies are downloaded separately and retain their own licence/NOTICE requirements.
 
 ## Model
 
@@ -16,7 +16,7 @@ Gemma 4 is developed by Google DeepMind. Its official model card lists Apache Li
 - [Official OpenAI documentation: hooks](https://developers.openai.com/codex/hooks)
 - [Claude Code hooks](https://code.claude.com/docs/en/hooks)
 
-Installed-client behaviour and complete context-path coverage remain to be tested. Antigravity is used for development by two teammates; no protected-runtime integration is claimed.
+Scoped native CLI trials are recorded in [client integration evidence](docs/CLIENT_INTEGRATION.md). Their synthetic provider transport does not establish signed-in cloud delivery or complete context-path coverage. No protected-runtime integration is claimed for Antigravity.
 
 ## Implementation references
 

@@ -6,6 +6,7 @@ import shlex
 import sys
 
 from devguard.client import private_token
+from devguard.runtime import runtime_directory
 
 
 def prepare(directory: Path, token_file: Path, base_url: str):
@@ -53,7 +54,7 @@ def prepare(directory: Path, token_file: Path, base_url: str):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True, help='New private directory; never overwrites an existing profile')
-    parser.add_argument('--token-file', type=Path, default=Path('.devguard/client-token'))
+    parser.add_argument('--token-file', type=Path, default=runtime_directory()/'client-token')
     parser.add_argument('--base-url', default='http://127.0.0.1:8765/api/v1')
     args = parser.parse_args()
     try:

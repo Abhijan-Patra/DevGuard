@@ -98,7 +98,7 @@ def test_malformed_connection_urls_produce_safe_errors(url):
 
 def test_local_token_file_must_be_private_regular_and_not_linked(tmp_path,monkeypatch):
     root=tmp_path/'app';runtime=root/'.devguard';runtime.mkdir(parents=True,mode=0o700)
-    monkeypatch.setattr(enrolment,'__file__',str(root/'devguard/ui/session.py'))
+    monkeypatch.setenv('DEVGUARD_HOME', str(root.resolve()))
     path=runtime/'session-token';path.write_text(TOKEN);path.chmod(0o600)
     assert enrolment.load_local_token('http://127.0.0.1:8765/api/v1')==TOKEN
     path.chmod(0o644)

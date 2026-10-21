@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-10-21T13:47:52.296605+00:00",
+  "scope": "Clean installed wheel; temporary private workspace; declared synthetic input",
+  "live_model_and_docker": true,
+  "clipboard_enabled": false,
+  "checks": {
+    "api_and_assets": true,
+    "unauthenticated_access_denied": true,
+    "browser_pairing": true,
+    "capture_and_watchers_off": true,
+    "isolated_client_profile_without_global_changes": true,
+    "real_sanitized_delivery": true,
+    "real_docker_repair": true,
+    "review_before_apply": true,
+    "disposable_apply": true,
+    "rollback_restores_original": true,
+    "trusted_tests_unchanged": true,
+    "redacted_audit": true,
+    "managed_stop": true
+  },
+  "repair_state": "READY_FOR_REVIEW",
+  "repair_reason": null,
+  "general_clipboard_accessed": false,
+  "installed_version": "0.2.0"
+}

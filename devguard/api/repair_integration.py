@@ -99,8 +99,11 @@ def demo_repair_factory(repository_root: Path, image_id: str):
     if not re.fullmatch(r'sha256:[0-9a-f]{64}', image_id):
         raise ValueError('Use an actual pinned Docker image ID')
     repository_root = repository_root.resolve()
-    from demo.backend.config import demo_project
-    return projects_repair_factory(repository_root, [demo_project(repository_root, image_id)])
+    from devguard.local import ROOT, demo_manifest
+    from devguard.repair.projects import load_projects
+    if repository_root != ROOT:
+        raise ValueError('Demo startup must use the configured local workspace')
+    return projects_repair_factory(repository_root, load_projects(demo_manifest(image_id)))
 
 
 def projects_repair_factory(repository_root: Path, specs):

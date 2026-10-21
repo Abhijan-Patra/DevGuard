@@ -62,10 +62,10 @@ def main() -> int:
         return 0
     try:
         if args.command == "baseline":
-            from demo.backend.config import demo_project
-
-            root = Path(__file__).resolve().parents[2]
-            spec = demo_project(root, args.image_id)
+            from devguard.bootstrap import ASSETS
+            from devguard.repair.contracts import ProjectSpec
+            spec = ProjectSpec('demo-cart', ASSETS / 'demo', ('cart.py', 'main.py'),
+                               ('cart.py',), ASSETS / 'checks', ('cart',), args.image_id)
             result = DockerVerifier(args.docker).run(spec.root, spec, "cart", Event())
             print(
                 json.dumps(

@@ -1,5 +1,7 @@
 # Single-laptop workspace
 
+New users: start with the [public installation guide](INSTALL.md). It covers the source installer, release wheel, prerequisites and troubleshooting. The technical workflows below remain useful after installation.
+
 21 October 2026. One machine owns all former Mac 1, Mac 2 and Windows roles. The primary interface is now the dependency-free browser workspace served by FastAPI at `http://127.0.0.1:8765/app`. The Streamlit dashboard remains available as a legacy interface; the existing Render deployment now hosts a read-only feature tour using the same design and recorded evidence.
 
 ## Start and stop

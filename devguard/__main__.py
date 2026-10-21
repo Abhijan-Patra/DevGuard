@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import secrets
 import stat
+import sys
 
 import uvicorn
 
@@ -32,7 +33,8 @@ def session_token(name='session-token', variable="DEVGUARD_SESSION_TOKEN"):
         fd = os.open(token_file, flags)
         with os.fdopen(fd) as stream:
             info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or (os.name != "nt" and info.st_mode & 0o077):
+            if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                    or (os.name != "nt" and (info.st_mode & 0o077 or info.st_uid != os.getuid()))):
                 raise ValueError("Session token must be a private regular file")
             return stream.read(512).strip()
     else:
@@ -42,13 +44,31 @@ def session_token(name='session-token', variable="DEVGUARD_SESSION_TOKEN"):
         return token
 
 
-def main():
-    parser = argparse.ArgumentParser(description="DevGuard local control API")
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in {'start', 'stop', 'status', 'doctor'}:
+        from devguard.local import main as launch
+        return launch(argv)
+    if argv and argv[0] == 'serve':
+        argv.pop(0)
+    from importlib.metadata import version
+    parser = argparse.ArgumentParser(description="DevGuard local control API",
+        epilog='User commands: devguard doctor | devguard start | devguard status | devguard stop. Use serve for foreground/API-only operation.')
+    parser.add_argument('--version', action='version', version='DevGuard ' + version('devguard'))
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--demo-image-id", help="Opt into the named cart demo using an existing sha256 Docker image ID")
     parser.add_argument('--projects-config', type=Path, help='Reviewed local JSON manifest; roots and tests cannot be changed over HTTP')
     parser.add_argument('--no-browser-pairing', action='store_true', help='Disable same-origin local workspace enrolment')
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    if not 1024 <= args.port <= 65535:
+        parser.error('Choose a port between 1024 and 65535')
+    if sys.platform not in {'darwin', 'linux'}:
+        parser.error('This local preview supports macOS/Linux; Windows native capture is not implemented')
+    if args.projects_config:
+        args.projects_config = args.projects_config.expanduser().resolve(strict=True)
+    from devguard.local import private_root, ROOT
+    private_root()
+    os.chdir(ROOT)
     settings = Settings(session_token(),
         ollama_url=os.environ.get('DEVGUARD_OLLAMA_URL', 'http://127.0.0.1:11434'),
         model=os.environ.get('DEVGUARD_MODEL', MODEL),
@@ -67,4 +87,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,35 +1,52 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "devguard"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local Gemma-powered privacy and backend investigation companion"
 readme = "README.md"
-requires-python = ">=3.11"
-license = {text = "MIT"}
+requires-python = ">=3.11,<3.14"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{name = "DevGuard contributors"}]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Operating System :: MacOS",
+  "Topic :: Security",
+]
 dependencies = [
-  "fastapi>=0.115,<1",
-  "httpx>=0.27,<1",
-  "uvicorn>=0.30,<1",
+  "fastapi==0.143.2",
+  "httpx==0.28.1",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.1",
+  "starlette==1.8.0",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<10", "mcp>=1.28,<2"]
-client = ["mcp>=1.28,<2"]
-clipboard = ["pyobjc-framework-Cocoa>=10,<13; sys_platform == 'darwin'"]
-ui = ["streamlit>=1.35,<2"]
+dev = ["pytest==9.1.1", "mcp==1.30.0"]
+client = ["mcp==1.30.0"]
+clipboard = ["pyobjc-framework-Cocoa==12.2.2; sys_platform == 'darwin'"]
+ui = ["streamlit==1.66.0"]
 
 [project.scripts]
 devguard = "devguard.__main__:main"
+devguard-local = "devguard.local:main"
+
+[project.urls]
+Homepage = "https://github.com/Abhijan-Patra/DevGuard"
+Documentation = "https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/INSTALL.md"
+Issues = "https://github.com/Abhijan-Patra/DevGuard/issues"
 
 [tool.setuptools.packages.find]
 include = ["devguard*"]
 
 [tool.setuptools.package-data]
 "devguard.ui" = ["dashboard.css"]
-"devguard" = ["web/*.html", "web/*.css", "web/*.js", "web/*.svg", "web/*.json"]
+"devguard" = ["web/*.html", "web/*.css", "web/*.js", "web/*.svg", "web/*.json", "resources/demo/*", "resources/checks/*.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

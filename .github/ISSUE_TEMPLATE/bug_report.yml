@@ -1,0 +1,25 @@
+name: Bug report
+description: Report a reproducible problem using synthetic data only.
+body:
+  - type: markdown
+    attributes:
+      value: Never attach tokens, clipboard contents, private source, .devguard, databases or raw runtime logs. For vulnerabilities, use SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: DevGuard version and OS
+      placeholder: v0.2.0, macOS, Apple silicon, Python 3.11
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Synthetic reproduction steps
+      description: What did you do? Local app or public tour? What did you expect and what happened?
+    validations:
+      required: true
+  - type: textarea
+    id: metadata
+    attributes:
+      label: Reviewed diagnostic metadata
+      description: Fixed reason code, public model tag/digest, tool versions. Remove private values and paths before posting.
