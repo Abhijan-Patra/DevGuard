@@ -6,7 +6,7 @@ Mac 2 currently has an SSH forward to Mac 1 occupying port 8765. Keep that tunne
 
 ```sh
 .venv/bin/python -m devguard --port 8766 --demo-image-id sha256:YOUR_ACTUAL_LOCAL_IMAGE_ID
-DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py
+DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py --server.address 127.0.0.1
 ```
 
 The second command is run in another terminal. Open `http://127.0.0.1:8501`; it starts in Live Mode, using `http://127.0.0.1:8766/api/v1`. The environment setting accepts only a local numeric port. The ordinary UI can still be launched separately in visibly labeled fixture mode; this launcher does not substitute fixtures when the API holds a request.

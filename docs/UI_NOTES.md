@@ -29,7 +29,7 @@ python -m pip install -e '.[dev,ui]'
 ### Start Command
 Run the Streamlit application from the repository root:
 ```powershell
-python -m streamlit run devguard/ui/app.py
+python -m streamlit run devguard/ui/app.py --server.address 127.0.0.1
 ```
 By default, the dashboard opens at `http://localhost:8501`.
 

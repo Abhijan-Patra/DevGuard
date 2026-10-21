@@ -8,6 +8,7 @@ import sys
 import httpx
 
 from devguard.config import MODEL, MODEL_DIGEST
+from devguard.bootstrap import RUNNER_TAG
 
 
 def diagnose(*, privacy_only=False, transport=None):
@@ -46,7 +47,7 @@ def diagnose(*, privacy_only=False, transport=None):
             docker_ready = subprocess.run([docker, 'info'], stdout=subprocess.DEVNULL,
                                            stderr=subprocess.DEVNULL, timeout=5).returncode == 0
             if docker_ready:
-                image_ready = subprocess.run([docker, 'image', 'inspect', 'devguard-runner:mac2'],
+                image_ready = subprocess.run([docker, 'image', 'inspect', RUNNER_TAG],
                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5).returncode == 0
         except (OSError, subprocess.TimeoutExpired):
             pass

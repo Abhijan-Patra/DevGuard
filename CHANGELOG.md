@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 — 21 October 2026 · Verifier compatibility
+
+- Prepare the local verifier as a single-platform image, with a tag derived from its public build inputs and preparation profile, instead of silently reusing the historical shared tag.
+- Preserve failure metadata in release trials, including held repair state/reason, without logging exception payloads.
+- Include the loopback-only legacy Streamlit configuration in the source archive.
+- Retain the published 0.2.0 trial failures and distinguish dependency holds from model repair failures.
+
 ## 0.2.0 — 21 October 2026 · Public preview
 
 - Publish a self-contained wheel and source distribution with the browser workspace, public demo source, independent oracle and minimal Docker build inputs.

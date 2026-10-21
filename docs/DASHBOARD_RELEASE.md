@@ -21,7 +21,7 @@ Start the backend from this checkout; optionally supply its trusted, already-pre
 
 ```sh
 .venv/bin/python -m devguard
-.venv/bin/python -m streamlit run devguard/ui/app.py
+.venv/bin/python -m streamlit run devguard/ui/app.py --server.address 127.0.0.1
 ```
 
 Open **http://127.0.0.1:8501**. The default is clearly labelled Fixture Mode. Choose **Live Mode**, then **Connect on this Mac** in connection settings. This explicit action reads only the private local operator token for the default port 8765; it keeps that token in non-widget server session state and never fills the password field. Manual operator enrolment remains available. Changing the endpoint revokes the automatically loaded credential and clears prior results/audit-page state. Disconnect clears credentials and result state.

@@ -38,7 +38,7 @@ Dashboard:
 
 ```sh
 .venv/bin/python -m pip install -e '.[ui]'
-.venv/bin/python -m streamlit run devguard/ui/app.py
+.venv/bin/python -m streamlit run devguard/ui/app.py --server.address 127.0.0.1
 ```
 
 The tracked Streamlit configuration binds only `127.0.0.1:8501` and disables usage telemetry. Keep it local because operator credentials and native clipboard controls belong on the capture Mac. Fixture mode is the default. Live mode uses `http://127.0.0.1:8765/api/v1` and the local operator token. Do not paste that token into a development assistant or GitHub.

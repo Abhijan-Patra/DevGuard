@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-10-21T15:28:55.190656+00:00",
+  "scope": "Post-publication verification of the actual downloaded v0.2.0 wheel",
+  "artifact_sha256": "1499a8282c7abf777c0c8089e67c1166f5340f61b52034870facb5f3556ce121",
+  "published_checksums_verified": true,
+  "archive_audit_passed": true,
+  "trials": [
+    {
+      "trial": "initial_downloaded_wheel",
+      "passed": false,
+      "failure": "Did not reach READY_FOR_REVIEW; original harness did not retain the run reason"
+    },
+    {
+      "trial": "diagnostic_repeat",
+      "passed": false,
+      "state": "BLOCKED",
+      "reason_code": "BASELINE_UNAVAILABLE",
+      "baseline": "ERROR",
+      "model_investigation_started": false,
+      "completed_tools": []
+    }
+  ],
+  "additional_observation": "Historical OCI-index verifier tag lookups intermittently returned No such image while image listing showed the tag. A separately prepared single-platform verifier ran the synthetic failing baseline. This observation does not establish a Docker engine root cause.",
+  "original_source_applied": false,
+  "general_clipboard_accessed": false
+}

@@ -1,6 +1,6 @@
 # Public preview release verification
 
-Version 0.2.0, 21 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
+Version 0.2.1, 21 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
 
 ## Required release gates
 
@@ -14,11 +14,15 @@ Version 0.2.0, 21 October 2026. This checklist distinguishes package/CI checks f
 
 The tag-triggered [release workflow](../.github/workflows/release.yml) requires the reusable [verification workflow](../.github/workflows/ci.yml) before publishing. Review CI and the local evidence before pushing a version tag. The release title explicitly identifies the preview; no binary signing/notarization or desktop auto-updater is provided.
 
+## Verifier compatibility follow-up
+
+[Post-publication 0.2.0 holds](evidence/release-published-v0.2.0-holds.json) retain both failed trials, including the diagnostic BASELINE_UNAVAILABLE result before model investigation. Historical OCI-index tag/ID lookup was inconsistent in this Docker environment; no Docker engine root cause is claimed. Version 0.2.1 prepares a single-platform verifier under a tag derived from its public inputs/profile rather than reusing the historical tag. The [0.2.1 installed real workflow](evidence/release-wheel-live-v0.2.1.json) passed failing baseline, real generated repair, independent verification, reviewed disposable apply and rollback. Failed release trials now persist metadata without exception payloads.
+
 ## Local measured evidence
 
 [Clean installed wheel smoke](evidence/release-wheel-smoke.json) and [real installed Gemma/Docker workflow](evidence/release-wheel-live.json) record synthetic, isolated trials. The latter uses a temporary canonical workspace, preserves the packaged independent oracle, and stops only its owned backend. It does not access the user's general clipboard or alter their project.
 
-The [fresh source installation](evidence/release-source-install.json) also passed the documented installer, dependency check, read-only doctor and privacy-only start/status/stop commands from an extracted source archive. The local regression suite passed 282 tests; the release CI remains authoritative for its own matrix results.
+The [fresh source installation](evidence/release-source-install.json) also passed the documented installer, dependency check, read-only doctor and privacy-only start/status/stop commands from an extracted source archive. The local regression suite passed 283 tests; the release CI remains authoritative for its own matrix results.
 
 The [sensitive clipboard trial](evidence/clipboard-sensitive-preview.json) separately covers real Gemma/Gitleaks with a private named NSPasteboard, placeholder display, explicit native cleaned-copy and held-copy refusal. It is not a broad accuracy benchmark.
 

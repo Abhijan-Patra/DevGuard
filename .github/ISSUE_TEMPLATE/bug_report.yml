@@ -8,7 +8,7 @@ body:
     id: version
     attributes:
       label: DevGuard version and OS
-      placeholder: v0.2.0, macOS, Apple silicon, Python 3.11
+      placeholder: v0.2.1, macOS, Apple silicon, Python 3.11
     validations:
       required: true
   - type: textarea

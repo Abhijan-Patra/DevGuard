@@ -1,6 +1,6 @@
 # Install DevGuard
 
-DevGuard 0.2.0 is a local **public preview**, not a hosted protection service. The public website is a read-only tour. To inspect your own text, clipboard or project, run the application on your machine.
+DevGuard 0.2.1 is a local **public preview**, not a hosted protection service. The public website is a read-only tour. To inspect your own text, clipboard or project, run the application on your machine.
 
 ## Before installation
 
@@ -33,12 +33,12 @@ The launcher checks prerequisites, can open installed Ollama/Docker applications
 
 ## Install a release wheel
 
-Download `devguard-0.2.0-py3-none-any.whl` and `SHA256SUMS` from the [GitHub release](https://github.com/Abhijan-Patra/DevGuard/releases/latest). Compare its checksum with `shasum -a 256 devguard-0.2.0-py3-none-any.whl`. Then, in the download directory:
+Download `devguard-0.2.1-py3-none-any.whl` and `SHA256SUMS` from the [GitHub release](https://github.com/Abhijan-Patra/DevGuard/releases/latest). Compare its checksum with `shasum -a 256 devguard-0.2.1-py3-none-any.whl`. Then, in the download directory:
 
 ```sh
 python3.11 -m venv .devguard-venv
 . .devguard-venv/bin/activate
-python -m pip install './devguard-0.2.0-py3-none-any.whl[clipboard,client]'
+python -m pip install './devguard-0.2.1-py3-none-any.whl[clipboard,client]'
 devguard start
 ```
 
