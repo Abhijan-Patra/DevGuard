@@ -137,3 +137,12 @@ The bearer v1 contract remains supported. The CLI also enables explicit same-ori
 - `POST /patches/{id}/rollback`: same approved/hash/base/idempotency fields as apply. Uses inverse atomic apply with the full tracked applied source as its base. Concurrent edits are preserved by rejecting rollback; repeated successful rollback with the same key is idempotent. Adds terminal `ROLLED_BACK`.
 
 Project enrollment is startup-only with `--projects-config`. No HTTP/model endpoint can choose arbitrary source roots, Docker images, commands, destinations or test definitions. The primary browser application is `/app` with same-origin static assets, restrictive CSP, no cross-origin grants and no persistent browser storage of sensitive content. Theme preference is the only localStorage value.
+
+## Restricted coding-client additions — 21 October 2026
+
+- `GET /client/sources`: operator or scoped adapter; project IDs and registered relative source paths only.
+- `POST /client/context`: the existing ContextInput; exact manifest/descriptor read, real guard, final source hash check and one-use release to the fixed `managed-client` destination. Returns approved `text` with decision/reasons/hash/receipt, or `text: null` for a held inspection. The transient preview is removed after successful release. No caller can choose a receiver URL or original bytes. Generic guard delivery cannot consume this destination.
+- The MCP surface intentionally exposes only source listing/reading, with no task/policy/root/command/URL/apply arguments. Model-provided source paths cannot expand the startup manifest. Scoped credentials cannot access operator/composer/clipboard/repair controls.
+- Adds `PROMPT_INJECTION` as a classification/reason code. Explicit detected policy-override attempts BLOCK regardless of model opinion. Generic credential-shaped baselines remain protected even if a provider detector excludes known example values. Any model-proposed CONFIDENTIAL span requires REVIEW (or preserves stronger BLOCK/LOCAL_ONLY). These are conservative policy rules, not exhaustive detection guarantees.
+
+See [client integration](CLIENT_INTEGRATION.md) and recorded native evidence; the existing five-case privacy baseline remains preserved alongside the calibrated rerun and extra small regression set.

@@ -23,23 +23,21 @@
 
 ## Automated verification
 
-The integrated local suite passed **238 tests**, with one existing upstream Starlette/HTTPX deprecation warning. `pip check` reports no broken requirements. This is not a model-accuracy score; the suite includes declared doubles. A wheel build completed with the workspace assets included. Remote GitHub Actions checks also passed for this finishing branch and PR #21.
+The integrated local suite passed **267 tests**, with one existing upstream Starlette/HTTPX deprecation warning. `pip check` reports no broken requirements. This is not a model-accuracy score; the suite includes declared doubles. A wheel build completed with the workspace assets included. The prior finishing branch passed remote GitHub Actions in PR #21. The current client/calibration branch records its own CI result separately.
 
-## Model evaluation limitations
+## Privacy calibration and native client trials
 
-[Five actual catalogue inspections](evidence/professional-privacy.json) were run against the real pinned Gemma on synthetic input, mapped explicitly to local-preview (no external delivery). The original expected outcomes were preserved:
+The [earlier five-case baseline](evidence/professional-privacy.json) remains preserved: P02 false-positive redaction, P03 decision mismatch and P05 missing injection reason are still visible. The [corrected real-Gemma rerun](evidence/professional-privacy-calibrated.json) matches all five original decisions and required reasons without changing the catalogue. The fix distinguishes technical formats/public constants from personal data, requires review for confidential spans, and blocks/reports detected policy-override attempts. Generic credential baselines remain protected independently of provider example allowlists.
 
-- P01: SANITIZE/CREDENTIAL, expected decision and reasons matched.
-- P02: returned SANITIZE/PERSONAL_DATA for a harmless identifier; expected ALLOW. **False positive.**
-- P03: returned SANITIZE/CONFIDENTIAL; expected REVIEW. **Decision mismatch.** This measurement alone does not establish that all confidential facts were removed.
-- P04: SANITIZE/CREDENTIAL/PERSONAL_DATA; expected decision and reasons matched.
-- P05: BLOCK; expected CREDENTIAL plus PROMPT_INJECTION, but only CREDENTIAL was reported. **Reason-code mismatch.**
+Eight additional declared synthetic variants were defined before their first run. That [first measurement](evidence/professional-privacy-variants-first.json) found a sentence-final email detector miss (V06). The detector was corrected with punctuation regression tests; the [rerun](evidence/professional-privacy-variants.json) matches all eight expectations. These are small calibration/regression sets, not an independent unseen accuracy estimate. P06/P07 in the older combined catalogue are not retrospectively marked passed by ordinary text inspection.
 
-These are calibration results, not an unseen accuracy benchmark or five passing cases. The older combined catalogue registry is left unchanged; remaining catalogue cases are not retrospectively marked passed. No fabricated repair, fixture-specific classifier rule or successful fallback model was added.
+[Thirteen recorded native boundary checks](evidence/professional-native-clients.json) passed using installed bundled Codex CLI `0.163.0-alpha.10.2`, Claude Code `2.1.119`, MCP SDK `1.30.0` and the **real** pinned Gemma guard. Tests covered sensitive prompt hold, benign positive controls, clean managed reads, source credential redaction, traversal holds, native Codex shell denial, and unavailable-guard holds in both clients. Coding-provider transport was a **local synthetic protocol fixture**, not a cloud coding model; the receiver recorded marker-presence metadata. Codex hooks were reviewed/trusted in the native UI in an isolated home; no bypass flag or global config change was used. Claude was not signed in, so this is not signed-in cloud account evidence. See [setup and exact scope](CLIENT_INTEGRATION.md) and [reproduction harness](../evals/native_trials/README.md).
+
+The productive external-client surface is now two stdio MCP tools: registered source listing and guarded source read. Source reads undergo the actual server-side scan/hash/one-use boundary before returning text. The scoped client credential cannot access operator, composer, clipboard or repair controls. Client profile generation is isolated and never preinstalls trust. Required opt-in native clipboard capture remains unchanged.
 
 ## Remaining integration gates
 
-- Existing native Codex hooks are restrictive and **unverified** as a productive installed-client integration. The supported productive scope here is the explicit local context gate/managed source/composer workflow. Automatic context, attachments, alternative tools and client transcripts are outside it.
+- Native CLI prompt/MCP paths have the recorded scoped checks above. Signed-in cloud-provider delivery, desktop/IDE variants, automatic context, attachments, alternative/hosted tools, transcripts and telemetry remain unverified. Skipped/crashed/timed-out hooks can fail open at the native layer; the managed server output gate enforces its own holds.
 - Native Windows capture is not implemented. This delivery targets this Mac; no second laptop is assumed.
 - Quiet-time admission does not infer actual OS/user idle. Sleep suspends execution.
 - Generic Python projects require explicit small source manifests, separately reviewed pytest checks and a prepared image. This is not an every-language/every-bug production recovery system.
@@ -47,3 +45,5 @@ These are calibration results, not an unseen accuracy benchmark or five passing 
 - The redesigned public read-only tour is deployed at https://devguard-demo.onrender.com; HTTP 200 and the actual new browser view were verified. Device controls stay disabled there. The real workspace is local at `http://127.0.0.1:8765/app`.
 
 The implementation is a working scoped local agent, with the above gates stated explicitly. Perfect detection, universal interception and production certification are not claimed.
+
+The [post-calibration real repair rerun](evidence/professional-post-calibration-repair.json) again reached READY_FOR_REVIEW from a failing baseline, passed independent Docker verification and post-apply Docker checks on a disposable copy, preserved original repository/trusted test files, and acknowledged worker shutdown.

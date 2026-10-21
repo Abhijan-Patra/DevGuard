@@ -21,7 +21,7 @@ AUTH={'Authorization':'Bearer '+TOKEN}
 BROWSER={'Origin':'http://127.0.0.1:8765','X-DevGuard-Workspace':'1'}
 
 
-def app_for(tmp_path, *, browser=True):
+def app_for(tmp_path, *, browser=True, adapter_token=None):
     root=tmp_path/'project';root.mkdir()
     (root/'cart.py').write_text('VALUE = 1\n')
     (root/'main.py').write_text('# independent dependency\n')
@@ -33,7 +33,7 @@ def app_for(tmp_path, *, browser=True):
         service,_=service_for(spec,tmp_path)
         services.append(service)
         return service
-    app=create_app(Settings(TOKEN),repair_factory=factory,browser_workspace=browser,
+    app=create_app(Settings(TOKEN,adapter_token=adapter_token),repair_factory=factory,browser_workspace=browser,
                    scanner=TestScanner(),inspector=TestInspector(ModelProposal(decision=Decision.ALLOW,spans=[])),
                    clipboard_adapter=UnsupportedClipboard(),
                    transport=httpx.MockTransport(lambda r:httpx.Response(200,json={'models':[]})))

@@ -134,3 +134,59 @@ def workspace_router(app, require_operator, supervisor, composer):
         return {'cleared': True}
 
     return router
+
+
+def client_router(app, require_adapter):
+    """Separate restricted surface; adapter cannot use operator/repair routes."""
+    router = APIRouter(prefix='/api/v1/client')
+
+    @router.get('/sources')
+    def sources(principal=Depends(require_adapter)):
+        service = app.state.repair.service
+        if service is None:
+            return response_error(RepairError('DEPENDENCY_UNAVAILABLE'))
+        with service._lock:
+            return {'projects': [{'project_id': spec.project_id,
+                                  'source_files': list(spec.source_files)}
+                                 for spec in service.projects.values()]}
+
+    @router.post('/context')
+    async def context(body: ContextInput, principal=Depends(require_adapter)):
+        try:
+            service = app.state.repair.service
+            if service is None:
+                raise RepairError('DEPENDENCY_UNAVAILABLE')
+            spec = service._project(body.project_id)
+            if body.path not in spec.source_files:
+                raise RepairError('PATH_DENIED')
+            data = await run_in_threadpool(read_source, spec.root, body.path)
+            if len(data) > 32768:
+                raise RepairError('SOURCE_TOO_LARGE')
+            expected = hashlib.sha256(data).hexdigest()
+            record = await app.state.guard.evaluate(GuardInput(
+                project_id=body.project_id, task=body.task, surface='file_read',
+                destination_id='managed-client', content_version=body.content_version,
+                text=data.decode('utf-8')), owner=principal)
+            async def source_unchanged():
+                try:
+                    current = await run_in_threadpool(read_source, spec.root, body.path)
+                except RepairError:
+                    app.state.guard.revoke(record.request_id)
+                    raise GuardError('STALE_SOURCE') from None
+                if hashlib.sha256(current).hexdigest() != expected:
+                    app.state.guard.revoke(record.request_id)
+                    raise GuardError('STALE_SOURCE')
+            record.before_release = source_unchanged
+            if record.candidate is None:
+                return {**record.view(), 'text': None, 'source_hash': expected}
+            # Snapshot the metadata before consume removes the transient preview.
+            metadata = record.view()
+            receipt = await app.state.guard.consume_for_client(record.request_id,
+                owner=principal, version=body.content_version)
+            return {**metadata, 'safe_preview': None, **receipt, 'source_hash': expected}
+        except RepairError as error:
+            return response_error(error)
+        except UnicodeError:
+            return response_error(RepairError('SOURCE_ENCODING_DENIED'))
+
+    return router

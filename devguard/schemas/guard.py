@@ -21,6 +21,7 @@ class Category(StrEnum):
     PERSONAL_DATA = "PERSONAL_DATA"
     CONFIDENTIAL = "CONFIDENTIAL"
     IRRELEVANT = "IRRELEVANT"
+    PROMPT_INJECTION = "PROMPT_INJECTION"
 
 
 class GuardInput(StrictModel):

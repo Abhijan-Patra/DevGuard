@@ -26,12 +26,12 @@ from devguard.api.body_limit import BodyLimitMiddleware
 from devguard.api.repair_integration import RepairRuntime, integration_router
 from devguard.api.repair_routes import create_repair_router
 from devguard.api.web_session import BrowserSessions
-from devguard.api.workspace_routes import workspace_router, LocalComposer
+from devguard.api.workspace_routes import workspace_router, client_router, LocalComposer
 from devguard.monitor.supervisor import MonitorSupervisor
 
 
 CAPABILITIES = (
-    "privacy_gate", "clipboard_capture", "codex_adapter", "backend_repair",
+    "privacy_gate", "clipboard_capture", "codex_adapter", "claude_adapter", "managed_client", "backend_repair",
     'managed_source', 'saved_file_monitor', 'quiet_time_scheduler', 'reviewed_rollback',
 )
 
@@ -142,6 +142,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     app.include_router(integration_router(repair, app, authenticate))
     app.include_router(sessions.router())
     app.include_router(workspace_router(app, authenticate, supervisor, composer))
+    app.include_router(client_router(app, authenticate_guard))
 
     @app.middleware('http')
     async def security_headers(request, call_next):
@@ -194,12 +195,14 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     async def coverage():
         return {"capabilities": [
             {"capability": name,
-             "status": "UNVERIFIED" if name == 'codex_adapter' else 'PARTIAL',
+             "status": "PARTIAL",
              "limitations": {
-                 "privacy_gate": "Limited real Gemma/local-reference checks passed; installed-client delivery and general accuracy remain unverified.",
+                 "privacy_gate": "Real Gemma calibration cases and local delivery checks passed; earlier failures retained. General unseen accuracy remains unverified.",
                  "clipboard_capture": "Opt-in macOS text only; starts OFF; recorded native checks exist; current capture is explicit and version-bound.",
                  "backend_repair": "Routes wired; trusted configuration, pinned model/image and Docker engine required; starts paused.",
-                 "codex_adapter": "Hook code exists; installed-client interception is unverified.",
+                 "codex_adapter": "Recorded bundled CLI 0.163.0-alpha.10.2 prompt/tool/MCP boundary trials passed with real Gemma and a synthetic loopback coding provider. Requires explicit profile setup and native hook trust; not universal or cloud-delivery proof.",
+                 "claude_adapter": "Recorded Claude Code 2.1.119 prompt and managed MCP trials passed with real Gemma and a synthetic loopback coding provider. Signed-in cloud account workflow and desktop variants remain unverified.",
+                 "managed_client": "Two scoped stdio tools list/read registered source. Server scans and checks source before returning approved one-use bytes; no shell, writes, root selection or apply authority.",
                  'managed_source': 'Registered source only; guard-bound final source checks and actual local-composer delivery. No unrestricted tools or external client interception.',
                  'saved_file_monitor': 'Opt-in debounced manifest monitoring, supervised by app lifespan. Starts OFF; changes queue but never grant execution permission.',
                  'quiet_time_scheduler': 'Opt-in foreground-queue quiet time, not OS idle detection. Manual pause disables it. Active inference is not preempted.',

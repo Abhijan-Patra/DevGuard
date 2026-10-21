@@ -9,22 +9,22 @@ import stat
 import uvicorn
 
 from devguard.api.app import create_app
-from devguard.config import Settings
+from devguard.config import MODEL, Settings
 from devguard.storage.audit import AuditStore
 from devguard.api.repair_integration import demo_repair_factory
 from devguard.api.repair_integration import projects_repair_factory
 from devguard.repair.projects import load_projects
 
 
-def session_token():
-    configured = os.environ.get("DEVGUARD_SESSION_TOKEN")
+def session_token(name='session-token', variable="DEVGUARD_SESSION_TOKEN"):
+    configured = os.environ.get(variable)
     if configured:
         return configured
     directory = Path(".devguard")
     if directory.is_symlink():
         raise ValueError("Runtime directory must not be a symlink")
     directory.mkdir(mode=0o700, exist_ok=True)
-    token_file = directory / "session-token"
+    token_file = directory / name
     try:
         fd = os.open(token_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     except FileExistsError:
@@ -49,7 +49,10 @@ def main():
     parser.add_argument('--projects-config', type=Path, help='Reviewed local JSON manifest; roots and tests cannot be changed over HTTP')
     parser.add_argument('--no-browser-pairing', action='store_true', help='Disable same-origin local workspace enrolment')
     args = parser.parse_args()
-    settings = Settings.from_environment(session_token())
+    settings = Settings(session_token(),
+        ollama_url=os.environ.get('DEVGUARD_OLLAMA_URL', 'http://127.0.0.1:11434'),
+        model=os.environ.get('DEVGUARD_MODEL', MODEL),
+        adapter_token=session_token('client-token', 'DEVGUARD_ADAPTER_TOKEN'))
     print("DevGuard: http://127.0.0.1:%s (clipboard capture starts disabled)" % args.port)
     print("Operator token stays local in .devguard/session-token unless configured by environment.")
     audit = AuditStore(Path(".devguard") / "audit.sqlite3")

@@ -277,6 +277,7 @@ def test_hook_validates_bound_guard_response(
                 "status": "READY",
                 "request_id": "synthetic-request",
                 "policy_revision": "unit-test-policy",
+                "safe_preview": json.loads(request.data)['text'],
                 "content_version": sent["content_version"],
                 "destination_id": sent["destination_id"],
                 "expires_at": (datetime.now(UTC) + timedelta(seconds=60)).isoformat(),

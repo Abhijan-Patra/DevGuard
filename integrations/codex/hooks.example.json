@@ -1,8 +1,8 @@
 {
-  "description": "DevGuard restrictive trial; replace absolute paths, review and trust explicitly. All PreToolUse calls are denied in this first adapter.",
+  "description": "DevGuard restrictive trial; replace absolute paths, review and trust explicitly. Native tools are denied; opt-in managed MCP reads are allowed when DEVGUARD_MANAGED_TOOLS=1.",
   "hooks": {
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 8}]}],
-    "PreToolUse": [{"matcher": ".*", "hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 8}]}],
-    "PostToolUse": [{"matcher": ".*", "hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 8}]}]
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 25}]}],
+    "PreToolUse": [{"matcher": ".*", "hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 25}]}],
+    "PostToolUse": [{"matcher": ".*", "hooks": [{"type": "command", "command": "/ABSOLUTE/DEVGUARD/.venv/bin/python /ABSOLUTE/DEVGUARD/integrations/codex/hook.py", "timeout": 25}]}]
   }
 }

@@ -45,3 +45,9 @@ Scan all model-bound tool results and exported artefacts. Prompt-injection text 
 UI requests operator review/application. Backend rechecks all affected original-file hashes under a lock, validates allowed paths and candidate hash, rejects symlinks/conflicts and applies idempotently. Never overwrite concurrent edits or reset the repository. Preserve rollback metadata without leaking sensitive original content into public reports.
 
 Passing tests establish only the behaviour actually checked. Unresolved or blocked is an acceptable honest outcome.
+
+## Calibrated context policy and managed clients
+
+Confidential facts require explicit review; the model cannot authorize their automatic release by marking them removable. Detected imperative attempts to override privacy/security instructions block. That narrow deterministic pattern is defense in depth and can have misses or false positives; model inspection and fixed tool authority still apply. Programming identifier formats and public digest constants are not personal data solely because they look unique. Actual credential assignments/provider-shaped values remain protected regardless of claims that they are examples. Personal email detection includes sentence-final punctuation.
+
+The scoped client endpoint performs the full inspection/final scan/source check before returning text. A native PostToolUse warning is not the managed source boundary. Treat source text as untrusted instructions even after privacy inspection. Only the two enrolled MCP tool names are enabled in the restricted profile; user-modifiable hook/server configurations are not enterprise enforcement. No change grants original-source apply authority to a coding assistant.

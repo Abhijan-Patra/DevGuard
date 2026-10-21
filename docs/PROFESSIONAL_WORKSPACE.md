@@ -56,7 +56,7 @@ printf '%s' 'Declared synthetic debugging text' | .venv/bin/python -m devguard.m
 .venv/bin/python -m devguard.managed --project demo-cart --path cart.py --deliver
 ```
 
-These commands emit redacted metadata only; approved text appears in the local composer. They do not install hooks or grant access to unrestricted tools. Existing Codex hooks remain a restrictive, unverified prototype. Full productive native Codex/Claude interception is still a separate integration gate; this workspace does not claim to protect their automatic context, attachments, alternate tools or transcripts.
+These commands emit redacted metadata only; approved text appears in the local composer. They do not install hooks or grant access to unrestricted tools. The two guarded stdio MCP tools and native CLI hooks now have recorded synthetic-receiver trials with real Gemma. See [client integration](CLIENT_INTEGRATION.md) to prepare isolated profiles and explicitly trust native hooks. Signed-in cloud delivery, automatic context, attachments, alternate tools and transcripts remain outside the measured scope.
 
 ## Evidence discipline
 
