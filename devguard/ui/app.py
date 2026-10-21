@@ -139,4 +139,9 @@ def main():
     st.markdown('<div class="footer-note">DevGuard · Local Gemma intelligence · Explicit operator control · No screenshot or recording dependency</div>',unsafe_allow_html=True)
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    if os.environ.get('DEVGUARD_PUBLIC_DEMO')=='1':
+        from devguard.ui.public_demo import render_public_workspace
+        render_public_workspace()
+    else:
+        main()

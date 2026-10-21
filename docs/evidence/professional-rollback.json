@@ -1,0 +1,12 @@
+{
+  "scope": "Real workspace candidate; only disposable .devguard/local-demo source modified",
+  "applied_state": "APPLIED",
+  "post_apply_docker": "PASS",
+  "stale_rollback_status": 409,
+  "concurrent_edit_preserved": true,
+  "rollback_state": "ROLLED_BACK",
+  "rollback_repeat_idempotent": true,
+  "exact_original_restored": true,
+  "restored_bug_docker": "FAIL",
+  "repository_source_modified": false
+}

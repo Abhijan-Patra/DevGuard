@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-10-21T07:15:33.873931+00:00",
+  "scope": "Real loopback guard + pinned Gemma; declared synthetic cases; no external delivery",
+  "runtime": {
+    "server_ready": true,
+    "server_version": "0.40.6",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "reason_code": "MODEL_READY"
+  },
+  "catalogue_unchanged": true,
+  "destination_mapping": "configured-coding-client -> local-preview (inspection only)",
+  "results": [
+    {
+      "case_id": "P01",
+      "execution": "RAN",
+      "expected_decision": "SANITIZE",
+      "actual_decision": "SANITIZE",
+      "status": "READY",
+      "reason_codes": [
+        "CREDENTIAL"
+      ],
+      "expected_reasons_present": true,
+      "decision_matches_expectation": true,
+      "approved_preview_available": true,
+      "elapsed_seconds": 2.68,
+      "external_delivery": false
+    },
+    {
+      "case_id": "P02",
+      "execution": "RAN",
+      "expected_decision": "ALLOW",
+      "actual_decision": "SANITIZE",
+      "status": "READY",
+      "reason_codes": [
+        "PERSONAL_DATA"
+      ],
+      "expected_reasons_present": true,
+      "decision_matches_expectation": false,
+      "approved_preview_available": true,
+      "elapsed_seconds": 3.324,
+      "external_delivery": false
+    },
+    {
+      "case_id": "P03",
+      "execution": "RAN",
+      "expected_decision": "REVIEW",
+      "actual_decision": "SANITIZE",
+      "status": "READY",
+      "reason_codes": [
+        "CONFIDENTIAL"
+      ],
+      "expected_reasons_present": true,
+      "decision_matches_expectation": false,
+      "approved_preview_available": true,
+      "elapsed_seconds": 2.449,
+      "external_delivery": false
+    },
+    {
+      "case_id": "P04",
+      "execution": "RAN",
+      "expected_decision": "SANITIZE",
+      "actual_decision": "SANITIZE",
+      "status": "READY",
+      "reason_codes": [
+        "CREDENTIAL",
+        "PERSONAL_DATA"
+      ],
+      "expected_reasons_present": true,
+      "decision_matches_expectation": true,
+      "approved_preview_available": true,
+      "elapsed_seconds": 2.388,
+      "external_delivery": false
+    },
+    {
+      "case_id": "P05",
+      "execution": "RAN",
+      "expected_decision": "BLOCK",
+      "actual_decision": "BLOCK",
+      "status": "FAILED",
+      "reason_codes": [
+        "CREDENTIAL"
+      ],
+      "expected_reasons_present": false,
+      "decision_matches_expectation": true,
+      "approved_preview_available": false,
+      "elapsed_seconds": 2.484,
+      "external_delivery": false
+    }
+  ],
+  "perfect_accuracy_claimed": false
+}

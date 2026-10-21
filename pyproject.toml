@@ -28,6 +28,7 @@ include = ["devguard*"]
 
 [tool.setuptools.package-data]
 "devguard.ui" = ["dashboard.css"]
+"devguard" = ["web/*.html", "web/*.css", "web/*.js", "web/*.svg", "web/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

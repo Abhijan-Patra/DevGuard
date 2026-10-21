@@ -6,6 +6,8 @@ import os
 import shutil
 import stat
 import tempfile
+import uuid
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
@@ -97,6 +99,55 @@ def read_source(root: Path, name: str) -> bytes:
 
 def revision(files: dict[str, bytes]) -> str:
     return digest(json.dumps({k: digest(v) for k, v in sorted(files.items())}).encode())
+
+
+@contextmanager
+def source_parent(root: Path, name: str):
+    """Anchor both temporary creation and rename to an approved directory inode."""
+    safe_relative(name)
+    descriptor = None
+    try:
+        descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        for part in PurePosixPath(name).parts[:-1]:
+            following = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=descriptor)
+            os.close(descriptor)
+            descriptor = following
+        yield descriptor, PurePosixPath(name).name
+    except OSError:
+        raise RepairError('SOURCE_UNAVAILABLE') from None
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+
+
+def atomic_replace_source(root, name, data, originals):
+    with source_parent(root, name) as (parent, leaf):
+        info = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise RepairError('FILE_TYPE_DENIED')
+        temporary = '.devguard-patch-' + uuid.uuid4().hex
+        created = False
+        try:
+            fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
+            created = True
+            with os.fdopen(fd, 'wb') as handle:
+                handle.write(data)
+                handle.flush()
+                os.fchmod(handle.fileno(), info.st_mode & 0o777)
+                os.fsync(handle.fileno())
+            if any(read_source(root, path) != content for path, content in originals.items()):
+                raise RepairError('STALE_SOURCE')
+            with source_parent(root, name) as (current, _):
+                a, b = os.fstat(parent), os.fstat(current)
+                if (a.st_dev, a.st_ino) != (b.st_dev, b.st_ino):
+                    raise RepairError('STALE_SOURCE')
+            os.replace(temporary, leaf, src_dir_fd=parent, dst_dir_fd=parent)
+        finally:
+            if created:
+                try:
+                    os.unlink(temporary, dir_fd=parent)
+                except FileNotFoundError:
+                    pass
 
 
 @dataclass

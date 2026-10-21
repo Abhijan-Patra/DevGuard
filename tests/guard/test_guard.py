@@ -286,3 +286,19 @@ def test_remote_operator_request_cannot_enable_native_clipboard():
                             headers={"Authorization": f"Bearer {TOKEN}"})
         assert response.status_code == 403
         assert api.get("/api/v1/clipboard/status", headers={"Authorization": f"Bearer {TOKEN}"}).json()["enabled"] is False
+
+
+def test_policy_change_during_bound_source_recheck_holds_delivery():
+    async def scenario():
+        captured=[]
+        async def receive(text):captured.append(text)
+        engine=GuardEngine(TestScanner(),TestInspector(allowed()),AuditStore(),receivers={'test-sink':receive})
+        result=await engine.evaluate(request(text='ordinary technical evidence'))
+        async def change_policy():engine.policy_revision='new-policy-after-await'
+        result.before_release=change_policy
+        with pytest.raises(GuardError):
+            await engine.deliver(result.request_id,owner='operator',version=1,destination='test-sink')
+        assert captured==[]
+        assert result.request_id not in engine.records
+        engine.close()
+    asyncio.run(scenario())

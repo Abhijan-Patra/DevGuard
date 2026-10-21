@@ -1,0 +1,9 @@
+{
+  "scope": "Real pinned Gemma, live workspace API, declared synthetic input",
+  "decision": "SANITIZE",
+  "actual_receiver_matched_preview": true,
+  "synthetic_credential_absent": true,
+  "replay_held": true,
+  "elapsed_seconds": 0.981,
+  "general_clipboard_enabled": false
+}

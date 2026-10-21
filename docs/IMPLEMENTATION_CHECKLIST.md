@@ -1,3 +1,29 @@
+# Current completion checklist — 21 October 2026
+
+Evidence and limits: [professional status](PROFESSIONAL_STATUS.md). Current setup: [single laptop](PROFESSIONAL_WORKSPACE.md).
+
+- [x] One pinned local Gemma, deterministic scanner, one shared priority queue.
+- [x] Guarded text inspection, exact validated spans, actual local delivery and replay rejection.
+- [x] Managed enrolled-source reads, descriptor path checks, source-hash checks on all release routes.
+- [x] Required opt-in native macOS text capture, version-bound copy, cancellation/dedupe and disable cleanup.
+- [x] Primary custom browser workspace, dark/light themes, all seven views wired to the real backend.
+- [x] Explicit local browser pairing; no browser bearer storage; cross-origin/remote enrollment refused.
+- [x] Real Gemma investigation and immutable independent Docker verification on this laptop.
+- [x] Review/apply/reject/cancel/stale protection; reviewed conflict-safe/idempotent rollback.
+- [x] Reviewed startup project manifests, scoped saved-file watchers, opt-in quiet-time admission.
+- [x] Single-laptop dependency checks/start/status/owned-process stop; disposable default repair project.
+- [x] Redacted audit pagination/filter/export; wheel packaging and repeatable CI configuration.
+- [x] Real synthetic privacy evaluation with false positives/mismatches preserved.
+- [ ] Productive installed Codex/Claude interception proven end-to-end. The managed local workflow does not establish this.
+- [ ] Broad unseen accuracy benchmark. Five calibration cases are insufficient; remaining catalogue cases are not marked passed.
+- [ ] Native Windows capture. This deliverable runs entirely on the current Mac.
+- [ ] Real OS-idle scheduling. Quiet-time mode uses queue timestamps, not keyboard/user activity.
+- [ ] New custom workspace deployed to the public site. The prior hosted Streamlit site remains an explicitly synthetic demo.
+
+The historical initial checklist below is retained as planning history, not current status.
+
+---
+
 # Implementation checklist
 
 All items start unchecked. A checked item requires actual code and evidence; publishing these docs does not complete the application.

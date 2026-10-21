@@ -1,0 +1,12 @@
+{
+  "scope": "Private named NSPasteboard; declared synthetic data only; this laptop on 21 October 2026",
+  "general_clipboard_accessed": false,
+  "macOS": "26.6.2",
+  "ollama_version": "0.40.6",
+  "status": "PASS",
+  "checks_passed": 12,
+  "checks_total": 12,
+  "copy_to_finding_seconds": 7.971,
+  "unchanged_poll_wall_seconds": 3.01,
+  "unchanged_poll_process_cpu_seconds": 0.0017
+}

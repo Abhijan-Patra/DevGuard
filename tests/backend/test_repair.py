@@ -414,3 +414,23 @@ def test_shutdown_cancels_pending_work_and_prevents_reopening(spec, tmp_path):
         service.enter_idle()
     with pytest.raises(RepairError, match="WORKER_CLOSED"):
         service.queue(incident["incident_id"])
+
+
+def test_atomic_write_does_not_follow_a_parent_symlink_swapped_at_rename(tmp_path,monkeypatch):
+    from devguard.repair.workspace import atomic_replace_source
+    import os
+    root=tmp_path/'project';root.mkdir()
+    parent=root/'module';parent.mkdir()
+    (parent/'source.py').write_bytes(b'original\n')
+    outside=tmp_path/'outside';outside.mkdir()
+    (outside/'source.py').write_bytes(b'outside stays unchanged\n')
+    moved=root/'original-module'
+    replace=os.replace
+    def racing_replace(src,dst,**kwargs):
+        parent.rename(moved)
+        parent.symlink_to(outside,target_is_directory=True)
+        return replace(src,dst,**kwargs)
+    monkeypatch.setattr(os,'replace',racing_replace)
+    atomic_replace_source(root,'module/source.py',b'approved change\n',{'module/source.py':b'original\n'})
+    assert (outside/'source.py').read_bytes()==b'outside stays unchanged\n'
+    assert (moved/'source.py').read_bytes()==b'approved change\n'

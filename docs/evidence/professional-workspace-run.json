@@ -1,0 +1,40 @@
+{
+  "scope": "Actual single-laptop workspace; saved-file monitor and quiet-time scheduler; disposable demo only",
+  "watcher_queued_while_paused": true,
+  "quiet_time_admitted_actual_run": true,
+  "run": {
+    "run_id": "run-10950bac3d364d6894f3026fbb66b665",
+    "incident_id": "incident-62c019a68df249a5be8734f73dde461b",
+    "project_id": "demo-cart",
+    "state": "READY_FOR_REVIEW",
+    "candidate_id": "patch-98755d78625e474b93dab49e676f7298",
+    "baseline": "FAIL",
+    "verification": "PASS",
+    "reason_code": null,
+    "model": {
+      "name": "gemma4:e4b-it-q4_K_M",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+    },
+    "completed_tools": [
+      "read_allowed_file",
+      "run_named_test",
+      "read_allowed_file",
+      "propose_patch",
+      "run_named_test"
+    ]
+  },
+  "candidate_left_unapplied": true,
+  "capture_enabled": false,
+  "monitoring_after": {
+    "automatic": false,
+    "quiet_seconds": 15,
+    "mode": "FOREGROUND_QUEUE_QUIET_TIME",
+    "watched_projects": 0
+  },
+  "repair_after": {
+    "configured": true,
+    "available": true,
+    "state": "PAUSED",
+    "reason_code": "READY"
+  }
+}

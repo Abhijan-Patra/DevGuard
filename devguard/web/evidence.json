@@ -1,0 +1,180 @@
+{
+  "recorded_date": "2026-10-21",
+  "scope": "Separate recorded experiments, never a runtime classifier or success lookup",
+  "repair": {
+    "run": {
+      "run_id": "run-1627eaeb39a941ea9e7088874720c7d9",
+      "incident_id": "incident-0d9206727f8644698b30d2cacf35382b",
+      "project_id": "demo-cart",
+      "state": "READY_FOR_REVIEW",
+      "candidate_id": "patch-6a99fbf7a71d4d5abcf5747c4cef07cd",
+      "baseline": "FAIL",
+      "verification": "PASS",
+      "reason_code": null,
+      "model": {
+        "name": "gemma4:e4b-it-q4_K_M",
+        "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+      },
+      "completed_tools": [
+        "read_allowed_file",
+        "run_named_test",
+        "read_allowed_file",
+        "propose_patch",
+        "run_named_test"
+      ]
+    },
+    "applied_to_original_repository": false,
+    "queued_cancellation": {
+      "state": "CANCELED",
+      "candidate_created": false
+    },
+    "disposable_apply": {
+      "state": "APPLIED",
+      "idempotent_repeat": true
+    },
+    "model_runtime": {
+      "server_ready": true,
+      "server_version": "0.40.6",
+      "model": "gemma4:e4b-it-q4_K_M",
+      "model_ready": true,
+      "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "reason_code": "MODEL_READY"
+    },
+    "native_format_failures": 0,
+    "post_apply_verification": "PASS",
+    "worker_stopped": true,
+    "original_source_unchanged": true,
+    "trusted_tests_unchanged": true,
+    "audit_reopen_event_count": 28,
+    "elapsed_seconds": 45.96,
+    "scope": "21 October 2026, this laptop; real Gemma/API/Docker; source apply only to a disposable public copy"
+  },
+  "delivery": {
+    "scope": "Real pinned Gemma, live workspace API, declared synthetic input",
+    "decision": "SANITIZE",
+    "actual_receiver_matched_preview": true,
+    "synthetic_credential_absent": true,
+    "replay_held": true,
+    "elapsed_seconds": 0.981,
+    "general_clipboard_enabled": false
+  },
+  "clipboard": {
+    "scope": "Private named NSPasteboard; declared synthetic data only; this laptop on 21 October 2026",
+    "general_clipboard_accessed": false,
+    "macOS": "26.6.2",
+    "ollama_version": "0.40.6",
+    "status": "PASS",
+    "checks_passed": 12,
+    "checks_total": 12,
+    "copy_to_finding_seconds": 7.971,
+    "unchanged_poll_wall_seconds": 3.01,
+    "unchanged_poll_process_cpu_seconds": 0.0017
+  },
+  "privacy": {
+    "timestamp": "2026-10-21T07:15:33.873931+00:00",
+    "scope": "Real loopback guard + pinned Gemma; declared synthetic cases; no external delivery",
+    "runtime": {
+      "server_ready": true,
+      "server_version": "0.40.6",
+      "model": "gemma4:e4b-it-q4_K_M",
+      "model_ready": true,
+      "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+      "reason_code": "MODEL_READY"
+    },
+    "catalogue_unchanged": true,
+    "destination_mapping": "configured-coding-client -> local-preview (inspection only)",
+    "results": [
+      {
+        "case_id": "P01",
+        "execution": "RAN",
+        "expected_decision": "SANITIZE",
+        "actual_decision": "SANITIZE",
+        "status": "READY",
+        "reason_codes": [
+          "CREDENTIAL"
+        ],
+        "expected_reasons_present": true,
+        "decision_matches_expectation": true,
+        "approved_preview_available": true,
+        "elapsed_seconds": 2.68,
+        "external_delivery": false
+      },
+      {
+        "case_id": "P02",
+        "execution": "RAN",
+        "expected_decision": "ALLOW",
+        "actual_decision": "SANITIZE",
+        "status": "READY",
+        "reason_codes": [
+          "PERSONAL_DATA"
+        ],
+        "expected_reasons_present": true,
+        "decision_matches_expectation": false,
+        "approved_preview_available": true,
+        "elapsed_seconds": 3.324,
+        "external_delivery": false
+      },
+      {
+        "case_id": "P03",
+        "execution": "RAN",
+        "expected_decision": "REVIEW",
+        "actual_decision": "SANITIZE",
+        "status": "READY",
+        "reason_codes": [
+          "CONFIDENTIAL"
+        ],
+        "expected_reasons_present": true,
+        "decision_matches_expectation": false,
+        "approved_preview_available": true,
+        "elapsed_seconds": 2.449,
+        "external_delivery": false
+      },
+      {
+        "case_id": "P04",
+        "execution": "RAN",
+        "expected_decision": "SANITIZE",
+        "actual_decision": "SANITIZE",
+        "status": "READY",
+        "reason_codes": [
+          "CREDENTIAL",
+          "PERSONAL_DATA"
+        ],
+        "expected_reasons_present": true,
+        "decision_matches_expectation": true,
+        "approved_preview_available": true,
+        "elapsed_seconds": 2.388,
+        "external_delivery": false
+      },
+      {
+        "case_id": "P05",
+        "execution": "RAN",
+        "expected_decision": "BLOCK",
+        "actual_decision": "BLOCK",
+        "status": "FAILED",
+        "reason_codes": [
+          "CREDENTIAL"
+        ],
+        "expected_reasons_present": false,
+        "decision_matches_expectation": true,
+        "approved_preview_available": false,
+        "elapsed_seconds": 2.484,
+        "external_delivery": false
+      }
+    ],
+    "perfect_accuracy_claimed": false
+  },
+  "rollback": {
+    "scope": "Real workspace candidate; only disposable .devguard/local-demo source modified",
+    "applied_state": "APPLIED",
+    "post_apply_docker": "PASS",
+    "stale_rollback_status": 409,
+    "concurrent_edit_preserved": true,
+    "rollback_state": "ROLLED_BACK",
+    "rollback_repeat_idempotent": true,
+    "exact_original_restored": true,
+    "restored_bug_docker": "FAIL",
+    "repository_source_modified": false
+  }
+}

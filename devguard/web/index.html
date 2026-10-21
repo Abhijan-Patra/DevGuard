@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <meta
+      name="description"
+      content="A private, local workspace for guarded coding context and verified backend repairs."
+    />
+    <title>DevGuard — Local agent workspace</title>
+    <link rel="icon" href="/assets/mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/assets/workspace.css" />
+    <script type="module" src="/assets/workspace.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to workspace</a>
+    <div id="app">
+      <div class="boot">
+        <span class="brand-mark">d.</span>
+        <h1>Opening your workspace</h1>
+        <p>Connecting to the local control plane.</p>
+      </div>
+    </div>
+    <div id="notifications" role="status" aria-live="polite"></div>
+    <dialog id="review-dialog" aria-labelledby="dialog-title"></dialog>
+  </body>
+</html>

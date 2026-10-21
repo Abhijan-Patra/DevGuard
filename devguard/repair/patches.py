@@ -7,11 +7,9 @@ try:
 except ImportError:
     fcntl = None
 import os
-import tempfile
 import threading
 import uuid
 from dataclasses import dataclass, field
-from pathlib import Path
 
 from .contracts import GuardPort, ProjectSpec, RepairError
 from .workspace import (
@@ -21,6 +19,7 @@ from .workspace import (
     digest,
     read_source,
     revision,
+    atomic_replace_source,
 )
 
 
@@ -35,6 +34,7 @@ class Candidate:
     replacements: dict[str, bytes] = field(repr=False)
     state: str = "READY_FOR_REVIEW"
     idempotency_key: str | None = None
+    rollback_key: str | None = None
 
     def view(self) -> dict:
         return {
@@ -168,24 +168,7 @@ class PatchStore:
                     name, data = next(iter(candidate.replacements.items()))
                     if name not in spec.writable_files:
                         raise RepairError("WRITE_DENIED")
-                    target = checked_file(spec.root, name)
-                    mode = target.stat().st_mode & 0o777
-                    temporary = None
-                    try:
-                        with tempfile.NamedTemporaryFile(
-                            dir=target.parent, delete=False
-                        ) as handle:
-                            temporary = Path(handle.name)
-                            handle.write(data)
-                            handle.flush()
-                            os.fsync(handle.fileno())
-                        temporary.chmod(mode)
-                        if read_source(spec.root, name) != candidate.originals[name]:
-                            raise RepairError("STALE_SOURCE")
-                        os.replace(temporary, target)
-                    finally:
-                        if temporary is not None:
-                            temporary.unlink(missing_ok=True)
+                    atomic_replace_source(spec.root, name, data, candidate.originals)
                     candidate.state = "APPLIED"
                     candidate.idempotency_key = idempotency_key
                 except RepairError as error:
@@ -197,4 +180,32 @@ class PatchStore:
                     }:
                         candidate.state = "OBSOLETE"
                     raise
+            return candidate
+
+    def rollback(self, candidate_id, spec, *, expected_hash, expected_base,
+                 idempotency_key, approved):
+        """Reuse atomic apply checks with the inverse; never reset a working tree."""
+        with self._lock:
+            candidate = self.get(candidate_id)
+            if not approved or not 1 <= len(idempotency_key) <= 128:
+                raise RepairError('OPERATOR_APPROVAL_REQUIRED')
+            if expected_hash != candidate.candidate_hash or expected_base != candidate.base_revision:
+                raise RepairError('CANDIDATE_CONFLICT')
+            if candidate.state == 'ROLLED_BACK' and candidate.rollback_key == idempotency_key:
+                return candidate
+            if candidate.state != 'APPLIED':
+                raise RepairError('PATCH_NOT_READY')
+            applied = {**candidate.originals, **candidate.replacements}
+            inverse_id = 'patch-' + uuid.uuid4().hex
+            replacements = {n: candidate.originals[n] for n in candidate.replacements}
+            inverse = Candidate(inverse_id, candidate.run_id, revision(applied),
+                                revision(replacements), '', applied, replacements)
+            self.candidates[inverse_id] = inverse
+            try:
+                self.apply(inverse_id, spec, expected_hash=inverse.candidate_hash,
+                           expected_base=inverse.base_revision,
+                           idempotency_key=idempotency_key, approved=approved)
+            finally:
+                self.candidates.pop(inverse_id, None)
+            candidate.state, candidate.rollback_key = 'ROLLED_BACK', idempotency_key
             return candidate

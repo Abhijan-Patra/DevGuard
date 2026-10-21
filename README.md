@@ -2,7 +2,13 @@
 
 **A local Gemma-powered privacy guard and backend repair agent for AI-assisted development.**
 
-Status: the modern Mac 1 and dashboard integration passes 212 tests. The exact Gemma package digest is enforced before inference. Controlled native clipboard trials and a real model/API/dashboard/reference-delivery check passed with synthetic data; capture is OFF afterward. Mac 2 owns final repair and installed-client evidence. See [completion evidence](docs/MAC_1_WINDOWS_1_COMPLETION.md) and [integration status](docs/INTEGRATION_STATUS.md).
+The primary interface is now a purpose-built local browser workspace with dark/light themes, context inspection, managed source reads, opt-in native text capture, repair review/apply/rollback, project monitoring and redacted audit. All runtime work runs on one laptop. See [single-laptop setup](docs/PROFESSIONAL_WORKSPACE.md) and [current completion evidence](docs/PROFESSIONAL_STATUS.md).
+
+```sh
+./scripts/devguard-local start
+```
+
+Open **http://127.0.0.1:8765/app** and choose **Connect this browser**. Clipboard capture and source watchers start OFF; the worker starts paused. The default repair project is a disposable copy, so demonstration apply/rollback does not change the repository fixture.
 
 The [modern operator dashboard](docs/DASHBOARD_RELEASE.md) exposes all six implemented views and the actual backend controls. It runs locally at **http://127.0.0.1:8501**; choose Live Mode and Connect on this Mac. The combined release passes **212 tests**, with a real pinned-Gemma/reference-delivery smoke and completed native clipboard checks. Unsupported client paths remain labelled.
 
@@ -13,13 +19,17 @@ DevGuard inspects supported prompts, file access, tool results and copied text; 
 - **One model:** Gemma 4 E4B through Ollama, using the explicit local Q4 tag `gemma4:e4b-it-q4_K_M`. Different task prompts share one model and inference queue.
 - **Priority:** privacy and clipboard workflow first; backend repair next. Both are part of the product, with explicit milestones.
 - **Backend target:** Python 3.11+, FastAPI, Pydantic, SQLite, Gitleaks, watchdog, psutil, pytest/HTTPX, Ruff and restricted Docker jobs. Repair monitoring/sandbox dependencies are not installed by the Mac 1 implementation.
-- **Dashboard:** Streamlit, initially using labelled fixtures. It displays backend decisions and never owns security decisions.
+- **Dashboard:** A dedicated HTML/CSS/JavaScript workspace served by the existing FastAPI backend. The legacy Streamlit UI and isolated public demo remain available. The UI displays authoritative backend decisions and does not own security policy.
 - **Tracks:** target Best Use of Gemma 4; maintain public open-source code for the open-source AI track. Confirm multiple-category and local-model eligibility with the organiser.
 - **Licence:** MIT for this repository's original material. Model weights and dependencies retain their own licences.
 
 Gemma is a practical selection for this hardware and event, not a proven best model for every use case. See the [model decision and trial](docs/MODEL_DECISION.md).
 
-## Start here
+## Original team planning (historical)
+
+All former machine roles are now handled on this laptop, per the user's 21 October instruction. The task files below remain as implementation history. Start with the single-laptop guide above.
+
+### Original starting sequence
 
 1. Read the [final proposal](docs/FINAL_PLAN.md) and [team workflow](docs/TEAM_WORKFLOW.md).
 2. Open your machine's task file below and paste its starter prompt into your coding assistant.
