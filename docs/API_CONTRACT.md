@@ -122,3 +122,18 @@ Windows 1 builds views from examples and synthetic events under a persistent FIX
 The authenticated status `runtime` now adds `expected_model_digest` and `reason_code` (`MODEL_READY`, `MODEL_NOT_INSTALLED`, `MODEL_DIGEST_MISMATCH` or `MODEL_RUNTIME_UNAVAILABLE`). A matching tag alone no longer makes `model_ready` true. The shared model client rechecks the installed digest after queue admission and before each inference POST; mismatch holds without posting the input. These are additive status fields; request and repair adapter interfaces remain unchanged.
 
 The live dashboard validates the actual status envelope (`phase` plus typed `runtime`) before rendering text/action controls. Incompatible standalone mock servers require labelled Fixture Mode for rehearsal; this compatibility check does not authenticate arbitrary local software.
+
+
+## Professional workspace additions — 21 October 2026
+
+The bearer v1 contract remains supported. The CLI also enables explicit same-origin browser pairing: `POST /session/connect` and `/session/disconnect`. Pairing requires a loopback client, exact local Origin/Host and `X-DevGuard-Workspace: 1`; it creates an eight-hour HttpOnly/SameSite Strict cookie. All cookie API requests require the custom header; mutations require the exact Origin. `create_app` leaves pairing disabled unless trusted startup enables it. No bearer token is exposed to the browser or URL.
+
+- `GET /projects`: registered IDs, relative source/writable manifests, named checks, image IDs and watcher state; no absolute roots.
+- `POST /projects/{id}/watch`: `{enabled: bool, signal?: named_check}`; opt-in monitoring of the trusted existing manifest only.
+- `GET /scheduler/status`, `POST /scheduler/automatic`: `{enabled: bool, quiet_seconds: 15..3600}`. Quiet-time admission is based on foreground inference timestamps, not keyboard/OS-idle monitoring. Manual pause disables it.
+- `POST /context/read`: `{project_id, path, task?, content_version}`; descriptor-checked managed read through the guard. Inspection returns the existing guard shape plus a source hash. Its source-validation callback is bound to the inspection itself, so the generic delivery route cannot bypass the final source check.
+- `POST /context/requests/{id}/deliver`: same DeliveryInput as the guard route. Changed source returns 409 STALE_SOURCE; replay is held.
+- `GET /composer`, `DELETE /composer`: actual approved text received by the enrolled **local** composer, memory-only, ten-minute expiry. This is an authenticated transient operator view, not audit content or delivery to a third-party assistant.
+- `POST /patches/{id}/rollback`: same approved/hash/base/idempotency fields as apply. Uses inverse atomic apply with the full tracked applied source as its base. Concurrent edits are preserved by rejecting rollback; repeated successful rollback with the same key is idempotent. Adds terminal `ROLLED_BACK`.
+
+Project enrollment is startup-only with `--projects-config`. No HTTP/model endpoint can choose arbitrary source roots, Docker images, commands, destinations or test definitions. The primary browser application is `/app` with same-origin static assets, restrictive CSP, no cross-origin grants and no persistent browser storage of sensitive content. Theme preference is the only localStorage value.

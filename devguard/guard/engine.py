@@ -35,6 +35,7 @@ class Inspection:
     candidate: str | None = field(default=None, repr=False)
     delivered: bool = False
     consumed: bool = False
+    before_release: object = field(default=None, repr=False)
 
     def view(self):
         return {
@@ -171,6 +172,12 @@ class GuardEngine:
                 raise GuardError("INSPECTION_EXPIRED_OR_CHANGED")
             if not checked.complete or checked.spans:
                 raise GuardError("RELEASE_SCAN_HELD", 403)
+            if record.before_release is not None:
+                await record.before_release()
+                if (self.clock() >= record.deadline or self.records.get(identifier) is not record
+                        or record.policy_revision != self.policy_revision or record.candidate is None):
+                    self.revoke(identifier)
+                    raise GuardError('INSPECTION_EXPIRED_OR_CHANGED')
             record.consumed = True
             content, record.candidate = record.candidate, None
             try:

@@ -99,9 +99,15 @@ def demo_repair_factory(repository_root: Path, image_id: str):
     if not re.fullmatch(r'sha256:[0-9a-f]{64}', image_id):
         raise ValueError('Use an actual pinned Docker image ID')
     repository_root = repository_root.resolve()
+    from demo.backend.config import demo_project
+    return projects_repair_factory(repository_root, [demo_project(repository_root, image_id)])
+
+
+def projects_repair_factory(repository_root: Path, specs):
+    """Register reviewed local manifests using the same bounded worker."""
+    specs = tuple(specs)
 
     async def create(app):
-        from demo.backend.config import demo_project
         runtime = await app.state.model_queue.inspect()
         if not runtime.get('model_ready') or not runtime.get('model_digest'):
             raise RepairError('MODEL_NOT_PINNED')
@@ -112,12 +118,13 @@ def demo_repair_factory(repository_root: Path, image_id: str):
             raise RepairError('DOCKER_UNAVAILABLE')
         process = None
         try:
-            process = await asyncio.create_subprocess_exec(
-                verifier.docker, 'image', 'inspect', image_id, '--format', '{{.Id}}',
-                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
-            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=10)
-            if process.returncode != 0 or stdout.decode().strip() != image_id:
-                raise RepairError('VERIFIER_UNAVAILABLE')
+            for image_id in {spec.image_id for spec in specs}:
+                process = await asyncio.create_subprocess_exec(
+                    verifier.docker, 'image', 'inspect', image_id, '--format', '{{.Id}}',
+                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+                stdout, _ = await asyncio.wait_for(process.communicate(), timeout=10)
+                if process.returncode != 0 or stdout.decode().strip() != image_id:
+                    raise RepairError('VERIFIER_UNAVAILABLE')
         except (OSError, asyncio.TimeoutError):
             raise RepairError('DOCKER_UNAVAILABLE') from None
         finally:
@@ -141,6 +148,7 @@ def demo_repair_factory(repository_root: Path, image_id: str):
                 # startup checks, never flags supplied by an HTTP/model request.
                 'trusted_verifier': True,
             })
-        service.register_project(demo_project(repository_root, image_id))
+        for spec in specs:
+            service.register_project(spec)
         return service
     return create

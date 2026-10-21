@@ -13,6 +13,7 @@ from .patches import PatchStore, build_candidate
 from .workspace import capture, read_source, revision
 
 TERMINAL = {
+    'ROLLED_BACK',
     "APPLIED",
     "UNRESOLVED",
     "BLOCKED",
@@ -351,4 +352,13 @@ class RepairService:
     def reject(self, candidate_id: str) -> dict:
         candidate = self.patches.reject(candidate_id)
         self._state(self.get_run(candidate.run_id), candidate.state)
+        return candidate.view()
+
+    def rollback(self, candidate_id, **kwargs):
+        self._assert_open()
+        candidate = self.patches.get(candidate_id)
+        run = self.get_run(candidate.run_id)
+        self._event(run, 'patch.state', 'Operator requested rollback')
+        candidate = self.patches.rollback(candidate_id, self._project(run.project_id), **kwargs)
+        self._state(run, candidate.state)
         return candidate.view()

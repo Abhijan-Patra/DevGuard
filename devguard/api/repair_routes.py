@@ -146,9 +146,18 @@ def create_repair_router(service: RepairService, require_operator) -> APIRouter:
     async def reject(candidate_id: str, request: Request):
         return await with_body(request, Body, lambda b: service.reject(candidate_id))
 
+    @router.post('/patches/{candidate_id}/rollback')
+    async def rollback(candidate_id: str, request: Request):
+        return await with_body(request, ApplyBody, lambda b: service.rollback(
+            candidate_id, expected_hash=b.expected_candidate_hash,
+            expected_base=b.expected_base_revision, idempotency_key=b.idempotency_key,
+            approved=b.approved))
+
     @router.post("/scheduler/pause")
     async def pause(request: Request):
         def action(body):
+            if hasattr(service, 'supervisor'):
+                service.supervisor.automatic = False
             service.pause()
             return {"paused": True}
 

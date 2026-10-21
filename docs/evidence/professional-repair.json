@@ -1,0 +1,49 @@
+{
+  "run": {
+    "run_id": "run-1627eaeb39a941ea9e7088874720c7d9",
+    "incident_id": "incident-0d9206727f8644698b30d2cacf35382b",
+    "project_id": "demo-cart",
+    "state": "READY_FOR_REVIEW",
+    "candidate_id": "patch-6a99fbf7a71d4d5abcf5747c4cef07cd",
+    "baseline": "FAIL",
+    "verification": "PASS",
+    "reason_code": null,
+    "model": {
+      "name": "gemma4:e4b-it-q4_K_M",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+    },
+    "completed_tools": [
+      "read_allowed_file",
+      "run_named_test",
+      "read_allowed_file",
+      "propose_patch",
+      "run_named_test"
+    ]
+  },
+  "applied_to_original_repository": false,
+  "queued_cancellation": {
+    "state": "CANCELED",
+    "candidate_created": false
+  },
+  "disposable_apply": {
+    "state": "APPLIED",
+    "idempotent_repeat": true
+  },
+  "model_runtime": {
+    "server_ready": true,
+    "server_version": "0.40.6",
+    "model": "gemma4:e4b-it-q4_K_M",
+    "model_ready": true,
+    "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "expected_model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+    "reason_code": "MODEL_READY"
+  },
+  "native_format_failures": 0,
+  "post_apply_verification": "PASS",
+  "worker_stopped": true,
+  "original_source_unchanged": true,
+  "trusted_tests_unchanged": true,
+  "audit_reopen_event_count": 28,
+  "elapsed_seconds": 45.96,
+  "scope": "21 October 2026, this laptop; real Gemma/API/Docker; source apply only to a disposable public copy"
+}

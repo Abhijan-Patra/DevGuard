@@ -1,6 +1,6 @@
 # Architecture and trust boundaries
 
-Implementation specification; modules below are not yet executable.
+The modules below are implemented in the integrated codebase. See [current status](PROFESSIONAL_STATUS.md) for measured scope and remaining integration gates. The primary browser workspace is served by the same FastAPI process; no separate frontend server is needed.
 
 ```mermaid
 flowchart TD

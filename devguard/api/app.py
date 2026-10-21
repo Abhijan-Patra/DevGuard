@@ -8,6 +8,9 @@ import secrets
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from devguard.config import Settings
@@ -22,10 +25,14 @@ from devguard.storage.audit import AuditStore, AuditUnavailable
 from devguard.api.body_limit import BodyLimitMiddleware
 from devguard.api.repair_integration import RepairRuntime, integration_router
 from devguard.api.repair_routes import create_repair_router
+from devguard.api.web_session import BrowserSessions
+from devguard.api.workspace_routes import workspace_router, LocalComposer
+from devguard.monitor.supervisor import MonitorSupervisor
 
 
 CAPABILITIES = (
     "privacy_gate", "clipboard_capture", "codex_adapter", "backend_repair",
+    'managed_source', 'saved_file_monitor', 'quiet_time_scheduler', 'reviewed_rollback',
 )
 
 
@@ -34,22 +41,32 @@ class Unauthorized(Exception):
 
 
 def create_app(settings: Settings, *, transport=None, scanner=None, inspector=None,
-               clipboard_adapter=None, receivers=None, audit=None, repair_factory=None):
+               clipboard_adapter=None, receivers=None, audit=None, repair_factory=None,
+               browser_workspace=False):
     model = OllamaClient(settings, transport=transport)
     audit = audit or AuditStore()
     scanner = scanner or CredentialScanner()
-    guard = GuardEngine(scanner, inspector or ContextInspector(model), audit, receivers=receivers)
+    composer = LocalComposer()
+    guard = GuardEngine(scanner, inspector or ContextInspector(model), audit,
+                        receivers={'local-composer': composer.receive, **(receivers or {})})
     clipboard = ClipboardService(clipboard_adapter or native_clipboard(), guard, audit)
     repair = RepairRuntime(repair_factory)
+    supervisor = MonitorSupervisor(repair, model)
+    repair.supervisor = supervisor
+    sessions = BrowserSessions(browser_workspace)
 
     @asynccontextmanager
     async def lifespan(app):
         watcher = asyncio.create_task(clipboard.run())
+        monitor_task = asyncio.create_task(supervisor.run())
         repair.lifecycle_managed = True
         try:
             await repair.initialize(app)
             yield
         finally:
+            monitor_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await monitor_task
             watcher.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await watcher
@@ -62,6 +79,8 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             if not stopped and not await repair.join():
                 raise RuntimeError('WORKER_SHUTDOWN_TIMEOUT')
             guard.close()
+            composer.clear()
+            sessions.sessions.clear()
             audit.close()
 
     app = FastAPI(title="DevGuard", version="0.1.0", lifespan=lifespan,
@@ -83,15 +102,19 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             "code": error.code, "message": "Action held; inspect current local status"
         }})
 
-    async def authenticate(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
+    async def authenticate(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
+        if credentials is None and sessions.authorized(request):
+            return 'operator'
         if credentials is None or not secrets.compare_digest(
             credentials.credentials, settings.session_token
         ):
             raise Unauthorized()
         return "operator"
 
-    async def authenticate_guard(credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
+    async def authenticate_guard(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
         if credentials is None:
+            if sessions.authorized(request):
+                return 'operator'
             raise Unauthorized()
         if secrets.compare_digest(credentials.credentials, settings.session_token):
             return "operator"
@@ -106,6 +129,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     app.state.adapter_auth = authenticate_guard
     app.state.repair_event_sink = audit.add_repair
     app.state.repair = repair
+    app.state.supervisor = supervisor
 
     @app.exception_handler(AuditUnavailable)
     async def audit_unavailable(request, error):
@@ -116,6 +140,28 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     app.include_router(guard_router(authenticate, authenticate_guard, guard, clipboard, audit))
     app.include_router(create_repair_router(repair, authenticate))
     app.include_router(integration_router(repair, app, authenticate))
+    app.include_router(sessions.router())
+    app.include_router(workspace_router(app, authenticate, supervisor, composer))
+
+    @app.middleware('http')
+    async def security_headers(request, call_next):
+        response = await call_next(request)
+        response.headers['Cache-Control'] = 'no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['Content-Security-Policy'] = (
+            "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; "
+            "connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'")
+        return response
+
+    assets = Path(__file__).resolve().parents[1] / 'web'
+    app.mount('/assets', StaticFiles(directory=assets), name='workspace-assets')
+
+    @app.get('/')
+    @app.get('/app')
+    def workspace_page():
+        return FileResponse(assets / 'index.html')
 
     @app.exception_handler(Unauthorized)
     async def unauthorized(request: Request, error: Unauthorized):
@@ -141,18 +187,23 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
             "audit": {"durable": audit.durable, "retention_events": 5000},
             "repair_implemented": True,
             "repair": repair.status(),
+            "monitoring": supervisor.status(),
         }
 
     @app.get("/api/v1/coverage", dependencies=[Depends(authenticate)])
     async def coverage():
         return {"capabilities": [
             {"capability": name,
-             "status": "PARTIAL" if name in {"privacy_gate", "clipboard_capture", "backend_repair"} else "UNIMPLEMENTED",
+             "status": "UNVERIFIED" if name == 'codex_adapter' else 'PARTIAL',
              "limitations": {
                  "privacy_gate": "Limited real Gemma/local-reference checks passed; installed-client delivery and general accuracy remain unverified.",
-                 "clipboard_capture": "Opt-in macOS text only; starts OFF; native live trial pending.",
+                 "clipboard_capture": "Opt-in macOS text only; starts OFF; recorded native checks exist; current capture is explicit and version-bound.",
                  "backend_repair": "Routes wired; trusted configuration, pinned model/image and Docker engine required; starts paused.",
                  "codex_adapter": "Hook code exists; installed-client interception is unverified.",
+                 'managed_source': 'Registered source only; guard-bound final source checks and actual local-composer delivery. No unrestricted tools or external client interception.',
+                 'saved_file_monitor': 'Opt-in debounced manifest monitoring, supervised by app lifespan. Starts OFF; changes queue but never grant execution permission.',
+                 'quiet_time_scheduler': 'Opt-in foreground-queue quiet time, not OS idle detection. Manual pause disables it. Active inference is not preempted.',
+                 'reviewed_rollback': 'Explicit approval and full applied-source hash checks; refuses concurrent edits. Session-only, single-file atomic replacement.',
              }[name],
              "verified_at": None}
             for name in CAPABILITIES

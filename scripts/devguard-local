@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+TASK_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$TASK_ROOT"
+if [ ! -x "$TASK_ROOT/.venv/bin/python" ]; then
+  python3 -m venv .venv
+  .venv/bin/python -m pip install -r requirements.lock.txt
+  .venv/bin/python -m pip install -e '.[clipboard]'
+fi
+exec "$TASK_ROOT/.venv/bin/python" -m devguard.local "$@"

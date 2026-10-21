@@ -1,3 +1,7 @@
+# Current integration status
+
+The current single-laptop implementation and evidence are in [PROFESSIONAL_STATUS.md](PROFESSIONAL_STATUS.md); startup is in [PROFESSIONAL_WORKSPACE.md](PROFESSIONAL_WORKSPACE.md). The 16 October record below is historical.
+
 # Integrated backend and dashboard status
 
 16 October 2026. Current combined Mac 1/dashboard handoff: `codex/mac1-windows1-finish`, including PR #13, PR #14 and main through the QA/freeze merge `bdc58ab`. See [completion evidence](MAC_1_WINDOWS_1_COMPLETION.md) for digest enforcement, native clipboard checks and the real live-dashboard trial. The [earlier guard/readiness handoff](MAC_1_READINESS_HANDOFF.md) records the startup changes and Mac 2 repair coordination.

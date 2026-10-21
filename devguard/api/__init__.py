@@ -1,1 +1,1 @@
-"""Control API. Native capture and privacy release routes are not implemented yet."""
+"""Authenticated guard, native capture, project monitoring, repair and local workspace API."""

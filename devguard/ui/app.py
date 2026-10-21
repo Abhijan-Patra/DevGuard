@@ -1,4 +1,5 @@
 """DevGuard local operator workspace; presentation never substitutes backend decisions."""
+import os
 import streamlit as st
 from devguard.ui.client import BaseDevGuardClient,DevGuardError,FixtureDevGuardClient,HttpDevGuardClient
 from devguard.ui.components.banner import render_fixture_banner
@@ -18,7 +19,7 @@ VIEWS=['Overview','🛡️ Privacy Gate','📋 Text Clipboard','🔧 Repair & Pa
 
 
 def get_client() -> BaseDevGuardClient:
-    if st.session_state.get('app_mode',FIXTURE)==FIXTURE:
+    if os.environ.get('DEVGUARD_PUBLIC_DEMO')=='1' or st.session_state.get('app_mode',FIXTURE)==FIXTURE:
         if 'fixture_client' not in st.session_state:st.session_state.fixture_client=FixtureDevGuardClient()
         return st.session_state.fixture_client
     return HttpDevGuardClient(base_url=st.session_state.get('backend_url','http://127.0.0.1:8765/api/v1'),
@@ -55,11 +56,16 @@ def _disconnect():
 
 def main():
     apply_design()
+    public_demo=os.environ.get('DEVGUARD_PUBLIC_DEMO')=='1'
+    if public_demo:
+        st.session_state.app_mode=FIXTURE
+        st.info('PUBLIC INTERACTIVE DEMO · Synthetic examples only. Local Gemma, native clipboard and Docker repair run on the team Macs; this hosted dashboard does not run them. Do not enter private information.')
+        st.markdown('[Source code](https://github.com/Abhijan-Patra/DevGuard) · [Measured real-model repair evidence](https://github.com/Abhijan-Patra/DevGuard/blob/main/devguard/repair/README.md) · [Live demo guide](https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/DEMO_RUNBOOK.md)')
     live_error=None
     with st.sidebar:
         st.markdown('<div class="brand"><span class="brand-mark">D</span><div><div class="brand-name">DevGuard</div><div class="brand-sub">LOCAL OPERATOR WORKSPACE</div></div></div>',unsafe_allow_html=True)
         st.subheader('Data source')
-        mode=st.radio('Select Data Mode',[FIXTURE,LIVE],index=0 if st.session_state.get('app_mode')!=LIVE else 1,label_visibility='collapsed')
+        mode=st.radio('Select Data Mode',[FIXTURE] if public_demo else [FIXTURE,LIVE],index=0 if public_demo or st.session_state.get('app_mode')!=LIVE else 1,label_visibility='collapsed')
         st.session_state.app_mode=mode
         if mode==LIVE:
             with st.expander('Connection settings',expanded=not bool(st.session_state.get('session_token') or st.session_state.get('local_operator_token'))):
@@ -133,4 +139,9 @@ def main():
     st.markdown('<div class="footer-note">DevGuard · Local Gemma intelligence · Explicit operator control · No screenshot or recording dependency</div>',unsafe_allow_html=True)
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    if os.environ.get('DEVGUARD_PUBLIC_DEMO')=='1':
+        from devguard.ui.public_demo import render_public_workspace
+        render_public_workspace()
+    else:
+        main()

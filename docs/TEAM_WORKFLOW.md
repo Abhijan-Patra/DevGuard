@@ -1,3 +1,9 @@
+# Current ownership — 21 October 2026
+
+The user assigned all roles to the current laptop. No Mac 2, Windows host, SSH tunnel or teammate handoff is needed. Use `codex/professional-workspace` for the finishing branch. Preserve previous implementation and historical evidence. Start with [single-laptop setup](PROFESSIONAL_WORKSPACE.md).
+
+The earlier team allocation below is retained as history.
+
 # Four-member workflow and ownership
 
 One repository; four separate clones and branches. Never share Codex/Antigravity credentials. Do not work inside another person's live checkout.

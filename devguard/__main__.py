@@ -12,6 +12,8 @@ from devguard.api.app import create_app
 from devguard.config import Settings
 from devguard.storage.audit import AuditStore
 from devguard.api.repair_integration import demo_repair_factory
+from devguard.api.repair_integration import projects_repair_factory
+from devguard.repair.projects import load_projects
 
 
 def session_token():
@@ -44,13 +46,20 @@ def main():
     parser = argparse.ArgumentParser(description="DevGuard local control API")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--demo-image-id", help="Opt into the named cart demo using an existing sha256 Docker image ID")
+    parser.add_argument('--projects-config', type=Path, help='Reviewed local JSON manifest; roots and tests cannot be changed over HTTP')
+    parser.add_argument('--no-browser-pairing', action='store_true', help='Disable same-origin local workspace enrolment')
     args = parser.parse_args()
     settings = Settings.from_environment(session_token())
     print("DevGuard: http://127.0.0.1:%s (clipboard capture starts disabled)" % args.port)
     print("Operator token stays local in .devguard/session-token unless configured by environment.")
     audit = AuditStore(Path(".devguard") / "audit.sqlite3")
     factory = demo_repair_factory(Path.cwd(), args.demo_image_id) if args.demo_image_id else None
-    uvicorn.run(create_app(settings, audit=audit, repair_factory=factory),
+    if args.projects_config:
+        if args.demo_image_id:
+            parser.error('Choose --projects-config or --demo-image-id')
+        factory = projects_repair_factory(Path.cwd(), load_projects(args.projects_config))
+    uvicorn.run(create_app(settings, audit=audit, repair_factory=factory,
+                           browser_workspace=not args.no_browser_pairing),
                 host="127.0.0.1", port=args.port, access_log=False)
 
 

@@ -1,3 +1,9 @@
+# Current single-laptop setup
+
+Use [the professional workspace guide](PROFESSIONAL_WORKSPACE.md). Run `./scripts/devguard-local start`, then open `http://127.0.0.1:8765/app`.
+
+The older direct API/clipboard commands below remain useful for diagnostics.
+
 # Getting started: Mac 1 guard and clipboard service
 
 Ollama and the selected Gemma package are installed on the first Mac. See [current handoff](MAC_1_READINESS_HANDOFF.md) for the measured digest and checks. Runtime endpoints hold requests when contextual analysis is unavailable.

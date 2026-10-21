@@ -2,7 +2,7 @@
 
 ## Current scope
 
-The guard, required opt-in macOS text clipboard service, Windows dashboard and Mac 2 repair routes are integrated. Read docs/INTEGRATION_STATUS.md for actual checks, trusted startup and remaining gates. Capture starts OFF; repair starts unavailable or paused. The CLI persists bounded redacted audit metadata, while candidates/clipboard/work state remain transient. Real Gemma accuracy, Docker repair and installed-client interception are not verified.
+As of 21 October 2026, the user assigned all Mac 1, Mac 2 and Windows work to this laptop. Read docs/PROFESSIONAL_WORKSPACE.md and docs/PROFESSIONAL_STATUS.md for the current interface, startup and measured gates. The FastAPI browser workspace is primary; Streamlit is legacy. Capture and watchers start OFF; repairs start paused. Persistent audit contains bounded metadata; candidates, composer and clipboard state are transient. Real local Gemma/Docker trials exist; accuracy and installed-client interception remain limited.
 
 ## Fixed decisions
 
@@ -11,11 +11,11 @@ The guard, required opt-in macOS text clipboard service, Windows dashboard and M
 - Backend investigation uses source, diffs, selected structured logs, named API probes and independent tests. No screenshot, screen-recording or keyboard-monitoring dependencies.
 - Rules enforce policy; the model proposes classifications/actions. No fixture-specific secret answers, scripted successful repairs or fabricated results.
 - Clipboard observation alone does not prevent every paste. Supported gates must inspect before delivery and hold on unresolved checks.
-- All backend/model/security/repair/native-capture logic belongs to Mac 1 and Mac 2. Windows 1 owns UI; Windows 2 owns scenario content/manual QA/demo docs. Follow docs/TEAM_WORKFLOW.md and task-file paths.
+- The current owner handles all implementation roles on this laptop. Preserve prior contributions; historical task files describe module responsibilities, not a need for another machine.
 
 ## Collaboration
 
-Read your task file and docs/API_CONTRACT.md before coding. Work in a separate clone/assigned codex branch. Coordinate shared-schema/dependency changes with Mac 1. Preserve other owners' files and user edits. The initial documentation publisher may create the shared planning package; subsequent implementation follows ownership.
+Read docs/API_CONTRACT.md before coding. Work on an isolated codex branch. Preserve existing work and user edits. No other laptop or teammate is required for current development, model inference, native capture, Docker verification or presentation.
 
 ## Privacy and authority
 
