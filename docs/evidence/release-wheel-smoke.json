@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-10-21T13:52:57.399782+00:00",
+  "scope": "Clean installed wheel; temporary private workspace; declared synthetic input",
+  "live_model_and_docker": false,
+  "clipboard_enabled": false,
+  "checks": {
+    "api_and_assets": true,
+    "unauthenticated_access_denied": true,
+    "browser_pairing": true,
+    "capture_and_watchers_off": true,
+    "isolated_client_profile_without_global_changes": true,
+    "privacy_contract_no_raw_secret": true,
+    "redacted_audit": true
+  },
+  "general_clipboard_accessed": false,
+  "installed_version": "0.2.0"
+}

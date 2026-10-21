@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-10-21T14:03:39.419018+00:00",
+  "scope": "Built source archive extracted into a fresh temporary directory; documented setup script and privacy-only lifecycle",
+  "checks": {
+    "fresh_virtualenv_install": true,
+    "pinned_dependencies_install": true,
+    "dependency_check": true,
+    "doctor_ready": true,
+    "source_launcher_start": true,
+    "source_launcher_status_healthy": true,
+    "source_launcher_stop": true
+  },
+  "general_clipboard_accessed": false,
+  "installed_version": "0.2.0"
+}

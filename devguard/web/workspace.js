@@ -277,7 +277,7 @@ function render() {
       .querySelector("main")
       .insertAdjacentHTML(
         "afterbegin",
-        '<div class="notice warn public-banner"><b>PUBLIC READ-ONLY FEATURE TOUR</b><br>No live inference or device access is hosted here. Controls are disabled; example project metadata is illustrative. Real Gemma, clipboard and Docker workflows run on the local Mac. Open Verification for recorded experiments and limitations. <a href="https://github.com/Abhijan-Patra/DevGuard/blob/codex/professional-workspace/docs/PROFESSIONAL_WORKSPACE.md" target="_blank" rel="noreferrer">Run locally ↗</a></div>',
+        '<div class="notice warn public-banner"><b>PUBLIC READ-ONLY FEATURE TOUR</b><br>No live inference or device access is hosted here. Controls are disabled; example project metadata is illustrative. Real Gemma, clipboard and Docker workflows run on the local Mac. Open Verification for recorded experiments and limitations. <a href="https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/INSTALL.md" target="_blank" rel="noreferrer">Install DevGuard ↗</a></div>',
       );
     document
       .querySelectorAll("button,input,select,textarea")

@@ -4,6 +4,7 @@ from pathlib import Path
 import stat
 from urllib.parse import urlsplit
 from devguard.ui.client import DevGuardError
+from devguard.runtime import runtime_directory
 
 
 def load_local_token(base_url):
@@ -16,7 +17,7 @@ def load_local_token(base_url):
             or port!=8765 or url.path.rstrip('/')!='/api/v1'
             or url.username or url.password or url.query or url.fragment):
         raise DevGuardError('Local enrolment requires the default DevGuard endpoint on this Mac.',code='LOCAL_ENROLMENT_REQUIRED')
-    path=Path(__file__).resolve().parents[2]/'.devguard/session-token'
+    path=runtime_directory()/'session-token'
     fd=None
     try:
         if path.parent.is_symlink() or path.is_symlink():raise ValueError
