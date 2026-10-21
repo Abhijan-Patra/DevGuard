@@ -1,0 +1,28 @@
+{
+  "scope": "Final committed workspace runtime, this laptop, disposable source only",
+  "run": {
+    "run_id": "run-fd9922bb4f5f4344b39bdc0a89e542ee",
+    "incident_id": "incident-53885f982ec24ebfab835016f360d551",
+    "project_id": "demo-cart",
+    "state": "READY_FOR_REVIEW",
+    "candidate_id": "patch-d249db74ff8249e0b8983746e806232f",
+    "baseline": "FAIL",
+    "verification": "PASS",
+    "reason_code": null,
+    "model": {
+      "name": "gemma4:e4b-it-q4_K_M",
+      "digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c"
+    },
+    "completed_tools": [
+      "read_allowed_file",
+      "run_named_test",
+      "read_allowed_file",
+      "propose_patch",
+      "run_named_test"
+    ]
+  },
+  "image_id": "sha256:8934821441ea27fa60fb9cf729b47fbd17b59a5d8668213ac5025e0f6d2e1957",
+  "candidate_left_unapplied": true,
+  "capture_enabled": false,
+  "repair_state": "PAUSED"
+}

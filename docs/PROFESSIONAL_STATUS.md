@@ -23,7 +23,7 @@
 
 ## Automated verification
 
-The integrated local suite passed **238 tests**, with one existing upstream Starlette/HTTPX deprecation warning. `pip check` reports no broken requirements. This is not a model-accuracy score; the suite includes declared doubles. A wheel build completed with the workspace assets included. CI configuration is provided; a remote CI run is not claimed until observed.
+The integrated local suite passed **238 tests**, with one existing upstream Starlette/HTTPX deprecation warning. `pip check` reports no broken requirements. This is not a model-accuracy score; the suite includes declared doubles. A wheel build completed with the workspace assets included. Remote GitHub Actions checks also passed for this finishing branch and PR #21.
 
 ## Model evaluation limitations
 
@@ -44,6 +44,6 @@ These are calibration results, not an unseen accuracy benchmark or five passing 
 - Quiet-time admission does not infer actual OS/user idle. Sleep suspends execution.
 - Generic Python projects require explicit small source manifests, separately reviewed pytest checks and a prepared image. This is not an every-language/every-bug production recovery system.
 - Rollback/candidates are session-only. Restart clears them; persisted audit metadata cannot reconstruct them. Single-file replacement still has a narrow race against unrelated editors after the final hash check.
-- The public Render site remains the older explicitly simulated dashboard until deployment is separately updated. The new real workspace is local at `http://127.0.0.1:8765/app`.
+- The redesigned public read-only tour is deployed at https://devguard-demo.onrender.com; HTTP 200 and the actual new browser view were verified. Device controls stay disabled there. The real workspace is local at `http://127.0.0.1:8765/app`.
 
 The implementation is a working scoped local agent, with the above gates stated explicitly. Perfect detection, universal interception and production certification are not claimed.

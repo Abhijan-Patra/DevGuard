@@ -536,7 +536,7 @@ async function loadComposer() {
   state.composerExpiry = Date.now() + (result.expires_in_seconds ?? 600) * 1000;
   return result;
 }
-async function refreshRun() {
+async function refreshRun(force = false) {
   const incident = state.incidents.find(
     (i) => i.incident_id === state.selected,
   );
@@ -546,9 +546,13 @@ async function refreshRun() {
     return;
   }
   state.run = await api("/runs/" + encodeURIComponent(incident.active_run_id));
-  state.patch = state.run.candidate_id
-    ? await api("/patches/" + encodeURIComponent(state.run.candidate_id))
-    : null;
+  if (!state.run.candidate_id) {
+    state.patch = null;
+  } else if (force || state.patch?.candidate_id !== state.run.candidate_id || state.patch?.state !== state.run.state) {
+    // Keep the approved display while unchanged. Apply still revalidates on
+    // the server; ordinary polling must not repeatedly invoke Gemma on a diff.
+    state.patch = await api('/patches/' + encodeURIComponent(state.run.candidate_id));
+  }
 }
 async function navigate(target = null) {
   view =
@@ -730,7 +734,7 @@ async function action(name, element) {
       break;
     case "refresh-run":
       await refresh({ draw: false });
-      await refreshRun();
+      await refreshRun(true);
       render();
       break;
     case "review-apply":

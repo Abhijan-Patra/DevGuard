@@ -18,7 +18,7 @@ Evidence and limits: [professional status](PROFESSIONAL_STATUS.md). Current setu
 - [ ] Broad unseen accuracy benchmark. Five calibration cases are insufficient; remaining catalogue cases are not marked passed.
 - [ ] Native Windows capture. This deliverable runs entirely on the current Mac.
 - [ ] Real OS-idle scheduling. Quiet-time mode uses queue timestamps, not keyboard/user activity.
-- [ ] New custom workspace deployed to the public site. The prior hosted Streamlit site remains an explicitly synthetic demo.
+- [x] Redesigned public read-only tour deployed and browser/HTTP health verified. Actual operator execution remains local.
 
 The historical initial checklist below is retained as planning history, not current status.
 
