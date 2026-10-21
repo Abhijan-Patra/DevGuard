@@ -5,6 +5,7 @@ Default: foreground API/assets and held/approved privacy contract, no downloads.
 Neither mode enables clipboard observation or changes an existing user's workspace.
 """
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -17,6 +18,23 @@ import tempfile
 import time
 
 import httpx
+
+
+@contextmanager
+def capture_report(report, output):
+    try:
+        yield
+    except BaseException as error:
+        report['passed'] = False
+        # No exception message: it may include private paths or transport data.
+        report['failure_type'] = type(error).__name__
+        raise
+    else:
+        report['passed'] = True
+    finally:
+        if output:
+            output.write_text(json.dumps(report, indent=2) + '\n')
+        print(json.dumps(report, indent=2), flush=True)
 
 
 def main():
@@ -39,9 +57,11 @@ def main():
         process = None
         report = {'timestamp': datetime.now(timezone.utc).isoformat(),
                   'scope': 'Clean installed wheel; temporary private workspace; declared synthetic input',
-                  'live_model_and_docker': args.live, 'clipboard_enabled': False, 'checks': {}}
+                  'live_model_and_docker': args.live, 'clipboard_enabled': False, 'checks': {},
+                  'general_clipboard_accessed': False,
+                  'installed_version': __import__('importlib.metadata', fromlist=['version']).version('devguard')}
         oracle_hash = hashlib.sha256((ASSETS / 'checks/test_cart.py').read_bytes()).hexdigest()
-        with (root / 'server.log').open('w') as log:
+        with capture_report(report, args.output), (root / 'server.log').open('w') as log:
             try:
                 argv = prefix + (['start', '--port', str(port), '--no-open'] if args.live else ['serve', '--port', str(port)])
                 process = subprocess.Popen(argv, cwd=root, env=env, stdout=log, stderr=log)
@@ -108,6 +128,8 @@ def main():
                             time.sleep(.5);run = api('GET', '/runs/' + run['run_id'])
                         report['repair_state'] = run['state']
                         report['repair_reason'] = run.get('reason_code')
+                        report['baseline'] = run.get('baseline')
+                        report['verification'] = run.get('verification')
                         assert run['state'] == 'READY_FOR_REVIEW', 'Real repair did not produce a verified candidate'
                         assert cart.read_bytes() == original
                         patch_id = run['candidate_id']
@@ -138,10 +160,6 @@ def main():
                     if process is not None:process.wait(timeout=10)
                 elif process is not None and process.poll() is None:
                     process.terminate();process.wait(timeout=90)
-        report['general_clipboard_accessed'] = False
-        report['installed_version'] = __import__('importlib.metadata', fromlist=['version']).version('devguard')
-        if args.output:args.output.write_text(json.dumps(report, indent=2) + '\n')
-        print(json.dumps(report, indent=2))
 
 
 if __name__ == '__main__':main()

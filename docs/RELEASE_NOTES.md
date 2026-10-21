@@ -1,3 +1,5 @@
+**Use v0.2.1 for the verifier compatibility update.** Its local image is prepared as a single-platform image under a tag bound to public build inputs. Earlier 0.2.0 dependency holds remain in the recorded evidence; the patch also preserves trial failure metadata.
+
 DevGuard is a local privacy guard and reviewed backend repair workspace for AI-assisted development. This public preview includes an installable wheel, source distribution, checksums and a source setup script.
 
 Start with the [installation guide](https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/INSTALL.md). Install Python 3.11/3.12, Ollama, Gitleaks and Docker for repairs. The pinned local Gemma model is downloaded separately; model weights and user data are never bundled.

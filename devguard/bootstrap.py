@@ -1,11 +1,11 @@
 """Packaged public demo assets and minimal Docker context; no checkout required."""
 import io
+import hashlib
 from pathlib import Path
 import subprocess
 import tarfile
 
 ASSETS = Path(__file__).resolve().parent / 'resources'
-RUNNER_TAG = 'devguard-runner:mac2'  # Keep existing prepared images usable.
 
 
 def build_context():
@@ -20,5 +20,12 @@ def build_context():
     return context.getvalue()
 
 
+# Version the preparation profile as well as public inputs. Upgrades must not
+# silently reuse an old test environment under the historical shared tag.
+RUNNER_TAG = 'devguard-verifier:local-' + hashlib.sha256(b'single-platform-v1\0' + build_context()).hexdigest()[:12]
+
+
 def build_runner(docker):
-    subprocess.run([docker, 'build', '--tag', RUNNER_TAG, '-'], input=build_context(), check=True)
+    # A locally prepared, single-platform verifier does not need an OCI index
+    # with attestation descriptors. Keep image-ID resolution unambiguous.
+    subprocess.run([docker, 'build', '--provenance=false', '--tag', RUNNER_TAG, '-'], input=build_context(), check=True)

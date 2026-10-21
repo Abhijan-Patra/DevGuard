@@ -12,7 +12,7 @@ If startup is required, run each command in a separate terminal from the reposit
 
 ```sh
 .venv/bin/python -m devguard --port 8766 --demo-image-id sha256:c74d2d570e55537d0b57d10c8c079834dbacf14b10a7e79768edebf6733aa6c7
-DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py
+DEVGUARD_LOCAL_API_PORT=8766 .venv/bin/python -m streamlit run integrations/local_dashboard.py --server.address 127.0.0.1
 ```
 
 That image exists on the measured Mac 2; other machines build/inspect their own. Capture starts OFF and repair starts paused. Creating an incident/queued investigation and invoking manual idle are operator API actions, not a model power. See [repair commands](../devguard/repair/README.md).

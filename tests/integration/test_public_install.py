@@ -118,3 +118,15 @@ def test_foreground_demo_factory_uses_bundled_disposable_source_without_checkout
     assert spec.root == root / '.devguard/local-demo'
     assert spec.trusted_tests == ASSETS / 'checks'
     assert (spec.root / 'cart.py').read_bytes() == (ASSETS / 'demo/cart.py').read_bytes()
+
+
+def test_release_failure_report_preserves_dependency_hold_without_exception_payload(tmp_path):
+    from scripts.release_smoke import capture_report
+    output = tmp_path / 'failed-trial.json'
+    report = {'repair_state': 'BLOCKED', 'repair_reason': 'BASELINE_UNAVAILABLE', 'checks': {}}
+    with pytest.raises(RuntimeError):
+        with capture_report(report, output):
+            raise RuntimeError('synthetic-private-exception-detail')
+    data = json.loads(output.read_text())
+    assert data['passed'] is False and data['repair_reason'] == 'BASELINE_UNAVAILABLE'
+    assert 'synthetic-private-exception-detail' not in output.read_text()
