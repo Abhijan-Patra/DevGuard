@@ -12,7 +12,7 @@ import time
 from uuid import uuid4
 
 from devguard.guard.redaction import redact
-from devguard.schemas.guard import Decision, GuardInput
+from devguard.schemas.guard import Category, Decision, GuardInput
 
 
 class GuardError(Exception):
@@ -102,13 +102,15 @@ class GuardEngine:
 
     async def _evaluate(self, request, owner, started):
         # No API allows registering arbitrary outbound URLs or receivers.
-        if request.destination_id not in {"local-preview", *self.receivers}:
+        if request.destination_id not in {"local-preview", "managed-client", *self.receivers}:
             raise GuardError("DESTINATION_NOT_ENROLLED", 403)
         result = await self.scanner.scan(request.text)
         reasons = sorted({s.category.value for s in result.spans})
         cleaned = redact(request.text, result.spans, permit_overlap=True)
         decision, candidate = Decision.REVIEW, None
-        if not result.complete:
+        if Category.PROMPT_INJECTION.value in reasons:
+            decision = Decision.BLOCK
+        elif not result.complete:
             reasons.append("SCANNER_UNAVAILABLE")
         else:
             proposal = await self.inspector.inspect(cleaned, request.task)
@@ -123,6 +125,11 @@ class GuardEngine:
                     decision, candidate = Decision.REVIEW, None
                 if candidate is not None:
                     reasons.extend(s.category.value for s in proposal.spans)
+                    if any(s.category == Category.PROMPT_INJECTION for s in proposal.spans):
+                        decision = Decision.BLOCK
+                    elif (decision not in {Decision.BLOCK, Decision.LOCAL_ONLY}
+                          and any(s.category == Category.CONFIDENTIAL for s in proposal.spans)):
+                        decision = Decision.REVIEW
                     if decision in {Decision.REVIEW, Decision.BLOCK, Decision.LOCAL_ONLY}:
                         candidate = None
                     elif result.spans or proposal.spans:
@@ -151,6 +158,23 @@ class GuardEngine:
         return record
 
     async def deliver(self, identifier, *, owner, version, destination):
+        return await self._deliver(identifier, owner=owner, version=version, destination=destination,
+                                   receiver=self.receivers.get(destination))
+
+    async def consume_for_client(self, identifier, *, owner, version):
+        """Trusted synchronous client route: return only one-use guarded bytes.
+
+        A request cannot select a URL, callback or arbitrary external receiver.
+        Source callbacks and all ordinary delivery checks still run under lock.
+        """
+        received = []
+        async def receive(text):
+            received.append(text)
+        receipt = await self._deliver(identifier, owner=owner, version=version,
+                                      destination='managed-client', receiver=receive)
+        return {**receipt, 'text': received[0]}
+
+    async def _deliver(self, identifier, *, owner, version, destination, receiver):
         async with self._release_lock:
             record = self.get(identifier, owner)
             if record.version != version or record.destination != destination:
@@ -161,7 +185,6 @@ class GuardEngine:
                 raise GuardError("ALREADY_CONSUMED")
             if record.candidate is None or record.decision not in {Decision.ALLOW, Decision.SANITIZE}:
                 raise GuardError("REQUEST_HELD", 403)
-            receiver = self.receivers.get(destination)
             if receiver is None:
                 raise GuardError("RECEIVER_NOT_IMPLEMENTED", 503)
             checked = await self.scanner.scan(record.candidate)

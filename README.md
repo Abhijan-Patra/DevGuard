@@ -68,3 +68,7 @@ Both Mac owners own all backend, model, enforcement and repair logic. Windows wo
 Observing a clipboard or saved file is detection. Preventing a supported request requires a synchronous gate before delivery. Clipboard capture does not intercept every paste, and a standalone MCP server does not control an assistant's other tools. See coverage before making claims.
 
 The [getting-started guide](docs/GETTING_STARTED.md) contains startup, clipboard controls and model smoke-test commands. Requests needing unavailable contextual analysis stay held. No real coding-client receiver is enrolled by default.
+
+## Guarded coding-client source tools
+
+The native Codex/Claude CLI integration now has isolated prompt/MCP boundary trials with the real Gemma guard and a synthetic local provider receiver. The two managed tools list/read registered source; they cannot run shell commands or apply changes. [Client setup and limits](docs/CLIENT_INTEGRATION.md), [measured native evidence](docs/evidence/professional-native-clients.json), [privacy calibration](docs/evidence/professional-privacy-calibrated.json) and [additional regression cases](docs/evidence/professional-privacy-variants.json). Earlier failures remain preserved; no universal or perfect-detection claim.

@@ -136,10 +136,10 @@ function publicRead(path) {
             "Real single-laptop Gemma, Docker, native text and delivery measurements are on the Verification page. Their scope and mismatches are preserved.",
         },
         {
-          capability: "installed_client_interception",
-          status: "UNVERIFIED",
+          capability: "recorded_native_cli_boundaries",
+          status: "PARTIAL",
           limitations:
-            "Native coding-client interception is not established by this feature tour or the managed local workflow.",
+            "Recorded CLI hook/MCP trials used real Gemma and a synthetic local coding-provider receiver. This tour does not install hooks or prove cloud/desktop coverage.",
         },
       ],
     };
@@ -469,7 +469,7 @@ function system() {
     )}<div class="divider"></div><span class="label">Pinned model digest</span><pre>${esc(r.model_digest || "Not available")}</pre><span class="label">Inference queue</span><pre>${esc(JSON.stringify(s.inference_queue || {}, null, 2))}</pre></section><section class="panel"><div class="panel-head"><h2>Single-laptop setup</h2></div><p class="subtitle">Run from the repository root. The launcher checks Docker and the exact Gemma package, inspects the verifier image and starts this local workspace.</p><pre>./scripts/devguard-local start
 ./scripts/devguard-local status
 ./scripts/devguard-local stop</pre><p class="subtitle">Enrol your own Python backend with independent pytest checks and a prepared image:</p><pre>.venv/bin/python -m devguard \
-  --projects-config /absolute/path/projects.json</pre><div class="notice">The model can propose edits to one approved source file per candidate. It cannot change your policy, trusted tests or original files. Rollback requires explicit review and unchanged applied source.</div>${button("Disconnect this browser", "disconnect", "danger")}</section></div><div class="section-row"><h2>Integration boundaries</h2><span class="caption">IMPLEMENTATION ≠ UNIVERSAL COVERAGE</span></div><div class="grid g2">${state.coverage.map((c) => `<section class="panel"><div class="panel-head"><h2>${esc(c.capability.replaceAll("_", " "))}</h2>${badge(c.status)}</div><p class="subtitle">${esc(c.limitations)}</p></section>`).join("")}</div><div class="notice warn">Installed coding-client hooks remain a restrictive prototype, not universal interception. The managed source-read/composer path is the supported local workflow. Arbitrary app pastes, automatic context ingestion and attachments remain outside its boundary. Windows native capture is not available on this Mac.</div>`;
+  --projects-config /absolute/path/projects.json</pre><div class="notice">The model can propose edits to one approved source file per candidate. It cannot change your policy, trusted tests or original files. Rollback requires explicit review and unchanged applied source.</div>${button("Disconnect this browser", "disconnect", "danger")}</section></div><div class="section-row"><h2>Integration boundaries</h2><span class="caption">IMPLEMENTATION ≠ UNIVERSAL COVERAGE</span></div><div class="grid g2">${state.coverage.map((c) => `<section class="panel"><div class="panel-head"><h2>${esc(c.capability.replaceAll("_", " "))}</h2>${badge(c.status)}</div><p class="subtitle">${esc(c.limitations)}</p></section>`).join("")}</div><div class="notice warn">Recorded Codex and Claude CLI hook/MCP boundaries passed with real Gemma and a local synthetic provider. Isolated profiles require explicit setup and native hook trust; they are not active in every application. The managed server source-read path enforces its own output gate. Arbitrary app pastes, automatic context ingestion and attachments remain outside its boundary. Windows native capture is not available on this Mac.</div>`;
 }
 
 function evidence() {
@@ -481,10 +481,16 @@ function evidence() {
       "Use the repository evidence files; no results are fabricated.",
     );
   const rows = e.privacy.results;
+  const calibrated = [...(e.privacy_calibrated?.results || []), ...(e.privacy_variants?.results || [])];
+  const native = e.native_clients?.results || [];
+  const calibrationTable = (items) => `<div class="table-wrap"><table><thead><tr><th>CASE</th><th>EXPECTED</th><th>OBSERVED</th><th>REQUIRED REASONS</th></tr></thead><tbody>${items.map((r) => `<tr><td>${esc(r.case_id)}</td><td>${badge(r.expected_decision)}</td><td>${badge(r.actual_decision)}</td><td>${r.expected_reasons_present ? "Present" : "Missing"}</td></tr>`).join("")}</tbody></table></div>`;
   return `${heading("VERIFICATION / RECORDED TRIALS", "Measured. Not assumed.", "Recorded single-laptop trials from 21 October. These are individual experiments, not continuous monitoring or an unseen accuracy benchmark.", button(icon("download") + " Export redacted evidence", "export-evidence"))}
   <div class="grid g3"><div class="panel stat"><small>Real Gemma + Docker repair</small><strong>${esc(e.repair.elapsed_seconds)} s</strong><p>Failing baseline → verified patch → disposable apply</p></div><div class="panel stat"><small>Native text lifecycle</small><strong>${esc(e.clipboard.checks_passed)} / ${esc(e.clipboard.checks_total)}</strong><p>Private named pasteboard; general clipboard untouched</p></div><div class="panel stat"><small>Actual cleaned-text delivery</small><strong>${esc(e.delivery.elapsed_seconds)} s</strong><p>Receiver bytes matched; synthetic secret absent; replay held</p></div></div>
-  <div class="section-row"><h2>Privacy calibration</h2><span class="caption">5 REAL SYNTHETIC CASES / EXPECTATIONS PRESERVED</span></div>
-  <section class="panel"><div class="table-wrap"><table><thead><tr><th>CASE</th><th>EXPECTED</th><th>OBSERVED</th><th>REQUIRED REASONS PRESENT</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.case_id)}</td><td>${badge(r.expected_decision)}</td><td>${badge(r.actual_decision)}</td><td>${r.expected_reasons_present ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div><div class="notice warn">P02 is a false positive on a harmless identifier. P03 differs from the expected confidentiality decision. P05 blocked but did not report the expected injection reason code. These outcomes remain visible; this is not a perfect-detection claim.</div></section>
+  ${calibrated.length ? `<div class="section-row"><h2>Privacy after calibration</h2><span class="caption">${calibrated.filter((r) => r.decision_matches_expectation && r.expected_reasons_present).length} / ${calibrated.length} SMALL REGRESSION CASES</span></div><section class="panel">${calibrationTable(calibrated)}<div class="notice">Real pinned Gemma and Gitleaks; original P01–P05 expectations unchanged, plus eight synthetic variants. A sentence-final email miss found during the variant run was fixed and retested. These are calibration cases, not an independent accuracy estimate. The earlier baseline with three mismatches is preserved below.</div></section>` : ""}
+  ${native.length ? `<div class="section-row"><h2>Native coding-client boundaries</h2><span class="caption">${native.filter((r) => r.passed).length} / ${native.length} RECORDED CHECKS</span></div><section class="panel"><p class="subtitle">Actual installed Codex CLI 0.163.0-alpha.10.2 and Claude Code 2.1.119. The privacy guard uses real Gemma. The coding-provider transport is a local synthetic fixture; cloud-model delivery was not tested.</p><div class="table-wrap"><table><thead><tr><th>CLIENT</th><th>PATH</th><th>RESULT</th><th>RECEIVER CALLS</th><th>SENSITIVE MARKER</th></tr></thead><tbody>${native.map((r) => `<tr><td>${esc(r.client)}</td><td>${esc(({blocked:"Sensitive prompt held",text:"Benign prompt passed",managed:"Approved source read",sensitive:"Source credential removed",traversal:"Traversal held",shell:"Native shell denied",guard_unavailable:"Unavailable guard held"})[r.case] || r.case)}</td><td>${badge(r.passed ? "PASS" : "FAILED")}</td><td>${esc(r.provider_requests)}</td><td>${r.sensitive_marker_received ? "Received" : "Absent"}</td></tr>`).join("")}</tbody></table></div><div class="notice">Prompt holds, benign positive controls, managed clean reads, source redaction, traversal holds, native Codex shell denial and unavailable-guard holds were measured. This does not cover every app, attachment, automatic context source or transcript.</div></section>` : ""}
+  <details class="panel"><summary>Earlier baseline: three mismatches preserved</summary>  <div class="section-row"><h2>Earlier privacy baseline</h2><span class="caption">HISTORICAL RESULTS / PRESERVED</span></div>
+  <section class="panel"><div class="table-wrap"><table><thead><tr><th>CASE</th><th>EXPECTED</th><th>OBSERVED</th><th>REQUIRED REASONS PRESENT</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.case_id)}</td><td>${badge(r.expected_decision)}</td><td>${badge(r.actual_decision)}</td><td>${r.expected_reasons_present ? "Yes" : "No"}</td></tr>`).join("")}</tbody></table></div><div class="notice warn">This earlier baseline contains the P02 false positive, P03 decision mismatch and P05 missing injection reason. The corrected rerun is shown below; the earlier failures remain visible.</div></section>
+</details>
   <div class="section-row"><h2>Checks beyond a green test</h2><span class="caption">REAL API + DOCKER</span></div><section class="panel">${[
     ["Original source unchanged", e.repair.original_source_unchanged],
     ["Protected tests unchanged", e.repair.trusted_tests_unchanged],
@@ -502,7 +508,7 @@ function evidence() {
     )
     .join(
       "",
-    )}</section><div class="notice">Installed Codex/Claude interception and broad unseen accuracy remain separate gates. The model cannot edit policy, trusted tests or its own verification results. Evidence never substitutes for current runtime readiness.</div>`;
+    )}</section><div class="notice">Recorded native CLI boundaries are scoped to the tested versions and isolated configurations. Signed-in cloud delivery, desktop variants and broad unseen accuracy remain unverified. The model cannot edit policy, trusted tests or its own verification results. Evidence never substitutes for current runtime readiness.</div>`;
 }
 
 async function refresh({ draw = true } = {}) {

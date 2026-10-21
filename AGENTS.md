@@ -2,7 +2,7 @@
 
 ## Current scope
 
-As of 21 October 2026, the user assigned all Mac 1, Mac 2 and Windows work to this laptop. Read docs/PROFESSIONAL_WORKSPACE.md and docs/PROFESSIONAL_STATUS.md for the current interface, startup and measured gates. The FastAPI browser workspace is primary; Streamlit is legacy. Capture and watchers start OFF; repairs start paused. Persistent audit contains bounded metadata; candidates, composer and clipboard state are transient. Real local Gemma/Docker trials exist; accuracy and installed-client interception remain limited.
+As of 21 October 2026, the user assigned all Mac 1, Mac 2 and Windows work to this laptop. Read docs/PROFESSIONAL_WORKSPACE.md and docs/PROFESSIONAL_STATUS.md for the current interface, startup and measured gates. The FastAPI browser workspace is primary; Streamlit is legacy. Capture and watchers start OFF; repairs start paused. Persistent audit contains bounded metadata; candidates, composer and clipboard state are transient. Real local Gemma/Docker and scoped native CLI hook/MCP trials exist. Read docs/CLIENT_INTEGRATION.md; synthetic coding-provider transport is not signed-in cloud delivery, universal interception or unseen accuracy proof.
 
 ## Fixed decisions
 
