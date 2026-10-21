@@ -18,7 +18,7 @@ One pinned local model performs semantic sensitivity/relevance analysis and choo
 
 ## What actually ran
 
-- **210 automated tests passed** on integrated main `679d3be` plus Mac 2 worker; pip check clean. These tests include declared fake model/verifier ports and are separate from real-model measurements. One dependency deprecation warning remains.
+- **223 automated tests passed** on integrated main `4b2991d` plus Mac 2 worker; pip check clean. These tests include declared fake model/verifier ports and are separate from real-model measurements. One dependency deprecation warning remains.
 - On an M4 Air with 16 GB, real Gemma/guard/API/Docker reproduced the declared cart failure, generated a patch, passed independent verification, applied only to a disposable public copy, repeated application idempotently and passed post-apply tests in **46.07 s**. Original repository source/tests were unchanged; worker stopped; 28 audit records survived reopening.
 - A separate genuine candidate followed by a concurrent edit returned **409 STALE_SOURCE**, preserved that edit and became OBSOLETE. Queued cancellation produced no candidate. **42.19 s** for that trial.
 - A real local reference receiver received exactly the inspected cleaned bytes; replay was held; all five live dashboard views rendered. **1.282 s** for the single synthetic privacy evaluation on Mac 2. No source apply or clipboard enablement occurred in that check.

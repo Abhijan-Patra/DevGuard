@@ -1,0 +1,41 @@
+{
+  "scope": "Published modern dashboard + actual running Gemma backend + pending real candidate; read-only view checks",
+  "dashboard_revision": "7ceb706",
+  "checks": {
+    "Overview": {
+      "exceptions": 0,
+      "errors": 0
+    },
+    "🛡️ Privacy Gate": {
+      "exceptions": 0,
+      "errors": 0
+    },
+    "📋 Text Clipboard": {
+      "exceptions": 0,
+      "errors": 0
+    },
+    "🔧 Repair & Patches": {
+      "exceptions": 0,
+      "errors": 0,
+      "run_states": [
+        "READY_FOR_REVIEW"
+      ],
+      "has_real_diff": true
+    },
+    "📜 Audit Event Log": {
+      "exceptions": 0,
+      "errors": 0
+    },
+    "📊 Integration Coverage": {
+      "exceptions": 0,
+      "errors": 0
+    }
+  },
+  "capture_enabled": false,
+  "source_apply_requested": false,
+  "live_mode": true,
+  "measurement_date": "2026-10-16",
+  "backend_run_id": "run-9b037640ca104915b1df3113c28d2d11",
+  "model_digest": "dc35e8d9c6061baa6f0fa870975ab6932e2542b579b13ea0f199fa4bb7300c9c",
+  "limitations": "Read-only element-tree checks of the actual local backend, not a browser pixel audit or new delivery/clipboard/repair benchmark."
+}
