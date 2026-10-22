@@ -1,0 +1,46 @@
+{
+  "scope": "One instrumented real published 0.3.2 diagnostic; unchanged model, checks and policy; declared synthetic source only",
+  "general_clipboard_accessed": false,
+  "state": "BLOCKED",
+  "reason_code": "CHECK_UNAVAILABLE",
+  "baseline": "FAIL",
+  "verification": null,
+  "completed_tools": [
+    "read_allowed_file",
+    "run_named_test",
+    "read_allowed_file",
+    "propose_patch"
+  ],
+  "original_source_unchanged": true,
+  "checks": [
+    {
+      "status": "FAIL",
+      "exit_code": 1,
+      "markers": [],
+      "source_grammar": {
+        "cart.py": "VALID",
+        "main.py": "VALID"
+      }
+    },
+    {
+      "status": "FAIL",
+      "exit_code": 1,
+      "markers": [],
+      "source_grammar": {
+        "cart.py": "VALID",
+        "main.py": "VALID"
+      }
+    },
+    {
+      "status": "ERROR",
+      "exit_code": 2,
+      "markers": [
+        "SyntaxError"
+      ],
+      "source_grammar": {
+        "cart.py": "SyntaxError:1",
+        "main.py": "VALID"
+      }
+    }
+  ]
+}

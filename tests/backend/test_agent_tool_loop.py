@@ -173,3 +173,42 @@ def test_repeated_native_transport_format_failure_stops_without_fake_actions(
     assert (result.state, result.reason_code) == ("BLOCKED", "INVALID_MODEL_ACTION")
     assert model.attempts == 2
     assert result.completed_tools == []
+
+
+def test_generated_syntax_error_is_feedback_within_existing_patch_budget(spec, tmp_path):
+    from devguard.repair.contracts import TestResult as CheckResult
+    from devguard.repair.workspace import digest
+    invalid = '```python\nVALUE = 2\n```\n'
+    model = FakeModel(
+        {'tool':'read_allowed_file','arguments':{'path':'cart.py'}},
+        {'tool':'propose_patch','arguments':{'path':'cart.py','expected_hash':digest(b'VALUE = 1\n'),'content':invalid}},
+        {'tool':'run_named_test','arguments':{'name':'cart'}},
+        {'tool':'propose_patch','arguments':{'path':'cart.py','expected_hash':digest(invalid.encode()),'content':'VALUE = 2\n'}},
+        {'tool':'run_named_test','arguments':{'name':'cart'}},
+        {'tool':'finish','arguments':{}},
+    )
+    class Checks:
+        outcomes=iter([CheckResult('FAIL','declared baseline',1),
+            CheckResult('ERROR','declared source SyntaxError',2),
+            CheckResult('PASS','declared revised check',0),CheckResult('PASS','declared final independent check',0)])
+        def run(self,*args):return next(self.outcomes)
+    service,_=service_for(spec,tmp_path,model=model,verifier=Checks())
+    run=run_once(service)
+    assert run.state == 'READY_FOR_REVIEW'
+    feedback=json.loads(model.messages[3][-1]['content'])
+    assert feedback['status']=='ERROR' and feedback['reason_code']=='SOURCE_SYNTAX_ERROR'
+    assert feedback['source_errors']==[{'path':'cart.py','line':1}]
+    assert (spec.root/'cart.py').read_bytes()==b'VALUE = 1\n'
+
+
+def test_checker_error_with_valid_source_still_holds_after_patch(spec,tmp_path):
+    from devguard.repair.contracts import TestResult as CheckResult
+    model=FakeModel(*fake_actions()[:2], {'tool':'run_named_test','arguments':{'name':'cart'}})
+    class Checks:
+        outcomes=iter([CheckResult('FAIL','declared baseline',1),CheckResult('ERROR','declared checker error',2)])
+        def run(self,*args):return next(self.outcomes)
+    service,_=service_for(spec,tmp_path,model=model,verifier=Checks())
+    run=run_once(service)
+    assert (run.state,run.reason_code)==('BLOCKED','CHECK_UNAVAILABLE')
+    assert not service.patches.candidates
+    assert (spec.root/'cart.py').read_bytes()==b'VALUE = 1\n'

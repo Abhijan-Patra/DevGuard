@@ -1,3 +1,8 @@
+## 0.3.3 — Bounded source syntax feedback
+
+- Feed actual generated-source syntax ERRORs back to the agent within existing budgets; continue holding unavailable checkers and require final independent PASS.
+- Clarify plain-source replacement schema; retain failed published trial and diagnostic evidence.
+
 ## 0.3.2 — Installed demo verifier mount
 
 - Prepare exact bundled independent demo checks in the private runtime outside model-writable source, so Docker Desktop can mount them without sharing a package/virtualenv directory.
