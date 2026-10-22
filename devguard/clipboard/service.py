@@ -4,6 +4,7 @@ import asyncio
 import contextlib
 import time
 
+from devguard.clipboard.native import ClipboardBusy
 from devguard.guard.engine import GuardError
 from devguard.schemas.guard import Category, Decision, GuardInput, MAX_TEXT_BYTES
 
@@ -117,7 +118,14 @@ class ClipboardService:
             await self._cancel_job()
             if not self.enabled or generation != self._generation:
                 return
-            kind, text = self.adapter.read_text(MAX_TEXT_BYTES)
+            try:
+                kind, text = self.adapter.read_text(MAX_TEXT_BYTES)
+            except ClipboardBusy:
+                if previous_id:
+                    self.guard.revoke(previous_id)
+                self._seen = None
+                self.summary = "CLIPBOARD_BUSY_RETRYING"
+                return
             if self.adapter.counter() != current:
                 if previous_id:
                     self.guard.revoke(previous_id)
@@ -223,3 +231,6 @@ class ClipboardService:
                 await asyncio.sleep(0.75)
         finally:
             await self.disable()
+            close = getattr(self.adapter, "close", None)
+            if close:
+                close()

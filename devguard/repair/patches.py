@@ -2,16 +2,13 @@
 
 import difflib
 
-try:
-    import fcntl
-except ImportError:
-    fcntl = None
 import os
 import threading
 import uuid
 from dataclasses import dataclass, field
 
 from .contracts import GuardPort, ProjectSpec, RepairError
+from devguard.platform_io import private_directory, file_lock
 from .workspace import (
     MAX_FILE_BYTES,
     Snapshot,
@@ -148,12 +145,8 @@ class PatchStore:
             lock_dir = spec.root / ".devguard"
             if lock_dir.is_symlink():
                 raise RepairError("SYMLINK_DENIED")
-            lock_dir.mkdir(mode=0o700, exist_ok=True)
-            flags = os.O_CREAT | os.O_RDWR | getattr(os, "O_NOFOLLOW", 0)
-            fd = os.open(lock_dir / "apply.lock", flags, 0o600)
-            with os.fdopen(fd, "w") as lock:
-                if fcntl is not None:
-                    fcntl.flock(lock, fcntl.LOCK_EX)
+            private_directory(lock_dir)
+            with file_lock(lock_dir / 'apply.lock', blocking=True):
                 try:
                     live = {
                         name: read_source(spec.root, name)

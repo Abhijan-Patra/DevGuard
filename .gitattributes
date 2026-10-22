@@ -1,0 +1,5 @@
+# Package/fixture digests use exact bytes on every checkout, including Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ico binary

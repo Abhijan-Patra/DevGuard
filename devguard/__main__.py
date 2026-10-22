@@ -15,6 +15,7 @@ from devguard.storage.audit import AuditStore
 from devguard.api.repair_integration import demo_repair_factory
 from devguard.api.repair_integration import projects_repair_factory
 from devguard.repair.projects import load_projects
+from devguard.platform_io import private_directory, private_open
 
 
 def session_token(name='session-token', variable="DEVGUARD_SESSION_TOKEN"):
@@ -24,13 +25,13 @@ def session_token(name='session-token', variable="DEVGUARD_SESSION_TOKEN"):
     directory = Path(".devguard")
     if directory.is_symlink():
         raise ValueError("Runtime directory must not be a symlink")
-    directory.mkdir(mode=0o700, exist_ok=True)
+    private_directory(directory)
     token_file = directory / name
     try:
-        fd = os.open(token_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        fd = private_open(token_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL)
     except FileExistsError:
         flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
-        fd = os.open(token_file, flags)
+        fd = private_open(token_file, flags)
         with os.fdopen(fd) as stream:
             info = os.fstat(stream.fileno())
             if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
@@ -62,8 +63,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if not 1024 <= args.port <= 65535:
         parser.error('Choose a port between 1024 and 65535')
-    if sys.platform not in {'darwin', 'linux'}:
-        parser.error('This local preview supports macOS/Linux; Windows native capture is not implemented')
+    if sys.platform not in {'darwin', 'linux', 'win32'}:
+        parser.error('Supported runtime platforms are macOS, Windows and Linux')
     if args.projects_config:
         args.projects_config = args.projects_config.expanduser().resolve(strict=True)
     from devguard.local import private_root, ROOT
@@ -81,9 +82,16 @@ def main(argv=None):
         if args.demo_image_id:
             parser.error('Choose --projects-config or --demo-image-id')
         factory = projects_repair_factory(Path.cwd(), load_projects(args.projects_config))
-    uvicorn.run(create_app(settings, audit=audit, repair_factory=factory,
+    config = uvicorn.Config(create_app(settings, audit=audit, repair_factory=factory,
                            browser_workspace=not args.no_browser_pairing),
                 host="127.0.0.1", port=args.port, access_log=False)
+    if os.name == 'nt' and os.environ.get('DEVGUARD_SHUTDOWN_EVENT'):
+        from devguard.windows import graceful_server
+        server = uvicorn.Server(config)
+        with graceful_server(server, os.environ['DEVGUARD_SHUTDOWN_EVENT']):
+            server.run()
+    else:
+        uvicorn.Server(config).run()
 
 
 if __name__ == "__main__":

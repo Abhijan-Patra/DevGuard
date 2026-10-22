@@ -38,7 +38,7 @@ The productive external-client surface is now two stdio MCP tools: registered so
 ## Remaining integration gates
 
 - Native CLI prompt/MCP paths have the recorded scoped checks above. Signed-in cloud-provider delivery, desktop/IDE variants, automatic context, attachments, alternative/hosted tools, transcripts and telemetry remain unverified. Skipped/crashed/timed-out hooks can fail open at the native layer; the managed server output gate enforces its own holds.
-- Native Windows capture is not implemented. This delivery targets this Mac; no second laptop is assumed.
+- Windows native text capture and platform boundaries are implemented for v0.3.0; see [Windows setup and measured gates](WINDOWS.md). Hardware/model and signed-in Windows coding-client trials remain separate from native CI.
 - Quiet-time admission does not infer actual OS/user idle. Sleep suspends execution.
 - Generic Python projects require explicit small source manifests, separately reviewed pytest checks and a prepared image. This is not an every-language/every-bug production recovery system.
 - Rollback/candidates are session-only. Restart clears them; persisted audit metadata cannot reconstruct them. Single-file replacement still has a narrow race against unrelated editors after the final hash check.
@@ -47,3 +47,10 @@ The productive external-client surface is now two stdio MCP tools: registered so
 The implementation is a working scoped local agent, with the above gates stated explicitly. Perfect detection, universal interception and production certification are not claimed.
 
 The [post-calibration real repair rerun](evidence/professional-post-calibration-repair.json) again reached READY_FOR_REVIEW from a failing baseline, passed independent Docker verification and post-apply Docker checks on a disposable copy, preserved original repository/trusted test files, and acknowledged worker shutdown.
+
+
+## Windows support — 22 October 2026
+
+Windows native clipboard, private ACL storage, canonical NTFS source handles, atomic reviewed apply/rollback, an isolated PowerShell installer and graceful owned-process shutdown are implemented. The [Windows native/package matrix](https://github.com/Abhijan-Patra/DevGuard/actions/runs/39720529119) passed on Python 3.11/3.12, including actual synthetic clipboard, junction, hard-link, file-lock and lifecycle checks. Common repair tests use declared model/verifier doubles; this is not Windows model accuracy or real Windows Linux-container Docker evidence. The actual hosted OS was Windows Server 2025; physical Windows 11 performance, Windows ARM and signed-in coding-client delivery remain unverified. See [setup and scope](WINDOWS.md).
+
+The clean installed Mac v0.3.0 package passed real sanitized delivery, Gemma-generated repair, independent Docker verification, disposable reviewed apply and rollback. The initial privacy hold remains recorded separately. General clipboard content was not read in those release trials.

@@ -58,7 +58,7 @@ class CredentialScanner:
 
     def __post_init__(self):
         if self.binary is None:
-            local = Path(".devguard/tools/gitleaks")
+            local = Path(".devguard/tools/gitleaks.exe" if os.name == "nt" else ".devguard/tools/gitleaks")
             self.binary = str(local.resolve()) if local.is_file() else shutil.which("gitleaks")
 
     @property
@@ -80,7 +80,8 @@ class CredentialScanner:
                     "--exit-code", "0", "--ignore-gitleaks-allow",
                     stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.DEVNULL, cwd=directory,
-                    env={"PATH": os.defpath, "HOME": "/nonexistent"},
+                    env={**{key: os.environ[key] for key in ('SystemRoot', 'WINDIR') if key in os.environ},
+                         "PATH": os.defpath, "HOME": directory, "USERPROFILE": directory},
                 )
                 stdout, _ = await asyncio.wait_for(process.communicate(text.encode()), timeout=5)
             if process.returncode or len(stdout) > 1024 * 1024:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "devguard"
-version = "0.2.1"
+version = "0.3.0"
 description = "Local Gemma-powered privacy and backend investigation companion"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"
@@ -16,6 +16,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
   "Topic :: Security",
 ]
 dependencies = [
@@ -24,6 +25,8 @@ dependencies = [
   "uvicorn==0.54.0",
   "pydantic==2.14.1",
   "starlette==1.8.0",
+  "pywin32==312; sys_platform == 'win32'",
+  "psutil==7.2.2; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]

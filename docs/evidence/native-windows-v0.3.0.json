@@ -1,0 +1,39 @@
+{
+  "scope": "Native Windows API boundaries on disposable GitHub-hosted runners; declared synthetic data only",
+  "ci_run": "https://github.com/Abhijan-Patra/DevGuard/actions/runs/39720529119",
+  "verified_commit": "78da5d8588b0826394b167e862c9199bfee64583",
+  "host_os": "Microsoft Windows Server 2025",
+  "runner_image": "windows-2025-vs2026",
+  "python_versions": [
+    "3.11",
+    "3.12"
+  ],
+  "native_job_result": "PASS",
+  "native_and_common_boundary_tests": {
+    "passed": 212,
+    "skipped": 7,
+    "upstream_deprecation_warnings": 1
+  },
+  "clean_wheel_platforms": [
+    "windows-latest",
+    "macos-latest",
+    "ubuntu-latest"
+  ],
+  "all_nine_jobs": "PASS",
+  "native_os_checks": [
+    "protected user/SYSTEM runtime ACLs; rejects broad grants and multiple token hard links",
+    "canonical NTFS reads; junction escape denial; bound directory identity after rename",
+    "reviewed source replacement, stale-source refusal and exact-byte rollback",
+    "cross-process launcher lock",
+    "PID/creation-time/argv ownership and private-event graceful shutdown",
+    "bounded Unicode clipboard read, stale-copy refusal and embedded-NUL refusal",
+    "actual managed backend start/status/duplicate-start/stop on a temporary workspace"
+  ],
+  "clipboard_data": "Only declared synthetic text on disposable CI desktops",
+  "developer_general_clipboard_accessed": false,
+  "real_gemma_on_windows": false,
+  "real_docker_linux_containers_on_windows": false,
+  "signed_in_windows_coding_provider": false,
+  "physical_windows_11_trial": false,
+  "limits": "Common privacy/repair tests use declared doubles. CI API tests and installed packages are not model accuracy, universal interception or production certification. Explicit skips retain POSIX-only and unavailable-tool boundaries; Windows equivalents are tested separately."
+}

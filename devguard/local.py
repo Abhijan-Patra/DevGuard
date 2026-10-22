@@ -11,6 +11,8 @@ import subprocess
 import sys
 import time
 import webbrowser
+import secrets
+from devguard.platform_io import private_directory, private_open, file_lock
 
 import httpx
 
@@ -33,31 +35,28 @@ def private_root():
     ROOT.mkdir(mode=0o700, parents=True, exist_ok=True)
     if RUNTIME.is_symlink():
         raise RuntimeError('Runtime directory cannot be a symlink')
-    RUNTIME.mkdir(mode=0o700, exist_ok=True)
-    if RUNTIME.stat().st_mode & 0o077 or RUNTIME.stat().st_uid != os.getuid():
-        raise RuntimeError('Runtime directory must be private (mode 0700)')
+    private_directory(RUNTIME)
 
 
 def private_write(path, value):
-    flags = os.O_WRONLY | os.O_CREAT | getattr(os, 'O_NOFOLLOW', 0)
-    fd = os.open(path, flags, 0o600)
-    with os.fdopen(fd, 'w') as stream:
-        info = os.fstat(stream.fileno())
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_mode & 0o077 or info.st_uid != os.getuid():
-            raise RuntimeError('Runtime files must be private, regular and owned by this user')
+    try:
+        fd = private_open(path, os.O_WRONLY | os.O_CREAT)
+    except OSError:
+        raise RuntimeError('Runtime files must be private, regular and owned by this user') from None
+    with os.fdopen(fd, 'w', encoding='utf-8', newline='') as stream:
         os.ftruncate(stream.fileno(), 0)
         stream.write(value)
 
 
 def load_record():
     try:
-        fd = os.open(RECORD, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+        fd = private_open(RECORD, os.O_RDONLY)
     except FileNotFoundError:
         return None
     with os.fdopen(fd) as stream:
         info = os.fstat(stream.fileno())
-        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_mode & 0o077
-                or info.st_uid != os.getuid() or info.st_size > 8192):
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
+                or (os.name != 'nt' and info.st_mode & 0o077) or info.st_size > 8192):
             raise RuntimeError('Runtime record must be a bounded private regular file')
         data = json.load(stream)
     if (not isinstance(data, dict) or type(data.get('pid')) is not int or data['pid'] <= 1
@@ -70,6 +69,12 @@ def load_record():
 def owned(record):
     if not isinstance(record, dict) or type(record.get('pid')) is not int:
         return False
+    if os.name == 'nt':
+        from devguard.windows import process_identity
+        args, created = process_identity(record['pid'])
+        return (bool(args) and args == record.get('argv') and created == record.get('process_start')
+                and args[1:5] == ['-m', 'devguard', '--port', str(record.get('port'))]
+                and bool(__import__('re').fullmatch(r'Local\\DevGuard-[0-9a-f]{64}', record.get('shutdown_event', ''))))
     result = subprocess.run(['ps', '-p', str(record['pid']), '-o', 'command='], capture_output=True, text=True)
     text = result.stdout.strip()
     started = subprocess.run(['ps', '-p', str(record['pid']), '-o', 'lstart='], capture_output=True, text=True).stdout.strip()
@@ -81,7 +86,7 @@ def owned(record):
 
 def ready(url):
     try:
-        with httpx.Client(trust_env=False, timeout=2) as client:
+        with httpx.Client(trust_env=False, timeout=7) as client:
             return client.get(url).status_code == 200
     except httpx.HTTPError:
         return False
@@ -94,6 +99,21 @@ def wait_until(check, seconds, label):
             return
         time.sleep(1)
     raise RuntimeError(label + ' did not become ready; inspect its application status')
+
+
+def warm_model(*, transport=None):
+    """Load only the pinned model with no prompt, before accepting private work."""
+    with httpx.Client(base_url='http://127.0.0.1:11434', trust_env=False,
+                      timeout=120, follow_redirects=False, transport=transport) as client:
+        response = client.get('/api/tags');response.raise_for_status()
+        if not any(m.get('name') == MODEL and m.get('digest') == MODEL_DIGEST
+                   for m in response.json().get('models', []) if isinstance(m, dict)):
+            raise RuntimeError('Gemma digest mismatch. Startup remains held')
+        response = client.post('/api/generate', json={'model': MODEL, 'stream': False,
+            'keep_alive': '5m', 'options': {'num_ctx': 4096}})
+        response.raise_for_status()
+        if response.json().get('done') is not True:
+            raise RuntimeError('Gemma warm-up did not finish; startup remains held')
 
 
 def ensure_dependencies(*, privacy_only=False):
@@ -130,8 +150,13 @@ def ensure_dependencies(*, privacy_only=False):
         models = client.get('http://127.0.0.1:11434/api/tags').json()['models']
     selected = next((model for model in models if model['name'] == MODEL), None)
     if selected is None:
-        processes = command(['ps', '-Ao', 'command='], capture_output=True, text=True).stdout
-        if any(('ollama pull ' + MODEL in line or 'ollama run ' + MODEL in line) for line in processes.splitlines()):
+        if os.name == 'nt':
+            from devguard.windows import exact_pull_active
+            active = exact_pull_active(MODEL)
+        else:
+            processes = command(['ps', '-Ao', 'command='], capture_output=True, text=True).stdout
+            active = any(('ollama pull ' + MODEL in line or 'ollama run ' + MODEL in line) for line in processes.splitlines())
+        if active:
             raise RuntimeError('The exact Gemma download is already active; let it finish, then start again')
         print('Downloading the exact pinned Gemma package…', flush=True)
         command([ollama, 'pull', MODEL])
@@ -140,12 +165,16 @@ def ensure_dependencies(*, privacy_only=False):
     if selected is None or selected.get('digest') != MODEL_DIGEST:
         raise RuntimeError('Gemma digest mismatch. No substitute model will be used')
     if privacy_only:
+        print("Loading the pinned local model (no user input)…", flush=True)
+        warm_model()
         return None
     inspected = subprocess.run([docker, 'image', 'inspect', RUNNER_TAG, '--format', '{{.Id}}'], capture_output=True, text=True)
     if inspected.returncode != 0:
         print('Building the restricted verifier with a minimal public build context…', flush=True)
         build_runner(docker)
         inspected = command([docker, 'image', 'inspect', RUNNER_TAG, '--format', '{{.Id}}'], capture_output=True, text=True)
+    print("Loading the pinned local model (no user input)…", flush=True)
+    warm_model()
     return inspected.stdout.strip()
 
 
@@ -153,7 +182,7 @@ def demo_manifest(image_id):
     directory = RUNTIME / 'local-demo'
     if directory.is_symlink():
         raise RuntimeError('Demo directory cannot be a symlink')
-    directory.mkdir(mode=0o700, exist_ok=True)
+    private_directory(directory)
     for name in ('cart.py', 'main.py'):
         target = directory / name
         if target.is_symlink():
@@ -186,25 +215,32 @@ def start(args):
     image = ensure_dependencies(privacy_only=args.privacy_only)
     config = config or (demo_manifest(image) if image else None)
     log_path = RUNTIME / 'local-server.log'
-    fd = os.open(log_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND | getattr(os, 'O_NOFOLLOW', 0), 0o600)
-    with os.fdopen(fd, 'a') as log:
-        info = os.fstat(log.fileno())
-        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_mode & 0o077 or info.st_uid != os.getuid():
-            raise RuntimeError('Server log must be a private regular file')
+    fd = private_open(log_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+    shutdown_event = 'Local\\DevGuard-' + secrets.token_hex(32) if os.name == 'nt' else None
+    with os.fdopen(fd, 'a', encoding='utf-8') as log:
         argv = [sys.executable, '-m', 'devguard', '--port', str(args.port)]
         if config:
             argv += ['--projects-config', str(config)]
-        process = subprocess.Popen(argv,
-                                   cwd=ROOT, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
-    expected_command = ''
-    for _ in range(20):
-        expected_command = subprocess.run(['ps', '-p', str(process.pid), '-o', 'command='], capture_output=True, text=True).stdout.strip()
-        if ' -m devguard --port ' in expected_command:
-            break
-        time.sleep(.05)
-    process_start = subprocess.run(['ps', '-p', str(process.pid), '-o', 'lstart='], capture_output=True, text=True).stdout.strip()
+        env = os.environ.copy()
+        if shutdown_event:
+            env['DEVGUARD_SHUTDOWN_EVENT'] = shutdown_event
+        options = {'creationflags': subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt' else {'start_new_session': True}
+        process = subprocess.Popen(argv, cwd=ROOT, env=env, stdin=subprocess.DEVNULL,
+                                   stdout=log, stderr=log, **options)
+    if os.name == 'nt':
+        from devguard.windows import process_identity
+        actual, process_start = process_identity(process.pid)
+        expected_command = subprocess.list2cmdline(actual)
+    else:
+        expected_command = ''
+        for _ in range(20):
+            expected_command = subprocess.run(['ps', '-p', str(process.pid), '-o', 'command='], capture_output=True, text=True).stdout.strip()
+            if ' -m devguard --port ' in expected_command:
+                break
+            time.sleep(.05)
+        process_start = subprocess.run(['ps', '-p', str(process.pid), '-o', 'lstart='], capture_output=True, text=True).stdout.strip()
     private_write(RECORD, json.dumps({'pid': process.pid, 'port': args.port, 'started_at': time.time(),
-                                    'command': expected_command, 'process_start': process_start}))
+        'command': expected_command, 'process_start': process_start, 'argv': argv, 'shutdown_event': shutdown_event}))
     wait_until(lambda: ready('http://127.0.0.1:%s/health' % args.port), 45, 'DevGuard')
     url = 'http://127.0.0.1:%s/app' % args.port
     print('Ready: ' + url)
@@ -218,7 +254,11 @@ def stop():
     if not owned(record):
         print('No owned DevGuard backend is running. Docker and Ollama are untouched.')
         return
-    os.kill(record['pid'], signal.SIGTERM)
+    if os.name == 'nt':
+        from devguard.windows import signal_shutdown
+        signal_shutdown(record['shutdown_event'])
+    else:
+        os.kill(record['pid'], signal.SIGTERM)
     wait_until(lambda: not owned(record), 75, 'DevGuard shutdown')
     RECORD.unlink(missing_ok=True)
     print('DevGuard stopped gracefully. Docker and Ollama are untouched.')
@@ -251,19 +291,18 @@ def main(argv=None):
                         print('     ' + check['action'])
                 print('Ready.' if report['ready'] else 'Complete the required FIX items, then retry.')
             return 0 if report['ready'] else 1
-        if sys.platform not in {'darwin', 'linux'}:
-            raise RuntimeError('The managed launcher supports macOS and Linux; Windows native capture is unavailable')
+        if sys.platform not in {'darwin', 'linux', 'win32'}:
+            raise RuntimeError('The managed launcher supports macOS, Windows and Linux')
         if args.projects_config:
             args.projects_config = args.projects_config.expanduser().resolve(strict=True)
-        import fcntl
         private_root()
         lock_path = RUNTIME / 'launcher.lock'
-        private_write(lock_path, '')
-        with lock_path.open('r') as lock:
-            try:
-                fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                raise RuntimeError('Another launcher operation is active; do not start a duplicate') from None
+        try:
+            lock_context = file_lock(lock_path)
+            lock_context.__enter__()
+        except BlockingIOError:
+            raise RuntimeError('Another launcher operation is active; do not start a duplicate') from None
+        try:
             # The detached server cannot inherit this descriptor.
             if args.action == 'start':
                 start(args)
@@ -273,6 +312,8 @@ def main(argv=None):
                 record = load_record()
                 print(json.dumps({'running': owned(record), 'port': record['port'] if record else None,
                                   'healthy': ready('http://127.0.0.1:%s/health' % record['port']) if record else False}))
+        finally:
+            lock_context.__exit__(None, None, None)
     except (RuntimeError, OSError, subprocess.SubprocessError, ValueError, httpx.HTTPError) as error:
         # Only launcher-controlled messages; no model input is handled here.
         print('Startup held: ' + str(error), file=sys.stderr)

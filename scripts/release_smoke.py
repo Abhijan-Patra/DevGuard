@@ -50,6 +50,9 @@ def main():
         workspace = root / 'private-home'
         env = {k: v for k, v in os.environ.items() if k not in {'PYTHONPATH', 'DEVGUARD_SESSION_TOKEN', 'DEVGUARD_ADAPTER_TOKEN', 'DEVGUARD_OLLAMA_URL', 'DEVGUARD_MODEL'}}
         env['DEVGUARD_HOME'] = str(workspace)
+        if os.name == 'nt':
+            import secrets
+            env['DEVGUARD_SHUTDOWN_EVENT'] = 'Local\\DevGuard-' + secrets.token_hex(32)
         with socket.socket() as probe:
             probe.bind(('127.0.0.1', 0));port = probe.getsockname()[1]
         base = f'http://127.0.0.1:{port}'
@@ -103,6 +106,7 @@ def main():
                     synthetic = 'Debug login: password=synthetic-release-credential-437295; ValueError at auth.py:42'
                     result = api('POST', '/guard/evaluate', {'surface': 'explicit_prompt', 'destination_id': 'local-composer',
                         'content_version': 1, 'task': None, 'text': synthetic})
+                    report['privacy'] = {key: result.get(key) for key in ('decision', 'status', 'reason_codes')}
                     assert 'synthetic-release-credential' not in json.dumps(result)
                     if args.live:
                         assert health.json()['model_ready']
@@ -159,7 +163,12 @@ def main():
                     report['checks']['managed_stop'] = True
                     if process is not None:process.wait(timeout=10)
                 elif process is not None and process.poll() is None:
-                    process.terminate();process.wait(timeout=90)
+                    if os.name == 'nt':
+                        from devguard.windows import signal_shutdown
+                        signal_shutdown(env['DEVGUARD_SHUTDOWN_EVENT'])
+                    else:
+                        process.terminate()
+                    process.wait(timeout=90)
 
 
 if __name__ == '__main__':main()

@@ -1,4 +1,12 @@
-**Use v0.2.1 for the verifier compatibility update.** Its local image is prepared as a single-platform image under a tag bound to public build inputs. Earlier 0.2.0 dependency holds remain in the recorded evidence; the patch also preserves trial failure metadata.
+# DevGuard v0.3.0 — Windows native support
+
+Windows source setup, local lifecycle, Unicode clipboard capture, private ACL storage and junction-safe source access now share the browser workspace with macOS. See the [Windows guide](https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/WINDOWS.md). Capture/watchers start OFF and repairs start paused. No model/policy/test authority is expanded.
+
+Windows-native CI tests and clean package installs are required before publication. Physical Windows 11 real-Gemma/Docker performance and signed-in Windows coding-client hook delivery are separate, unverified gates. Historical Mac real-model results remain labelled as Mac measurements. No error-free or production-certification claim is made.
+
+## Previous release evidence
+
+**v0.2.1 introduced the verifier compatibility update, retained in v0.3.0.** Its local image is prepared as a single-platform image under a tag bound to public build inputs. Earlier 0.2.0 dependency holds remain in the recorded evidence; the patch also preserves trial failure metadata.
 
 DevGuard is a local privacy guard and reviewed backend repair workspace for AI-assisted development. This public preview includes an installable wheel, source distribution, checksums and a source setup script.
 
@@ -12,6 +20,6 @@ Start with the [installation guide](https://github.com/Abhijan-Patra/DevGuard/bl
 
 Clean installation checks run on macOS/Linux with Python 3.11/3.12. A separate recorded Apple silicon trial used real pinned Gemma and Docker and exercised a verified repair, disposable apply and rollback. CI package tests are not physical clipboard/model-performance proof. See the [release checklist/evidence](https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/RELEASE_CHECKLIST.md).
 
-**Preview limits:** native clipboard is macOS-only; repair supports small enrolled Python projects with named independent pytest checks and one changed source file per candidate. Clipboard observation cannot block every paste. Classification may miss data or hold benign text. The public website is a read-only tour, not a remotely hosted local agent. Do not expose operator controls to the internet.
+**v0.2.x preview limits (historical):** native clipboard was macOS-only; repair supports small enrolled Python projects with named independent pytest checks and one changed source file per candidate. Clipboard observation cannot block every paste. Classification may miss data or hold benign text. The public website is a read-only tour, not a remotely hosted local agent. Do not expose operator controls to the internet.
 
 The wheel is distributed here on GitHub, not on PyPI. Use the supplied SHA256SUMS to check downloads. Original code is MIT; external tools and model weights retain their own licences. [Support](https://github.com/Abhijan-Patra/DevGuard/blob/main/SUPPORT.md) · [Security reporting](https://github.com/Abhijan-Patra/DevGuard/blob/main/SECURITY.md).

@@ -118,7 +118,12 @@ def test_snapshot_preserves_saved_uncommitted_bytes(spec, tmp_path):
     try:
         assert (snapshot.source / "cart.py").read_text() == "# saved edit\nVALUE = 7\n"
         assert not (snapshot.source / "trusted_tests").exists()
-        assert snapshot.directory.stat().st_mode & 0o777 == 0o700
+        if __import__('os').name == 'nt':
+            from devguard.windows import anchored_directory, check_private
+            with anchored_directory(snapshot.directory) as handle:
+                check_private(handle)
+        else:
+            assert snapshot.directory.stat().st_mode & 0o777 == 0o700
     finally:
         snapshot.close()
 
@@ -416,6 +421,7 @@ def test_shutdown_cancels_pending_work_and_prevents_reopening(spec, tmp_path):
         service.queue(incident["incident_id"])
 
 
+@pytest.mark.skipif(__import__("os").name == "nt", reason="POSIX permits parent rename; Windows holds directory handles and rejects it in tests/windows")
 def test_atomic_write_does_not_follow_a_parent_symlink_swapped_at_rename(tmp_path,monkeypatch):
     from devguard.repair.workspace import atomic_replace_source
     import os

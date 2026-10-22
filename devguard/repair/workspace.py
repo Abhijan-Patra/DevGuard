@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from .contracts import GuardPort, ProjectSpec, RepairError
+from devguard.platform_io import private_directory
 
 MAX_FILE_BYTES = 128 * 1024
 MAX_TOTAL_BYTES = 512 * 1024
@@ -23,6 +24,11 @@ def digest(data: bytes) -> str:
 
 
 def safe_relative(name: str) -> str:
+    from devguard.windows import relative_parts
+    try:
+        relative_parts(name)
+    except OSError:
+        raise RepairError('PATH_DENIED') from None
     p = PurePosixPath(name)
     if (
         not name
@@ -30,7 +36,7 @@ def safe_relative(name: str) -> str:
         or "\\" in name
         or "\x00" in name
         or any(part in {"", ".", ".."} for part in name.split("/"))
-        or any(part in PROTECTED or part.startswith(".env") for part in p.parts)
+        or any(part.casefold() in PROTECTED or part.casefold().startswith(".env") for part in p.parts)
         or p.suffix.lower() in {".key", ".pem", ".p12", ".sqlite", ".db"}
     ):
         raise RepairError("PATH_DENIED")
@@ -42,7 +48,11 @@ def checked_file(root: Path, name: str) -> Path:
     current = root
     for part in PurePosixPath(name).parts:
         current = current / part
-        if current.is_symlink():
+        try:
+            info = current.lstat()
+        except OSError:
+            raise RepairError('SOURCE_UNAVAILABLE') from None
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
             raise RepairError("SYMLINK_DENIED")
     try:
         info = current.stat()
@@ -57,6 +67,17 @@ def checked_file(root: Path, name: str) -> Path:
 
 def read_source(root: Path, name: str) -> bytes:
     safe_relative(name)
+    if os.name == 'nt':
+        from devguard.windows import read_source as read_windows
+        try:
+            data = read_windows(root, name, MAX_FILE_BYTES)
+            data.decode('utf-8', errors='strict')
+            return data
+        except UnicodeError:
+            raise RepairError('BINARY_SOURCE_DENIED') from None
+        except OSError:
+            checked_file(root, name)
+            raise RepairError('SOURCE_UNAVAILABLE') from None
     # Anchor every parent lookup to directory descriptors, rejecting intermediate
     # symlinks as well as a symlink leaf. Do not validate a path then follow it later.
     descriptor = None
@@ -121,6 +142,13 @@ def source_parent(root: Path, name: str):
 
 
 def atomic_replace_source(root, name, data, originals):
+    if os.name == 'nt':
+        from devguard.windows import replace_source
+        try:
+            replace_source(root, name, data, originals, read_source)
+            return
+        except OSError as error:
+            raise RepairError('STALE_SOURCE' if str(error) == 'STALE_SOURCE' else 'SOURCE_UNAVAILABLE') from None
     with source_parent(root, name) as (parent, leaf):
         info = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
@@ -185,9 +213,9 @@ def capture(
         raise RepairError("SOURCE_CHANGED")
     if runtime_root.is_symlink() or runtime_root.resolve() != runtime_root:
         raise RepairError("RUNTIME_ROOT_DENIED")
-    runtime_root.mkdir(mode=0o700, parents=True, exist_ok=True)
-    directory = Path(tempfile.mkdtemp(prefix="repair-", dir=runtime_root))
-    directory.chmod(0o700)
+    private_directory(runtime_root)
+    directory = runtime_root / ("repair-" + uuid.uuid4().hex)
+    private_directory(directory)
     source = directory / "source"
     source.mkdir()
     for name, data in originals.items():

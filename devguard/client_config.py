@@ -1,6 +1,9 @@
 """Prepare reviewable, isolated client configs; never edit global config/trust."""
 import argparse
 import json
+import os
+import subprocess
+from devguard.platform_io import private_directory
 from pathlib import Path
 import shlex
 import sys
@@ -21,15 +24,17 @@ def prepare(directory: Path, token_file: Path, base_url: str):
         or parsed.path.rstrip('/') != '/api/v1'):
         raise ValueError('LOOPBACK_GUARD_REQUIRED')
     directory = directory.absolute()
-    directory.mkdir(mode=0o700, parents=False, exist_ok=False)
-    codex = directory/'codex';codex.mkdir(mode=0o700)
+    if directory.exists():
+        raise FileExistsError('Choose a new isolated client directory')
+    private_directory(directory)
+    codex = directory/'codex';private_directory(codex)
     wrapper = directory/'guard_hook.py'
     values = {'DEVGUARD_BASE_URL': base_url, 'DEVGUARD_CLIENT_TOKEN_FILE': str(token_file),
               'DEVGUARD_PROJECT_ID': 'managed-client-session',
               'DEVGUARD_DESTINATION_ID': 'local-preview', 'DEVGUARD_MANAGED_TOOLS': '1'}
     wrapper.write_text('import os\nfrom devguard.client_hook import main\n'
                        f'os.environ.update({values!r})\nraise SystemExit(main())\n')
-    command = shlex.join([sys.executable, str(wrapper)])
+    command = subprocess.list2cmdline([sys.executable, str(wrapper)]) if os.name == 'nt' else shlex.join([sys.executable, str(wrapper)])
     hooks = {'hooks': {event: [{'matcher': '.*', 'hooks': [{
         'type': 'command', 'command': command, 'timeout': 25}]}]
         for event in ('UserPromptSubmit', 'PreToolUse', 'PostToolUse')}}

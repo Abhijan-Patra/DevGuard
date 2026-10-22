@@ -17,8 +17,8 @@ def diagnose(*, privacy_only=False, transport=None):
         checks.append({'name': name, 'ready': bool(ok), 'required': required,
                        'action': None if ok else action})
     add('python', (3, 11) <= sys.version_info[:2] < (3, 14), 'Install Python 3.11 or 3.12 (tested versions).')
-    add('launcher_platform', sys.platform in {'darwin', 'linux'},
-        'Use macOS for native clipboard capture. Windows launcher is not supported in this preview.')
+    add('launcher_platform', sys.platform in {'darwin', 'linux', 'win32'},
+        'Use Windows 11, macOS or Linux. Linux native clipboard is not supported.')
     from devguard.guard.scanner import CredentialScanner
     add('credential_scanner', CredentialScanner().available, 'Install Gitleaks: https://github.com/gitleaks/gitleaks#installing')
     model_ready = False
@@ -37,8 +37,8 @@ def diagnose(*, privacy_only=False, transport=None):
         pass
     add('ollama_server', server_ready, 'Install/open Ollama: https://ollama.com/download')
     add('pinned_model', model_ready, 'Run: ollama pull ' + MODEL + '. A different digest remains held; do not substitute a model.')
-    native = sys.platform == 'darwin' and importlib.util.find_spec('AppKit') is not None
-    add('native_clipboard', native, 'macOS only. Install the clipboard extra: python -m pip install ".[clipboard]"', required=False)
+    native = (sys.platform == 'darwin' and importlib.util.find_spec('AppKit') is not None) or (sys.platform == 'win32' and importlib.util.find_spec('win32clipboard') is not None)
+    add('native_clipboard', native, 'macOS/Windows desktop text. Install dependencies: python -m pip install ".[clipboard]"', required=False)
     docker = shutil.which('docker')
     docker_ready = False
     image_ready = False

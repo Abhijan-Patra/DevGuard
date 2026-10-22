@@ -87,7 +87,7 @@ class DockerVerifier:
         env = {
             k: v
             for k, v in os.environ.items()
-            if k in {"PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"}
+            if k in {"PATH", "HOME", "USERPROFILE", "SystemRoot", "WINDIR", "LOCALAPPDATA", "APPDATA", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"}
         }
         process = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env

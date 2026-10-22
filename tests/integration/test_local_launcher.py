@@ -1,5 +1,9 @@
 """Process ownership checks must survive macOS interpreter canonicalisation."""
 from types import SimpleNamespace
+import os
+import pytest
+
+pytestmark = pytest.mark.skipif(os.name == "nt", reason="POSIX ps identity; Windows process/event tests cover the native equivalent")
 from devguard import local
 
 

@@ -41,3 +41,5 @@ Scoped native CLI trials are recorded in [client integration evidence](docs/CLIE
 - [Signup credit](https://docs.digitalocean.com/platform/billing/signup-credit/)
 
 Model, client-hook and price pages were checked on 16 October 2026. Architecture, budgets, polling intervals, limits, ownership and milestones are project recommendations, not measured results or official scoring criteria. Track descriptions, deadline and team size come from the user's supplied event guideline/screenshots; confirm submission eligibility and multiple-category rules with the organiser.
+
+Windows runtime: pywin32 (PSF-2.0 and component notices in its distribution) and psutil (BSD-3-Clause), distributed separately by pip. Review their installed license files.
