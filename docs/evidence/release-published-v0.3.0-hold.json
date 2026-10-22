@@ -26,5 +26,14 @@
   "baseline": "ERROR",
   "verification": null,
   "passed": false,
-  "failure_type": "AssertionError"
+  "failure_type": "AssertionError",
+  "diagnostic_followup": {
+    "source_mount_available": true,
+    "installed_package_checks_mount_available": false,
+    "docker_exit_code": 125,
+    "error_category": "BIND_SOURCE_PATH_DOES_NOT_EXIST",
+    "host_source_and_check_directories_exist": true,
+    "source_checkout_oracle_normal_and_restrictive_umask": "expected FAIL baselines",
+    "scope": "Declared synthetic fixture; path redacted; no user clipboard accessed"
+  }
 }

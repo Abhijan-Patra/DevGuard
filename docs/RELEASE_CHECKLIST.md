@@ -1,6 +1,6 @@
 # Public preview release verification
 
-Version 0.3.0, 22 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
+Version 0.3.2, 22 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
 
 ## Required release gates
 
@@ -37,3 +37,10 @@ macOS and Windows have native text clipboard adapters. Native Windows CI additio
 The Windows job runs the actual PowerShell source installer and native handle/ACL/clipboard/process tests on disposable GitHub Windows runners, plus the common privacy/repair boundary suite with declared model/verifier doubles. The wheel matrix separately checks installation, static assets, authentication, browser pairing, OFF defaults, held privacy behavior and graceful server shutdown on Windows, macOS and Ubuntu for Python 3.11/3.12. Windows clipboard tests require an explicit CI opt-in and never touch the developer's clipboard.
 
 The [0.3.0 installed Mac real workflow](evidence/release-wheel-live-v0.3.0-macos.json) passed actual sanitized delivery, failing cart baseline, generated repair, independent Docker PASS, review, disposable apply, rollback and graceful stop. The [first privacy hold](evidence/release-v0.3.0-first-hold.json) is retained, with a separate successful diagnostic. Its original decision was not captured; cold-load latency is a possible cause, not an established root cause. Startup now warms only the exact digest-checked model with no prompt before accepting work. Policy timeouts and test oracles are unchanged.
+
+
+## Installed demo mount correction (0.3.2)
+
+The [downloaded 0.3.0 failure](evidence/release-published-v0.3.0-hold.json) was isolated to Docker's independent-test bind mount: the installed package test directory existed on the host but Docker reported it as nonexistent. Source mounts were available, and source-checkout oracle trials under normal/restrictive umasks returned the expected failing baseline. Version 0.3.2 exports an exact validated copy of the public bundled oracle under the private runtime, outside model-writable source. Modified copies or unexpected files hold without overwrite. No model, policy or expected test result changes.
+
+The [clean installed 0.3.2 real-model trial](evidence/release-wheel-live-v0.3.2-macos.json) passed failing baseline, real Gemma-generated repair, independent Docker PASS, review, disposable apply/rollback and graceful stop. The release smoke additionally verifies both bundled and prepared oracle hashes after the real workflow. Earlier failures remain recorded.

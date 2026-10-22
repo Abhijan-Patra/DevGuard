@@ -147,6 +147,8 @@ def main():
                         assert api('POST', '/patches/' + patch_id + '/rollback', authority)['state'] == 'ROLLED_BACK'
                         assert cart.read_bytes() == original
                         assert hashlib.sha256((ASSETS / 'checks/test_cart.py').read_bytes()).hexdigest() == oracle_hash
+                        assert hashlib.sha256((workspace / '.devguard/local-demo-checks/test_cart.py').read_bytes()).hexdigest() == oracle_hash
+                        report['checks']['prepared_oracle_unchanged'] = True
                         report['checks'].update(real_docker_repair=True, review_before_apply=True,
                             disposable_apply=True, rollback_restores_original=True, trusted_tests_unchanged=True)
                     else:
