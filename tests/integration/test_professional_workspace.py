@@ -23,10 +23,10 @@ BROWSER={'Origin':'http://127.0.0.1:8765','X-DevGuard-Workspace':'1'}
 
 def app_for(tmp_path, *, browser=True, adapter_token=None):
     root=tmp_path/'project';root.mkdir()
-    (root/'cart.py').write_text('VALUE = 1\n')
-    (root/'main.py').write_text('# independent dependency\n')
+    (root/'cart.py').write_bytes(b'VALUE = 1\n')
+    (root/'main.py').write_bytes(b'# independent dependency\n')
     checks=tmp_path/'checks';checks.mkdir()
-    (checks/'test_cart.py').write_text('# independent test definition\n')
+    (checks/'test_cart.py').write_bytes(b'# independent test definition\n')
     spec=ProjectSpec('demo',root.resolve(),('cart.py','main.py'),('cart.py',),checks.resolve(),('cart',),'sha256:'+'a'*64)
     services=[]
     async def factory(app):
@@ -128,7 +128,7 @@ def test_apply_rollback_is_idempotent_and_preserves_concurrent_edits(tmp_path):
         body['idempotency_key']='rollback-test'
         assert client.post(base+'/rollback',headers=AUTH,json=body).status_code==409
         assert (spec.root/'cart.py').read_text()=='VALUE = 999\n'
-        (spec.root/'cart.py').write_text('VALUE = 2\n')
+        (spec.root/'cart.py').write_bytes(b'VALUE = 2\n')
         assert client.post(base+'/rollback',headers=AUTH,json=body).json()['state']=='ROLLED_BACK'
         assert (spec.root/'cart.py').read_text()=='VALUE = 1\n'
         assert client.post(base+'/rollback',headers=AUTH,json=body).json()['state']=='ROLLED_BACK'

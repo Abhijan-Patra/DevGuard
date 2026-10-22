@@ -62,8 +62,8 @@ def test_junction_parent_escape_and_locked_root_replacement_are_refused(tmp_path
     from devguard.guard.engine import GuardError
     root = tmp_path / 'project';root.mkdir()
     outside = tmp_path / 'outside';outside.mkdir()
-    (outside / 'source.py').write_text('OUTSIDE = True\n')
-    (root / 'source.py').write_text('INSIDE = True\n')
+    (outside / 'source.py').write_bytes(b'OUTSIDE = True\n')
+    (root / 'source.py').write_bytes(b'INSIDE = True\n')
     junction = root / 'jump'
     subprocess.run(['cmd', '/c', 'mklink', '/J', str(junction), str(outside)],
         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

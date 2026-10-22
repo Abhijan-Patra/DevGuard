@@ -116,7 +116,11 @@ def test_scoped_client_can_read_but_has_no_operator_authority(tmp_path):
 
 def test_client_profile_is_isolated_and_never_embeds_token_or_grants_native_shell(tmp_path):
     from devguard.client_config import prepare
-    token=tmp_path/'client-token';token.write_text('synthetic-only-client-token-7865041298');token.chmod(0o600)
+    from devguard.platform_io import private_directory, private_open
+    directory=tmp_path/'private-client';private_directory(directory)
+    token=directory/'client-token'
+    with os.fdopen(private_open(token, os.O_WRONLY | os.O_CREAT), 'w') as stream:
+        stream.write('synthetic-only-client-token-7865041298')
     profile=tmp_path/'profile'
     result=prepare(profile,token,'http://127.0.0.1:8765/api/v1')
     assert not result['hooks_trusted'] and not result['global_configuration_changed']

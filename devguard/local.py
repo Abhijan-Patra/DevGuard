@@ -39,7 +39,10 @@ def private_root():
 
 
 def private_write(path, value):
-    fd = private_open(path, os.O_WRONLY | os.O_CREAT)
+    try:
+        fd = private_open(path, os.O_WRONLY | os.O_CREAT)
+    except OSError:
+        raise RuntimeError('Runtime files must be private, regular and owned by this user') from None
     with os.fdopen(fd, 'w', encoding='utf-8', newline='') as stream:
         os.ftruncate(stream.fileno(), 0)
         stream.write(value)

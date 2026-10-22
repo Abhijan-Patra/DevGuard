@@ -16,11 +16,11 @@ FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
 
 def relative_parts(name):
     parts = name.split('/')
-    reserved = {'CON', 'PRN', 'AUX', 'NUL', 'CONIN$', 'CONOUT$'} | {f'{s}{i}' for s in ('COM', 'LPT') for i in range(1, 10)}
+    reserved = {'CON', 'PRN', 'AUX', 'NUL', 'CONIN$', 'CONOUT$'} | {f'{s}{i}' for s in ('COM', 'LPT') for i in '123456789¹²³'}
     if (not name or len(parts) > 32 or PurePosixPath(name).is_absolute()
             or any(c in name for c in '\\:\0<>"|?*')
             or any(p in {'', '.', '..'} or p.endswith((' ', '.')) or
-                   p.split('.')[0].upper() in reserved or any(ord(c) < 32 for c in p) for p in parts)):
+                   p.split('.')[0].rstrip(' ').upper() in reserved or any(ord(c) < 32 for c in p) for p in parts)):
         raise OSError('WINDOWS_PATH_DENIED')
     return parts
 
@@ -94,9 +94,12 @@ def anchored_directory(path):
                 relative_parts(part)
                 current /= part
             handle = file.CreateFile(str(current), FILE_READ_ATTRIBUTES | con.READ_CONTROL,
-                con.FILE_SHARE_READ | con.FILE_SHARE_WRITE, None, con.OPEN_EXISTING,
+                con.FILE_SHARE_READ, None, con.OPEN_EXISTING,
                 con.FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
             handles.append(handle)
+            actual = file.GetFinalPathNameByHandle(handle, 0)
+            if os.path.normcase(actual.removeprefix('\\\\?\\')) != os.path.normcase(str(current)):
+                raise OSError('DIRECTORY_ALIAS_DENIED')
             info = file.GetFileInformationByHandle(handle)
             if info[0] & con.FILE_ATTRIBUTE_REPARSE_POINT or not info[0] & con.FILE_ATTRIBUTE_DIRECTORY:
                 raise OSError('REPARSE_DIRECTORY_DENIED')
@@ -104,6 +107,10 @@ def anchored_directory(path):
     except Exception as error:
         import pywintypes
         if isinstance(error, pywintypes.error):
+            if error.winerror in {2, 3}:
+                raise FileNotFoundError('WINDOWS_OBJECT_NOT_FOUND') from None
+            if error.winerror in {80, 183}:
+                raise FileExistsError('WINDOWS_OBJECT_EXISTS') from None
             raise OSError('WINDOWS_DIRECTORY_HELD') from None
         raise
     finally:
@@ -156,6 +163,9 @@ def read_source(root, name, limit):
         handle = file.CreateFile(str(path), con.GENERIC_READ, con.FILE_SHARE_READ, None,
             con.OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | con.FILE_FLAG_SEQUENTIAL_SCAN, None)
         try:
+            actual = file.GetFinalPathNameByHandle(handle, 0)
+            if os.path.normcase(actual.removeprefix('\\\\?\\')) != os.path.normcase(str(path)):
+                raise OSError('SOURCE_ALIAS_DENIED')
             info = file.GetFileInformationByHandle(handle)
             if info[0] & (con.FILE_ATTRIBUTE_DIRECTORY | con.FILE_ATTRIBUTE_REPARSE_POINT) or info[7] != 1:
                 raise OSError('REGULAR_SOURCE_REQUIRED')

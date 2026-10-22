@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from .contracts import GuardPort, ProjectSpec, RepairError
+from devguard.platform_io import private_directory
 
 MAX_FILE_BYTES = 128 * 1024
 MAX_TOTAL_BYTES = 512 * 1024
@@ -212,9 +213,9 @@ def capture(
         raise RepairError("SOURCE_CHANGED")
     if runtime_root.is_symlink() or runtime_root.resolve() != runtime_root:
         raise RepairError("RUNTIME_ROOT_DENIED")
-    runtime_root.mkdir(mode=0o700, parents=True, exist_ok=True)
-    directory = Path(tempfile.mkdtemp(prefix="repair-", dir=runtime_root))
-    directory.chmod(0o700)
+    private_directory(runtime_root)
+    directory = runtime_root / ("repair-" + uuid.uuid4().hex)
+    private_directory(directory)
     source = directory / "source"
     source.mkdir()
     for name, data in originals.items():

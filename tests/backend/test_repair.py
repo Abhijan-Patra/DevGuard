@@ -118,7 +118,12 @@ def test_snapshot_preserves_saved_uncommitted_bytes(spec, tmp_path):
     try:
         assert (snapshot.source / "cart.py").read_text() == "# saved edit\nVALUE = 7\n"
         assert not (snapshot.source / "trusted_tests").exists()
-        assert snapshot.directory.stat().st_mode & 0o777 == 0o700
+        if __import__('os').name == 'nt':
+            from devguard.windows import anchored_directory, check_private
+            with anchored_directory(snapshot.directory) as handle:
+                check_private(handle)
+        else:
+            assert snapshot.directory.stat().st_mode & 0o777 == 0o700
     finally:
         snapshot.close()
 
