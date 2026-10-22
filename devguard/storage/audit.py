@@ -8,6 +8,7 @@ import re
 import sqlite3
 import stat
 import threading
+from devguard.platform_io import private_directory, private_open
 from uuid import uuid4
 
 
@@ -31,14 +32,14 @@ REPAIR_KINDS = {"run.state", "tool.completed", "verification.completed", "patch.
 def private_database(path):
     """Trusted local path only, inside a private directory; no API selects it."""
     path = Path(path).absolute()
-    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    private_directory(path.parent)
     parent = path.parent.lstat()
     if not stat.S_ISDIR(parent.st_mode) or (
         os.name != "nt" and (parent.st_mode & 0o077 or parent.st_uid != os.getuid())
     ):
         raise AuditUnavailable()
     flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
-    fd = os.open(path, flags, 0o600)
+    fd = private_open(path, flags, 0o600)
     try:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or (
@@ -66,7 +67,7 @@ class AuditStore:
             self.db.execute("PRAGMA journal_mode=DELETE")
             self.db.execute("CREATE TABLE IF NOT EXISTS events (seq INTEGER PRIMARY KEY, data TEXT NOT NULL)")
             self.db.commit()
-        except (sqlite3.Error, OSError):
+        except (sqlite3.Error, OSError, RuntimeError):
             raise AuditUnavailable() from None
 
     def _append(self, event):

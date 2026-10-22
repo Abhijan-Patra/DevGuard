@@ -8,7 +8,7 @@ Keep useful debugging context, replace detected sensitive values with placeholde
 
 ## Get started
 
-This is a **public preview**. The complete local workflow has been exercised on an Apple silicon Mac with 16 GB memory. Native clipboard capture supports macOS only. Linux API/package checks run in CI; Linux hardware/model performance and Windows native capture are not verified.
+This is a **public preview**. The complete local workflow has been exercised on an Apple silicon Mac with 16 GB memory. Native text clipboard adapters exist for macOS and Windows. See [Windows setup and verification scope](docs/WINDOWS.md). Linux native capture is unsupported. Windows hardware/model performance requires a separate real-device trial.
 
 Install **Python 3.11 or 3.12**, [Ollama](https://ollama.com/download), [Gitleaks](https://github.com/gitleaks/gitleaks#installing), and [Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/) for repairs. Open Docker and Ollama and finish their own setup first.
 
@@ -59,3 +59,5 @@ The release pipeline runs the regression suite, dependency checks, JavaScript sy
 [Release verification](docs/RELEASE_CHECKLIST.md) · [Measured evidence](docs/PROFESSIONAL_STATUS.md) · [Architecture](docs/ARCHITECTURE.md) · [API contract](docs/API_CONTRACT.md) · [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md)
 
 MIT for original project code. Gemma and external dependencies keep their own licences. No model weights, credentials or user data are included. See [third-party notices](THIRD_PARTY_NOTICES.md).
+
+Windows users: follow the [PowerShell installation guide](docs/WINDOWS.md). Runtime starts with capture/watchers OFF and repairs paused on every supported platform.

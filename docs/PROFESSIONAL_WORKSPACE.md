@@ -24,7 +24,7 @@ Click **Connect this browser**. This explicit same-origin local pairing creates 
 
 - **Context gate:** inspect a prompt or structured text; the deterministic scanner, local Gemma and final scan decide whether a cleaned preview is available. Releasing is a separate explicit action to the enrolled local composer. A receipt proves local delivery only. The composer expires after ten minutes and never sends to a cloud assistant.
 - **Managed source read:** choose an enrolled source file. The backend reads it through descriptor-anchored path checks and binds its digest to the inspection. All delivery routes recheck this source after final scanning; changed source holds. No unrestricted shell/file access is introduced.
-- **Text clipboard:** capture starts OFF. Enable with explicit local consent, then copy new text. The existing clipboard is skipped. Copy cleaned text checks the inspected version. Disable clears transient work. Native macOS text only, no images/screenshots/keyboard monitoring.
+- **Text clipboard:** capture starts OFF. Enable with explicit local consent, then copy new text. The existing clipboard is skipped. Copy cleaned text checks the inspected version. Disable clears transient work. Native macOS/Windows desktop text only, no images/screenshots/keyboard monitoring.
 - **Backend repairs:** choose an enrolled project and named check, queue investigation and resume. Observe actual baseline, tools, verification and diff. Apply requires a review dialog, explicit approval and expected candidate/base hashes. Reject/cancel/pause remain available. Rollback is explicit, session-only and refuses any concurrent change in the applied tracked source. Neither application nor rollback resets a repository.
 - **Projects:** opt in to saved-file watching for an exact manifest. Changes debounce and deduplicate into queued investigations. Monitoring never silently starts execution. Quiet-time mode optionally admits jobs after a configured period without foreground model work; it is queue-based, not OS-input/keyboard monitoring. Manual pause disables automatic admission.
 - **Activity:** paginated, filterable metadata-only audit; explicit export. Loaded-record counts are not overall accuracy/usage statistics.
@@ -63,3 +63,5 @@ These commands emit redacted metadata only; approved text appears in the local c
 ## Evidence discipline
 
 Automated tests inject declared doubles for policy/control-flow boundaries; real-model and Docker trials are separate. Capture remains off outside explicit clipboard testing. The public project contains bounded redacted evidence only; all runtime files, tokens, prompts, candidates and snapshots stay ignored. No model weights are committed.
+
+Windows setup uses the [PowerShell guide](WINDOWS.md); the Unix shell launch examples above remain valid on macOS/Linux.

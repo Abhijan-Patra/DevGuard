@@ -1,3 +1,10 @@
+## 0.3.0 — Windows support
+
+- Add a PowerShell source installer/launcher and native Windows backend lifecycle with exact owned-process checks and graceful private-event shutdown.
+- Add opt-in, bounded Unicode text clipboard capture with version checks, busy retries and cleaned-copy/held placeholders.
+- Enforce Windows runtime ACLs, reparse/junction/device/alternate-stream refusal and pinned-parent source reads and writes; preserve POSIX boundaries.
+- Add Windows native security tests and clean-wheel install CI for Python 3.11/3.12. Hardware/model and signed-in client workflow evidence remains platform-specific.
+
 # Changelog
 
 ## 0.2.1 — 21 October 2026 · Verifier compatibility

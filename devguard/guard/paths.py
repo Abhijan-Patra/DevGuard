@@ -19,11 +19,25 @@ class ProjectFiles:
         root = Path(root).resolve(strict=True)
         if root in {Path("/"), Path.home()}:
             raise GuardError("PROJECT_ROOT_TOO_BROAD", 403)
-        self._root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        self._windows_anchor = None
+        if os.name == 'nt':
+            from devguard.windows import anchored_directory
+            self._windows_anchor = anchored_directory(root)
+            try:
+                self._windows_anchor.__enter__()
+            except OSError:
+                raise GuardError('SOURCE_READ_DENIED', 403) from None
+            self._root_fd = root
+        else:
+            self._root_fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
 
     def close(self):
         if self._root_fd is not None:
-            os.close(self._root_fd)
+            if self._windows_anchor is not None:
+                self._windows_anchor.__exit__(None, None, None)
+                self._windows_anchor = None
+            else:
+                os.close(self._root_fd)
             self._root_fd = None
 
     def read_text(self, relative):
@@ -37,6 +51,17 @@ class ProjectFiles:
         if any(part.casefold() in PROTECTED_PARTS or part.casefold() == ".env" or part.casefold().startswith(".env.")
                for part in path.parts) or path.suffix.lower() in PROTECTED_SUFFIXES:
             raise GuardError("PROTECTED_PATH", 403)
+        from devguard.windows import relative_parts
+        try:
+            relative_parts(relative)
+        except OSError:
+            raise GuardError('PATH_DENIED', 403) from None
+        if os.name == 'nt':
+            from devguard.windows import read_source
+            try:
+                return read_source(self._root_fd, relative, MAX_TEXT_BYTES).decode('utf-8', errors='strict')
+            except (OSError, UnicodeError):
+                raise GuardError('SOURCE_READ_DENIED', 403) from None
         descriptors = []
         try:
             parent = self._root_fd

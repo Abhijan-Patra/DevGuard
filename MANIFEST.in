@@ -4,7 +4,7 @@ include .streamlit/config.toml
 include requirements*.txt
 recursive-include devguard/resources *
 recursive-include docs *.md *.json
-recursive-include scripts *.sh *.py devguard-local
+recursive-include scripts *.sh *.ps1 *.py devguard-local
 recursive-include demo *.py Dockerfile *.md
 recursive-include trusted_tests *.py
 recursive-include evals *.py *.json *.md

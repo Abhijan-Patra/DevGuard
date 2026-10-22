@@ -198,7 +198,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
              "status": "PARTIAL",
              "limitations": {
                  "privacy_gate": "Real Gemma calibration cases and local delivery checks passed; earlier failures retained. General unseen accuracy remains unverified.",
-                 "clipboard_capture": "Opt-in macOS text only; starts OFF; recorded native checks exist; current capture is explicit and version-bound.",
+                 "clipboard_capture": "Opt-in macOS/Windows desktop text only; starts OFF; current capture is explicit and version-bound. See platform verification records.",
                  "backend_repair": "Routes wired; trusted configuration, pinned model/image and Docker engine required; starts paused.",
                  "codex_adapter": "Recorded bundled CLI 0.163.0-alpha.10.2 prompt/tool/MCP boundary trials passed with real Gemma and a synthetic loopback coding provider. Requires explicit profile setup and native hook trust; not universal or cloud-delivery proof.",
                  "claude_adapter": "Recorded Claude Code 2.1.119 prompt and managed MCP trials passed with real Gemma and a synthetic loopback coding provider. Signed-in cloud account workflow and desktop variants remain unverified.",

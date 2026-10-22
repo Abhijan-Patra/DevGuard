@@ -88,6 +88,7 @@ def test_stdio_client_holds_failures_and_cannot_select_remote_guard():
     asyncio.run(scenario())
 
 
+@pytest.mark.skipif(os.name == "nt", reason="POSIX mode boundary; Windows ACL equivalent in tests/windows")
 def test_private_client_token_refuses_symlink_public_mode_or_multiple_links(tmp_path):
     path=tmp_path/'token';path.write_text('synthetic-local-client-token-not-real-0123456789');path.chmod(0o600)
     assert private_token(path).startswith('synthetic')

@@ -1,6 +1,6 @@
 # Install DevGuard
 
-DevGuard 0.2.1 is a local **public preview**, not a hosted protection service. The public website is a read-only tour. To inspect your own text, clipboard or project, run the application on your machine.
+DevGuard 0.3.0 is a local **public preview**, not a hosted protection service. The public website is a read-only tour. To inspect your own text, clipboard or project, run the application on your machine.
 
 ## Before installation
 
@@ -10,7 +10,7 @@ DevGuard 0.2.1 is a local **public preview**, not a hosted protection service. T
 | Ollama | Runs the fixed local Gemma model. Open the app after installing it. Local inference needs no cloud API key. |
 | Gitleaks | Required credential scanner. macOS with Homebrew: `brew install gitleaks`. |
 | Docker Desktop/Engine | Required for backend repair only. Open it and complete its setup/terms yourself. |
-| macOS + clipboard extra | Native text clipboard capture. Linux/Windows have no native capture adapter in this release. |
+| macOS/Windows desktop | Native text clipboard capture. See [Windows installation](WINDOWS.md). Linux native capture remains unsupported. |
 
 Use an Apple silicon Mac with 16 GB memory for the measured configuration. Other hardware may be slower or run out of memory; no minimum-performance guarantee is made. Leave ample disk space for Python packages, Docker and the roughly 6.6 GB selected Ollama package. Model/image downloads need network access; running the prepared sandbox has no network access.
 
@@ -33,12 +33,12 @@ The launcher checks prerequisites, can open installed Ollama/Docker applications
 
 ## Install a release wheel
 
-Download `devguard-0.2.1-py3-none-any.whl` and `SHA256SUMS` from the [GitHub release](https://github.com/Abhijan-Patra/DevGuard/releases/latest). Compare its checksum with `shasum -a 256 devguard-0.2.1-py3-none-any.whl`. Then, in the download directory:
+Download `devguard-0.3.0-py3-none-any.whl` and `SHA256SUMS` from the [GitHub release](https://github.com/Abhijan-Patra/DevGuard/releases/latest). Compare its checksum with `shasum -a 256 devguard-0.3.0-py3-none-any.whl`. Then, in the download directory:
 
 ```sh
 python3.11 -m venv .devguard-venv
 . .devguard-venv/bin/activate
-python -m pip install './devguard-0.2.1-py3-none-any.whl[clipboard,client]'
+python -m pip install './devguard-0.3.0-py3-none-any.whl[clipboard,client]'
 devguard start
 ```
 
@@ -83,7 +83,7 @@ Run `./scripts/devguard-local doctor` (or `devguard doctor` for a wheel). `--jso
 | Verifier image absent | Normal `start` builds it. Image preparation needs network once. |
 | Port already in use | Stop your owned instance or choose `start --port 8766`; open the printed URL. The launcher never replaces an unknown process. |
 | Another launcher is active | Wait for its setup/download to finish; do not start a duplicate. |
-| Clipboard unsupported | Native capture is macOS-only. On macOS rerun setup/install the clipboard extra. |
+| Clipboard unsupported | Use a supported macOS/Windows desktop session and rerun platform setup. Linux capture is unsupported. |
 | Clipboard has no new preview | Enable consent, then copy new text. Pending checks need time; held/expired copies have a marker and cannot be copied as approved text. |
 | Repair produces no new patch | Check readiness, named test, paused state and result reason. An already repaired demo may now pass its baseline. Existing edits are never reset automatically. |
 | Browser asks to connect again | Reconnect after backend restart/session expiry, then explicitly re-enable desired capture/watchers. |

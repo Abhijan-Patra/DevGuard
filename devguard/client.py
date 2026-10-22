@@ -13,12 +13,16 @@ import time
 from urllib.parse import urlsplit
 
 import httpx
+from devguard.platform_io import private_open
 
 HELD = {'status': 'HELD', 'text': None, 'reason_code': 'DEVGUARD_CLIENT_HELD'}
 
 
 def private_token(path):
-    fd = os.open(path, os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0))
+    try:
+        fd = private_open(path, os.O_RDONLY)
+    except RuntimeError:
+        raise ValueError("PRIVATE_CLIENT_TOKEN_REQUIRED") from None
     with os.fdopen(fd) as stream:
         info = os.fstat(stream.fileno())
         if (not stat.S_ISREG(info.st_mode) or info.st_size > 512 or info.st_nlink != 1
