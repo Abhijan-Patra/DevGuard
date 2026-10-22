@@ -1,6 +1,6 @@
 # Windows setup and support
 
-Windows native support is implemented in v0.3.0. The [native Windows and package CI matrix](https://github.com/Abhijan-Patra/DevGuard/actions/runs/39720529119) passed on Python 3.11 and 3.12. Python 3.11/3.12 on Windows 11 x64 is the intended user configuration. GitHub Windows runners check native API behavior; they do not establish real-Gemma performance or physical Windows 11 desktop reliability. Windows ARM, network/removable source volumes and Windows services/session-zero capture are not supported targets.
+Windows native support was introduced in v0.3.0; use v0.3.1 or newer for the Windows verifier environment compatibility fix. The [native Windows and package CI matrix](https://github.com/Abhijan-Patra/DevGuard/actions/runs/39720529119) passed on Python 3.11 and 3.12. Python 3.11/3.12 on Windows 11 x64 is the intended user configuration. GitHub Windows runners check native API behavior; they do not establish real-Gemma performance or physical Windows 11 desktop reliability. Windows ARM, network/removable source volumes and Windows services/session-zero capture are not supported targets.
 
 ## Install and run
 

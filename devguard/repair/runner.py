@@ -13,6 +13,19 @@ from threading import Event
 from .contracts import ProjectSpec, RepairError, TestResult
 
 
+def verifier_environment(environment=None):
+    """Keep required OS/Docker variables, never assistant credentials or inputs.
+
+    Windows exposes environment keys in uppercase. Match keys case-insensitively
+    while preserving their spelling and values for CreateProcess.
+    """
+    environment = os.environ if environment is None else environment
+    allowed = {'PATH', 'HOME', 'USERPROFILE', 'SYSTEMROOT', 'WINDIR',
+               'LOCALAPPDATA', 'APPDATA', 'TEMP', 'TMP', 'TMPDIR',
+               'DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_CONFIG'}
+    return {key: value for key, value in environment.items() if key.upper() in allowed}
+
+
 class DockerVerifier:
     def __init__(self, docker: str = "docker", timeout: float = 45):
         self.docker = shutil.which(docker)
@@ -84,11 +97,7 @@ class DockerVerifier:
         command = self.command(source, spec, name, container)
         chunks: list[bytes] = []
         overflow = Event()
-        env = {
-            k: v
-            for k, v in os.environ.items()
-            if k in {"PATH", "HOME", "USERPROFILE", "SystemRoot", "WINDIR", "LOCALAPPDATA", "APPDATA", "DOCKER_HOST", "DOCKER_CONTEXT", "DOCKER_CONFIG"}
-        }
+        env = verifier_environment()
         process = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env
         )

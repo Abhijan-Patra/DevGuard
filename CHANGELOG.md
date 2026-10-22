@@ -1,3 +1,8 @@
+## 0.3.1 — Windows verifier environment
+
+- Preserve required Windows OS/temp variables case-insensitively in the restricted Docker child environment; continue excluding unrelated/private application variables.
+- Retain the v0.3.0 post-publication Docker baseline hold alongside prior passing installed real trials.
+
 ## 0.3.0 — Windows support
 
 - Add a PowerShell source installer/launcher and native Windows backend lifecycle with exact owned-process checks and graceful private-event shutdown.

@@ -35,3 +35,17 @@ def test_exact_model_pull_check_never_assumes_unreadable_ollama_is_idle(monkeypa
         with pytest.raises(RuntimeError):exact_pull_active('gemma4:e4b-it-q4_K_M')
     else:
         assert exact_pull_active('gemma4:e4b-it-q4_K_M') is expected
+
+
+@pytest.mark.parametrize('key', ['SYSTEMROOT', 'SystemRoot', 'systemroot'])
+def test_verifier_preserves_windows_os_environment_without_private_input(key):
+    from devguard.repair.runner import verifier_environment
+    values={key:'C:/Windows', 'TEMP':'C:/Users/Synthetic/Temp', 'TMP':'C:/Users/Synthetic/Temp',
+        'PATH':'C:/Tools', 'DOCKER_CONTEXT':'synthetic-local',
+        'DEVGUARD_SESSION_TOKEN':'synthetic-must-not-inherit',
+        'DEVGUARD_ADAPTER_TOKEN':'synthetic-must-not-inherit', 'PASSWORD':'synthetic-must-not-inherit'}
+    safe=verifier_environment(values)
+    assert safe[key] == 'C:/Windows'
+    assert safe['TEMP'] == values['TEMP'] and safe['TMP'] == values['TMP']
+    assert safe['DOCKER_CONTEXT'] == 'synthetic-local'
+    assert len(safe) == 5 and all('must-not-inherit' not in v for v in safe.values())
