@@ -253,6 +253,8 @@ def exact_pull_active(model):
     try:
         for process in psutil.process_iter(['name', 'cmdline']):
             args = process.info['cmdline'] or []
+            if (process.info['name'] or '').lower() == 'ollama.exe' and not args:
+                raise RuntimeError('Cannot inspect active Ollama downloads; startup is held')
             if ((process.info['name'] or '').lower() == 'ollama.exe' and
                     len(args) >= 3 and args[1] in {'pull', 'run'} and args[2] == model):
                 return True

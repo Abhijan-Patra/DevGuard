@@ -4,13 +4,15 @@
 
 Keep useful debugging context, replace detected sensitive values with placeholders, and review independently tested code changes before applying them. DevGuard uses **local Gemma 4 E4B through Ollama**. Its browser workspace runs on your laptop at `http://127.0.0.1:8765/app`.
 
-[Install guide](docs/INSTALL.md) · [Latest release](https://github.com/Abhijan-Patra/DevGuard/releases/latest) · [Read-only tour](https://devguard-demo.onrender.com) · [Support](SUPPORT.md)
+[Windows installation](docs/WINDOWS.md) · [macOS/Linux installation](docs/INSTALL.md) · [Latest release](https://github.com/Abhijan-Patra/DevGuard/releases/latest) · [Read-only tour](https://devguard-demo.onrender.com) · [Support](SUPPORT.md)
 
 ## Get started
 
 This is a **public preview**. The complete local workflow has been exercised on an Apple silicon Mac with 16 GB memory. Native text clipboard adapters exist for macOS and Windows. See [Windows setup and verification scope](docs/WINDOWS.md). Linux native capture is unsupported. Windows hardware/model performance requires a separate real-device trial.
 
-Install **Python 3.11 or 3.12**, [Ollama](https://ollama.com/download), [Gitleaks](https://github.com/gitleaks/gitleaks#installing), and [Docker Desktop](https://docs.docker.com/desktop/setup/install/mac-install/) for repairs. Open Docker and Ollama and finish their own setup first.
+Install **Python 3.11 or 3.12**, [Ollama](https://ollama.com/download), [Gitleaks](https://github.com/gitleaks/gitleaks#installing), and [Docker Desktop](https://docs.docker.com/desktop/) for repairs. Open Docker and Ollama and finish their own setup first.
+
+Windows users should follow the [PowerShell commands](docs/WINDOWS.md#install-and-run). On macOS/Linux:
 
 ```sh
 git clone https://github.com/Abhijan-Patra/DevGuard.git
