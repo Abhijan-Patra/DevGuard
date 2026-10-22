@@ -6,7 +6,7 @@ Windows-native CI tests and clean package installs are required before publicati
 
 ## Previous release evidence
 
-**Use v0.2.1 for the verifier compatibility update.** Its local image is prepared as a single-platform image under a tag bound to public build inputs. Earlier 0.2.0 dependency holds remain in the recorded evidence; the patch also preserves trial failure metadata.
+**v0.2.1 introduced the verifier compatibility update, retained in v0.3.0.** Its local image is prepared as a single-platform image under a tag bound to public build inputs. Earlier 0.2.0 dependency holds remain in the recorded evidence; the patch also preserves trial failure metadata.
 
 DevGuard is a local privacy guard and reviewed backend repair workspace for AI-assisted development. This public preview includes an installable wheel, source distribution, checksums and a source setup script.
 

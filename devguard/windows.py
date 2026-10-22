@@ -194,6 +194,7 @@ def replace_source(root, name, data, originals, read):
     path = local_path(root).joinpath(*relative_parts(name))
     with anchored_directory(path.parent):
         temporary = path.with_name('.devguard-patch-' + uuid.uuid4().hex)
+        stage = 'CREATE_TEMPORARY'
         try:
             # Parent is operator-selected source; inherit its ACL for the replacement.
             with temporary.open('xb') as output:
@@ -203,6 +204,7 @@ def replace_source(root, name, data, originals, read):
             # Preserve the original file's access restrictions, rather than
             # replacing a private source ACL with the directory's broader ACL.
             _, con, file, security, _ = _api()
+            stage = 'SOURCE_ACL_READ'
             handle = file.CreateFile(str(path), con.READ_CONTROL, con.FILE_SHARE_READ,
                 None, con.OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, None)
             try:
@@ -213,14 +215,25 @@ def replace_source(root, name, data, originals, read):
                 acl = sd.GetSecurityDescriptorDacl()
                 if acl is None:
                     raise OSError('SOURCE_ACL_REQUIRED')
+                stage = 'SOURCE_ACL_COPY'
                 security.SetNamedSecurityInfo(str(temporary), security.SE_FILE_OBJECT,
                     security.DACL_SECURITY_INFORMATION | security.PROTECTED_DACL_SECURITY_INFORMATION,
                     None, None, acl, None)
             finally:
                 handle.Close()
+            stage = "FINAL_SOURCE_CHECK"
             if any(read(root, n) != content for n, content in originals.items()):
                 raise OSError('STALE_SOURCE')
+            stage = 'ATOMIC_RENAME'
             os.replace(temporary, path)
+        except Exception as error:
+            if str(error) == 'STALE_SOURCE':
+                raise
+            import pywintypes
+            if isinstance(error, (OSError, pywintypes.error)):
+                code = getattr(error, 'winerror', None) or getattr(error, 'errno', None) or 0
+                raise OSError(f'{stage}_HELD_{code}') from None
+            raise
         finally:
             temporary.unlink(missing_ok=True)
 

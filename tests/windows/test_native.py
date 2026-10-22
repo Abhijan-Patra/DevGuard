@@ -46,7 +46,8 @@ def test_source_reads_apply_rollback_and_hardlink_refusal(tmp_path):
     root = tmp_path / 'project';root.mkdir()
     path = root / 'cart.py';path.write_bytes(b'VALUE = 1\r\n')
     original = read_source(root, 'cart.py')
-    atomic_replace_source(root, 'cart.py', b'VALUE = 2\n', {'cart.py': original})
+    from devguard.windows import replace_source
+    replace_source(root, 'cart.py', b'VALUE = 2\n', {'cart.py': original}, read_source)
     assert path.read_bytes() == b'VALUE = 2\n'
     with pytest.raises(RepairError):
         atomic_replace_source(root, 'cart.py', b'VALUE = 3\n', {'cart.py': original})

@@ -31,3 +31,9 @@ Reproduce package checks with a fresh virtualenv, installing the built wheel and
 ## Remaining limits
 
 macOS and Windows have native text clipboard adapters. Native Windows CI additionally checks ACLs, junctions, locks and graceful lifecycle with disposable synthetic data. It does not establish physical Windows 11 local-model performance or signed-in coding-client delivery. Linux has no native clipboard capture. Python 3.13 is accepted by metadata but has not been included in the release matrix. Signed-in cloud coding-client delivery and arbitrary external tools are outside the recorded synthetic provider tests. Model accuracy, sandbox resistance and recovery have no production certification or guarantee. Review all enrolled source/test scope and candidate changes.
+
+## Windows release gate (0.3.0)
+
+The Windows job runs the actual PowerShell source installer and native handle/ACL/clipboard/process tests on disposable GitHub Windows runners, plus the common privacy/repair boundary suite with declared model/verifier doubles. The wheel matrix separately checks installation, static assets, authentication, browser pairing, OFF defaults, held privacy behavior and graceful server shutdown on Windows, macOS and Ubuntu for Python 3.11/3.12. Windows clipboard tests require an explicit CI opt-in and never touch the developer's clipboard.
+
+The [0.3.0 installed Mac real workflow](evidence/release-wheel-live-v0.3.0-macos.json) passed actual sanitized delivery, failing cart baseline, generated repair, independent Docker PASS, review, disposable apply, rollback and graceful stop. The [first privacy hold](evidence/release-v0.3.0-first-hold.json) is retained, with a separate successful diagnostic. Its original decision was not captured; cold-load latency is a possible cause, not an established root cause. Startup now warms only the exact digest-checked model with no prompt before accepting work. Policy timeouts and test oracles are unchanged.
