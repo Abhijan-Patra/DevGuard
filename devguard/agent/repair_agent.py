@@ -38,7 +38,8 @@ class NamedTest(Arguments):
 
 class Patch(Arguments):
     path: str = Field(min_length=1, max_length=200)
-    expected_hash: str = Field(pattern="^[a-f0-9]{64}$")
+    # Legacy model adapters may still supply this field; it grants no authority.
+    expected_hash: str | None = Field(default=None, pattern="^[a-f0-9]{64}$")
     content: str = Field(max_length=32768, description="Complete plain Python module source. No Markdown fences, quoted code wrapper or literal backslash-n text; use actual newline characters in the content string.")
 
 
@@ -60,10 +61,18 @@ TOOL_TYPES = {
     "propose_patch": Patch,
     "finish": Empty,
 }
+def tool_schema(schema):
+    result = schema.model_json_schema()
+    if schema is Patch:
+        result['properties'].pop('expected_hash', None)
+        result['required'] = [n for n in result.get('required', []) if n != 'expected_hash']
+    return result
+
+
 TOOLS = [
     {
         "type": "function",
-        "function": {"name": name, "parameters": schema.model_json_schema()},
+        "function": {"name": name, "parameters": tool_schema(schema)},
     }
     for name, schema in TOOL_TYPES.items()
 ]
@@ -73,6 +82,7 @@ SYSTEM = (
     "Do not edit tests, policy or expected outcomes. Read evidence before proposing a minimal "
     "single-file source replacement. Preserve interfaces and necessary behavior. "
     "Replacement content must be complete plain source, never Markdown fences or a quoted code wrapper. "
+    "Do not supply checksums: the host binds each replacement to the approved read and successful draft writes. "
     "Run the named check after patching and use its feedback to revise if needed. "
     "SOURCE_SYNTAX_ERROR is feedback about your draft, not a passing check; correct the source within the same patch budget. "
     "Stop with finish when done or unable. Return one tool action; do not return hidden reasoning."
@@ -127,6 +137,7 @@ def investigate(
     deadline = time.monotonic() + budget_seconds
     patches = 0
     read_paths: set[str] = set()
+    observed_hashes: dict[str, str] = {}
     native_retries = 0
     for _ in range(max_steps):
         if cancel.is_set():
@@ -196,9 +207,10 @@ def investigate(
             if patches >= max_patches:
                 raise RepairError("PATCH_BUDGET_EXHAUSTED")
             replace_in_snapshot(
-                snapshot, spec, args.path, args.content, args.expected_hash
+                snapshot, spec, args.path, args.content, observed_hashes[args.path]
             )
             patches += 1
+            observed_hashes[args.path] = digest(args.content.encode("utf-8"))
             result = {
                 "applied_in_sandbox": True,
                 "originals_modified": False,
@@ -215,6 +227,7 @@ def investigate(
             raise RepairError("CANCELED")
         if isinstance(args, ReadFile):
             read_paths.add(args.path)
+            observed_hashes[args.path] = digest(data)
         append_tool_exchange(
             messages,
             name=action.tool,

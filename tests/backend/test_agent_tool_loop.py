@@ -212,3 +212,39 @@ def test_checker_error_with_valid_source_still_holds_after_patch(spec,tmp_path):
     assert (run.state,run.reason_code)==('BLOCKED','CHECK_UNAVAILABLE')
     assert not service.patches.candidates
     assert (spec.root/'cart.py').read_bytes()==b'VALUE = 1\n'
+
+
+def test_model_checksum_is_not_source_version_authority(spec,tmp_path):
+    actions=fake_actions()
+    actions[1]['arguments']['expected_hash']='b'*64
+    model=FakeModel(*actions)
+    service,_=service_for(spec,tmp_path,model=model)
+    run=run_once(service)
+    assert run.state=='READY_FOR_REVIEW'
+    assert (spec.root/'cart.py').read_bytes()==b'VALUE = 1\n'
+    patch_tool=next(t for t in __import__('devguard.agent.repair_agent',fromlist=['TOOLS']).TOOLS if t['function']['name']=='propose_patch')
+    assert 'expected_hash' not in patch_tool['function']['parameters']['properties']
+
+
+def test_trusted_read_binding_refuses_changed_sandbox_even_if_model_hash_matches(spec,tmp_path):
+    from threading import Event
+    from devguard.agent.repair_agent import investigate
+    from devguard.repair.workspace import capture,digest
+    snapshot=capture(spec,tmp_path/'private-snapshot')
+    changed=b'CONCURRENT = 1\n'
+    class ConcurrentModel(FakeModel):
+        calls=0
+        def next_action(self,messages,tools):
+            self.calls+=1
+            if self.calls==2:(snapshot.source/'cart.py').write_bytes(changed)
+            return super().next_action(messages,tools)
+    model=ConcurrentModel({'tool':'read_allowed_file','arguments':{'path':'cart.py'}},
+        {'tool':'propose_patch','arguments':{'path':'cart.py','expected_hash':digest(changed),'content':'VALUE = 2\n'}})
+    try:
+        with pytest.raises(RepairError,match='STALE_SANDBOX'):
+            investigate(model=model,guard=FakeGuard(),verifier=FakeVerifier(),spec=spec,
+                snapshot=snapshot,test_name='cart',baseline_output='declared synthetic failure',
+                cancel=Event(),on_tool=lambda name:None)
+        assert (snapshot.source/'cart.py').read_bytes()==changed
+        assert (spec.root/'cart.py').read_bytes()==b'VALUE = 1\n'
+    finally:snapshot.close()

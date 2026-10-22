@@ -1,5 +1,6 @@
-## 0.3.3 — Bounded source syntax feedback
+## 0.3.3 — Trusted sandbox versions and bounded syntax feedback
 
+- Bind replacements to trusted approved-read/write hashes rather than model-supplied checksums; preserve stale-sandbox and original-source apply checks.
 - Feed actual generated-source syntax ERRORs back to the agent within existing budgets; continue holding unavailable checkers and require final independent PASS.
 - Clarify plain-source replacement schema; retain failed published trial and diagnostic evidence.
 

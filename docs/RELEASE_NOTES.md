@@ -1,6 +1,6 @@
-# DevGuard v0.3.3 — Bounded repair feedback
+# DevGuard v0.3.3 — Trusted repair versions and bounded feedback
 
-Generated-source syntax errors now return ERROR feedback to the agent within its existing two-patch/step/time budget, allowing it to correct its draft. Real checker unavailability still holds. Final independent Docker verification must still PASS; source review/hash checks and test authority are unchanged. Replacement schema guidance requires plain Python source without Markdown wrappers.
+Replacement hashes are owned by trusted host bookkeeping bound to approved reads and successful sandbox writes; the model no longer copies a cryptographic hash. A changed sandbox still holds, and original-source apply hashes remain mandatory. Generated-source syntax errors now return ERROR feedback to the agent within its existing two-patch/step/time budget, allowing it to correct its draft. Real checker unavailability still holds. Final independent Docker verification must still PASS; source review/hash checks and test authority are unchanged. Replacement schema guidance requires plain Python source without Markdown wrappers.
 
 The prior published 0.3.2 diagnostic passed baseline and privacy delivery, then held after a generated-source syntax error (pytest exit 2). Both the failed trial and redacted diagnostic are retained; original source stayed unchanged. This is not an every-bug repair or model-accuracy guarantee.
 
