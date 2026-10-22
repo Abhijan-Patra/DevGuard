@@ -1,3 +1,9 @@
+# DevGuard v0.3.2 — Installed demo verifier
+
+Prepare an exact copy of the bundled independent demo checks in the private runtime, outside model-writable source. Docker Desktop need not mount a package/virtualenv directory that it cannot see. Existing edited test copies hold startup without overwrite; original bundled tests and model/test authority are unchanged. Named checks, source hashes, review, sandbox restrictions and fail-closed behavior remain mandatory.
+
+The v0.3.0 downloaded-wheel hold was isolated to the independent-check bind mount: the source mount existed and worked, but Docker reported the package check directory as nonexistent. Normal/restrictive file-mode diagnostics both produced the expected failing baseline with shared source-checkout checks. The fix changes the prepared demo mount location, not the oracle or filesystem permissions of user files.
+
 # DevGuard v0.3.1 — Windows verifier compatibility
 
 Preserve Windows `SYSTEMROOT` regardless of environment-key casing, plus the user temporary directories, in the Docker CLI's restricted child environment. Private assistant tokens and unrelated variables remain excluded. This avoids losing OS variables required by Windows child processes. Native Windows checks and six clean-wheel platform/version checks remain required for publication.

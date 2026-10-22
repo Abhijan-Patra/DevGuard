@@ -55,7 +55,8 @@ def test_installed_demo_is_disposable_and_preserves_existing_user_edits(monkeypa
     manifest = local.demo_manifest('sha256:' + 'a' * 64)
     spec, = load_projects(manifest)
     assert spec.root == root / '.devguard/local-demo'
-    assert spec.trusted_tests == ASSETS / 'checks'
+    assert spec.trusted_tests == root / '.devguard/local-demo-checks'
+    assert (spec.trusted_tests/'test_cart.py').read_bytes() == (ASSETS/'checks/test_cart.py').read_bytes()
     edited = spec.root / 'cart.py'
     edited.write_text('USER_EDIT = True\n')
     local.demo_manifest('sha256:' + 'b' * 64)
@@ -116,7 +117,8 @@ def test_foreground_demo_factory_uses_bundled_disposable_source_without_checkout
     assert callable(factory)
     spec, = load_projects(root / '.devguard/local-projects.json')
     assert spec.root == root / '.devguard/local-demo'
-    assert spec.trusted_tests == ASSETS / 'checks'
+    assert spec.trusted_tests == root / '.devguard/local-demo-checks'
+    assert (spec.trusted_tests/'test_cart.py').read_bytes() == (ASSETS/'checks/test_cart.py').read_bytes()
     assert (spec.root / 'cart.py').read_bytes() == (ASSETS / 'demo/cart.py').read_bytes()
 
 
@@ -150,3 +152,23 @@ def test_startup_warmup_never_sends_private_input_or_uses_an_unpinned_model():
         return httpx.Response(200, json={'models':[{'name':MODEL,'digest':'wrong'}]})
     with pytest.raises(RuntimeError, match='digest mismatch'):
         local.warm_model(transport=httpx.MockTransport(mismatch))
+
+
+def test_default_oracle_copy_is_independent_and_edited_copy_holds_without_overwrite(monkeypatch, tmp_path):
+    root = private_workspace(monkeypatch, tmp_path)
+    manifest = local.demo_manifest('sha256:' + 'a' * 64)
+    spec, = load_projects(manifest)
+    assert not spec.trusted_tests.is_relative_to(spec.root)
+    oracle = spec.trusted_tests/'test_cart.py'
+    original = (ASSETS/'checks/test_cart.py').read_bytes()
+    assert oracle.read_bytes() == original
+    oracle.write_bytes(b'# declared synthetic operator edit\n')
+    with pytest.raises(RuntimeError, match='Independent demo checks changed'):
+        local.demo_manifest('sha256:' + 'a' * 64)
+    assert oracle.read_bytes() == b'# declared synthetic operator edit\n'
+    assert (ASSETS/'checks/test_cart.py').read_bytes() == original
+    oracle.write_bytes(original)
+    (spec.trusted_tests/'unexpected.txt').write_text('declared synthetic extra file')
+    with pytest.raises(RuntimeError, match='unexpected files'):
+        local.demo_manifest('sha256:' + 'a' * 64)
+    assert oracle.read_bytes() == original
