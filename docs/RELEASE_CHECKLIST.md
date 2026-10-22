@@ -1,6 +1,6 @@
 # Public preview release verification
 
-Version 0.3.2, 22 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
+Version 0.3.3, 22 October 2026. This checklist distinguishes package/CI checks from actual local model/device results. Passing checks are finite evidence, not a guarantee that every installation or model answer will succeed.
 
 ## Required release gates
 
@@ -44,3 +44,9 @@ The [0.3.0 installed Mac real workflow](evidence/release-wheel-live-v0.3.0-macos
 The [downloaded 0.3.0 failure](evidence/release-published-v0.3.0-hold.json) was isolated to Docker's independent-test bind mount: the installed package test directory existed on the host but Docker reported it as nonexistent. Source mounts were available, and source-checkout oracle trials under normal/restrictive umasks returned the expected failing baseline. Version 0.3.2 exports an exact validated copy of the public bundled oracle under the private runtime, outside model-writable source. Modified copies or unexpected files hold without overwrite. No model, policy or expected test result changes.
 
 The [clean installed 0.3.2 real-model trial](evidence/release-wheel-live-v0.3.2-macos.json) passed failing baseline, real Gemma-generated repair, independent Docker PASS, review, disposable apply/rollback and graceful stop. The release smoke additionally verifies both bundled and prepared oracle hashes after the real workflow. Earlier failures remain recorded.
+
+## Trusted versions and bounded repair feedback (0.3.3)
+
+The [published 0.3.2 hold](evidence/release-published-v0.3.2-hold.json) and [instrumented synthetic diagnostic](evidence/release-published-v0.3.2-diagnostic.json) preserve the actual generated-source syntax error. The [first staged 0.3.3 hold](evidence/release-staged-v0.3.3-first-hold.json) retains the subsequent stale-sandbox result. The final change moves checksum bookkeeping into trusted approved-read/write state, removes that argument from the model-facing schema and permits bounded syntax-error feedback without changing the actual ERROR outcome or final PASS requirement.
+
+The [updated clean installed real trial](evidence/release-wheel-live-v0.3.3-macos.json) passed actual Gemma/Gitleaks sanitized delivery, failing baseline, generated repair, independent Docker PASS, review, disposable apply/rollback, graceful stop and both oracle hashes. The local regression suite passed 316 tests with seven native Windows skips; native Windows/package CI provides its own OS results. These finite checks do not establish every-bug repair, physical Windows model performance or signed-in Windows coding-provider delivery.

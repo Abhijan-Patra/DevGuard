@@ -152,3 +152,9 @@ See [client integration](CLIENT_INTEGRATION.md) and recorded native evidence; th
 ## Native Windows runtime — 22 October 2026
 
 `GET /status` adds `host_platform` (`sys.platform`, such as `win32`, `darwin` or `linux`) so setup commands in the browser match the backend host. No request field or release authority changes. macOS and Windows desktop text adapters use the existing consent/version/copy contract. Windows native reads use bounded CF_UNICODETEXT and a sequence counter; runtime storage validates Windows ACLs rather than POSIX mode bits. Windows scope and measured gates are in [the Windows guide](WINDOWS.md).
+
+## Trusted repair versions — 22 October 2026
+
+The internal model-facing `propose_patch` schema takes the enrolled path and complete plain source. It does not delegate cryptographic version bookkeeping to the model. Trusted agent code records the exact hash only after an approved source read, advances it after its own successful sandbox write, and passes that observed hash to the existing stale-sandbox check. Legacy adapter checksum arguments are parsed for compatibility but grant no authority. A concurrent unread edit still rejects the replacement. Public candidate/base hashes and operator approval on original-source apply/rollback are unchanged.
+
+A named check's actual ERROR/exit 2 can be returned as bounded `SOURCE_SYNTAX_ERROR` feedback only after a draft write and confirmed source syntax errors. It remains ERROR, consumes the same step/time/two-patch budget and is not passing verification. Valid-source checker failures, Docker unavailability and final verification failures still hold. The host compiler diagnoses syntax without executing source; the prepared Docker check remains the final authority.
