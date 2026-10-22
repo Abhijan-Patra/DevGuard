@@ -245,10 +245,62 @@ function eventTable(events) {
     );
   return `<div class="table-wrap"><table><thead><tr><th>EVENT</th><th>STATE</th><th>DETAIL</th><th>TIME</th></tr></thead><tbody>${events.map((e) => `<tr><td>${esc(e.kind)}</td><td>${badge(e.state)}</td><td>${esc(e.redacted_summary)}</td><td class="muted">${esc(stamp(e.timestamp))}</td></tr>`).join("")}</tbody></table></div>`;
 }
+const shieldStage = (id) => `<div class="shield-stage"><span class="field-orbit" aria-hidden="true"></span><canvas data-shield-field="${id}" aria-hidden="true"></canvas><div class="shield-fallback" aria-hidden="true">${icon("shield")}</div><div class="field-caption"><span>INTERACTIVE ILLUSTRATION</span><button type="button" data-action="motion" aria-pressed="false">Pause motion</button></div><span class="field-hint">Move across the shield · click for a ripple</span></div>`;
+let renderedRoute = null;
+let renderedResult = null;
+function enhanceWorkspace() {
+  const main = $("main");
+  const route = state.connected ? view : "welcome";
+  if (main) {
+    main.dataset.view = view;
+    if (renderedRoute !== route) main.classList.add("view-enter");
+  }
+  if (!state.connected) {
+    $(".welcome-copy")?.insertAdjacentHTML("beforeend", shieldStage("welcome"));
+  } else if (view === "overview") {
+    const diagram = $(".guard-diagram");
+    if (diagram) {
+      diagram.classList.add("overview-flow");
+      diagram.insertAdjacentHTML("beforebegin", shieldStage("overview"));
+    }
+  } else if (view === "privacy") {
+    const result = state.result;
+    const approved = result && result.status === "READY" && result.safe_preview != null;
+    const phase = state.busy ? "checking" : result ? approved ? "ready" : "held" : "idle";
+    const steps = [
+      ["file", "Your context", state.busy || result ? "Submitted for inspection" : "Add a prompt or enrolled source", state.busy || result ? "done" : ""],
+      ["shield", "Local inspection", state.busy ? "Inspecting with rules and Gemma" : result ? "Decision received" : "Rules + Gemma + final scan", state.busy ? "active" : result ? "done" : ""],
+      [approved ? "check" : "lock", "Your review", result?.delivered ? "Released to local composer" : approved ? "Approved preview available" : result?.status === "EXPIRED" ? "Expired · inspect again" : result ? "Held · check the reasons" : "Explicit approval before release", approved ? "done" : result ? "held" : ""],
+    ];
+    $(".page-head")?.insertAdjacentHTML("afterend", `<section class="context-experience" data-phase="${phase}"><div class="context-visual"><div class="context-visual-copy"><span class="eyebrow">THE CONTEXT BOUNDARY</span><h2>Useful context in.<br><span>Detected secrets out.</span></h2><p>Inspect first. Review the result. Release deliberately.</p><span class="tag">${publicDemo ? "READ-ONLY TOUR" : state.busy ? "INSPECTION IN PROGRESS" : "LOCAL WORKFLOW"}</span></div>${shieldStage("privacy")}</div><ol class="context-track" aria-label="Inspection workflow">${steps.map(([glyph, label, detail, status], index) => `<li class="flow-step ${status}"><span class="flow-number">0${index + 1}</span><span class="flow-icon">${icon(glyph)}</span><div><strong>${label}</strong><small>${esc(detail)}</small></div><span class="flow-connector" aria-hidden="true"></span></li>`).join("")}</ol></section>`);
+    const panel = $("#inspection-panel");
+    if (state.busy) {
+      const emptyPanel = panel?.querySelector(".empty");
+      if (emptyPanel) emptyPanel.innerHTML = `<div class="scan-visual" aria-hidden="true">${icon("shield")}<i></i><i></i><i></i></div><h3 role="status">Inspecting locally</h3><p>Waiting for the actual guard decision.<br>Your original text is not sent to a cloud model.</p>`;
+    } else if (result && renderedResult !== result.request_id + result.status) {
+      panel?.classList.add("result-enter");
+    }
+    renderedResult = result ? result.request_id + result.status : null;
+  } else if (view === "repairs") {
+    const run = state.run;
+    const running = run && ["INVESTIGATING", "PATCHING_SANDBOX"].includes(run.state);
+    const reviewing = run && ["READY_FOR_REVIEW", "APPLIED", "ROLLED_BACK", "REJECTED"].includes(run.state);
+    const steps = [
+      ["file", "Baseline", run?.baseline || "Not run", run?.baseline ? "done" : ""],
+      ["code", "Investigation", running ? "Agent working in snapshot" : run?.completed_tools?.length ? `${run.completed_tools.length} completed tools` : "Waiting for a run", running ? "active" : run?.completed_tools?.length ? "done" : ""],
+      ["shield", "Independent checks", run?.verification || "Not verified", run?.state === "VERIFYING" ? "active" : run?.verification === "PASS" ? "done" : run?.verification ? "held" : ""],
+      ["check", "Human review", reviewing ? run.state.replaceAll("_", " ") : "No reviewed candidate", reviewing ? "done" : ""],
+    ];
+    $(".page-head")?.insertAdjacentHTML("afterend", `<ol class="context-track repair-track" aria-label="Repair evidence stages">${steps.map(([glyph, label, detail, status], index) => `<li class="flow-step ${status}"><span class="flow-number">0${index + 1}</span><span class="flow-icon">${icon(glyph)}</span><div><strong>${label}</strong><small>${esc(detail)}</small></div><span class="flow-connector" aria-hidden="true"></span></li>`).join("")}</ol>`);
+  }
+  renderedRoute = route;
+  window.DevGuardMotion?.sync();
+}
 function render() {
   if (!state.connected) {
     $("#app").innerHTML =
-      `<section class="connect-card"><span class="brand-mark">d.</span><div class="eyebrow">YOUR LAPTOP. YOUR CONTROL.</div><h1>A quieter way<br>to build with AI.</h1><p>Guard the context you share. Investigate backend bugs. Review verified changes before they reach your code.</p><div class="notice">This is the real local workspace. Connecting authorizes this browser to use the local operator controls for eight hours. Clipboard capture and file watching stay off until you enable them.</div>${button(icon("lock") + " Connect this browser", "connect", "primary", state.busy)}<p class="caption">127.0.0.1 · No cloud model · No screen recording</p></section>`;
+      `<section class="welcome"><div class="welcome-copy"><a class="brand" href="#overview"><span class="brand-mark">${icon("shield")}</span><span>devguard<small>LOCAL AGENT WORKSPACE</small></span></a><div class="eyebrow">PRIVATE BY DESIGN. BUILT FOR DEVELOPERS.</div><h1>Your code.<br>Your context.<br><span>Your control.</span></h1><p>A local workspace to inspect what you share and review what AI changes. Powered by Gemma, running on your machine.</p><div class="welcome-notes"><span>${icon("lock")} Local inference</span><span>${icon("check")} Reviewed changes</span><span>${icon("shield")} Explicit access</span></div></div><div class="welcome-panel panel"><span class="welcome-icon">${icon("lock")}</span><div class="eyebrow">LOCAL WORKSPACE</div><h2>Make yourself at home.</h2><p>Connect this browser to your local DevGuard instance.</p><div class="welcome-steps"><div><span>01</span><section><h3>Inspect your context</h3><p>Keep useful debugging details. Replace detected sensitive values.</p></section></div><div><span>02</span><section><h3>Investigate a failure</h3><p>Let Gemma work with enrolled source and independent Docker checks.</p></section></div><div><span>03</span><section><h3>Review the change</h3><p>Inspect the diff and test results before approving a patch.</p></section></div></div><div class="notice">Connecting grants this browser local operator controls for eight hours. Clipboard capture and file watching start off.</div>${button(icon("lock") + " Connect this browser " + icon("arrow"), "connect", "primary", state.busy)}<p class="caption">Loopback connection · No cloud model · No screen recording</p></div></section>`;
+    enhanceWorkspace();
     return;
   }
   const s = state.status,
@@ -277,13 +329,13 @@ function render() {
       .querySelector("main")
       .insertAdjacentHTML(
         "afterbegin",
-        '<div class="notice warn public-banner"><b>PUBLIC READ-ONLY FEATURE TOUR</b><br>No live inference or device access is hosted here. Controls are disabled; example project metadata is illustrative. Real Gemma, clipboard and Docker workflows run on the local Mac. Open Verification for recorded experiments and limitations. <a href="https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/INSTALL.md" target="_blank" rel="noreferrer">Install DevGuard ↗</a></div>',
+        '<div class="notice warn public-banner"><div><b>PUBLIC READ-ONLY FEATURE TOUR</b><p>Explore the workspace. Inference and device controls run locally; project metadata here is illustrative.</p><details><summary>About this demo</summary><p>Controls are disabled. Verification contains recorded experiments with their limitations, not results from a live session.</p></details></div><a class="btn" href="https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/INSTALL.md" target="_blank" rel="noreferrer">Install locally ↗</a></div>',
       );
     document
       .querySelectorAll("button,input,select,textarea")
       .forEach((element) => {
         if (
-          !["theme", "menu", "export-evidence"].includes(
+          !["theme", "menu", "export-evidence", "motion"].includes(
             element.dataset.action,
           ) &&
           !element.dataset.mode
@@ -298,6 +350,18 @@ function render() {
       )
       .forEach((element) => (element.disabled = true));
   }
+  const brandMark = document.querySelector(".brand .brand-mark");
+  if (brandMark) brandMark.innerHTML = icon("shield");
+  document.querySelectorAll('.nav-item').forEach((link) => {
+    if (link.hash === '#' + view) link.setAttribute('aria-current', 'page');
+  });
+  if (publicDemo) {
+    const engine = document.querySelector('.engine-mini');
+    if (engine) engine.innerHTML = `<small>WORKSPACE MODE</small><b>${icon("grid")} Read-only tour</b><p>Local runtime required for live workflows.</p>`;
+    const avatar = document.querySelector('.avatar');
+    if (avatar) { avatar.textContent = 'DEMO'; avatar.title = 'Public read-only tour'; }
+  }
+  enhanceWorkspace();
 }
 function overview() {
   const s = state.status || {},
@@ -307,7 +371,17 @@ function overview() {
   const open = state.incidents.filter(
     (i) => i.status === "READY_FOR_REVIEW",
   ).length;
-  return `${heading("CONTROL PLANE / OVERVIEW", "Build freely. Share deliberately.", "Your private development workspace, with the checks and evidence in view.")}<div class="grid hero-grid"><section class="panel hero"><span class="tag good">${icon("lock")} PRIVATE BY DESIGN</span><h1>Less exposure.<br><span>More control.</span></h1><p>Keep useful debugging context. Leave sensitive details behind. Let your local agent investigate while you stay in charge.</p><div class="actions"><a class="btn primary" href="#privacy">Inspect context ${icon("arrow")}</a><a class="btn" href="#repairs">Review repairs</a></div><div class="orbit"></div></section><section class="panel hero-status"><div class="panel-head"><h2>Local control plane</h2><span class="caption">${publicDemo ? "LOCAL RUNTIME REQUIRED" : "LIVE"}</span></div><div class="status-row"><span class="muted">Gemma 4 E4B</span>${badge(rt.model_ready ? "MODEL_READY" : rt.reason_code)}</div><div class="status-row"><span class="muted">Credential scanner</span>${badge(s.credential_scanner_available ? "READY" : "UNAVAILABLE")}</div><div class="status-row"><span class="muted">Docker repair</span>${badge(r.available ? "READY" : r.reason_code)}</div><div class="status-row"><span class="muted">Audit storage</span><b>${s.audit?.durable ? "Persistent · redacted" : "Session only"}</b></div></section></div><div class="grid g4"><div class="panel stat"><small>Guarded inspections</small><strong>${state.events.filter((e) => e.kind === "guard.decision").length}</strong><p>In loaded audit records</p></div><div class="panel stat"><small>Text clipboard</small><strong>${c.enabled ? "Watching" : "Off"}</strong><p>${c.enabled ? esc(c.state) : "Only starts with your consent"}</p></div><div class="panel stat"><small>Review queue</small><strong>${open.toString().padStart(2, "0")}</strong><p>Verified candidates awaiting review</p></div><div class="panel stat"><small>Registered projects</small><strong>${state.projects.length.toString().padStart(2, "0")}</strong><p>${s.monitoring?.watched_projects || 0} watched · ${esc(r.state || "unavailable").toLowerCase()} worker</p></div></div><div class="section-row"><h2>Your next move</h2><span class="caption">EXPLICIT ACTIONS / REAL EVIDENCE</span></div><div class="grid g3">${[
+  const metrics = [
+    ["shield", "Guard decisions", publicDemo ? "—" : state.events.filter((e) => e.kind === "guard.decision").length, publicDemo ? "Live session required" : "Decisions in loaded audit records"],
+    ["clipboard", "Text clipboard", c.enabled ? "Watching" : "Off", c.enabled ? c.state : "Enable only when you need it"],
+    ["code", "Awaiting review", publicDemo ? "—" : open.toString().padStart(2, "0"), "Verified patches, pending your approval"],
+    ["folder", publicDemo ? "Example projects" : "Enrolled projects", state.projects.length.toString().padStart(2, "0"), publicDemo ? "Illustrative project metadata" : `${s.monitoring?.watched_projects || 0} watched · exact source manifests`],
+  ];
+  return `${heading("WORKSPACE / OVERVIEW", "Your development, under control.", "Inspect sensitive context. Investigate failures. Ship changes you have reviewed.", '<a class="btn primary" href="#privacy">' + icon("shield") + ' Inspect context ' + icon("arrow") + '</a>')}
+  <div class="grid g4 metrics">${metrics.map(([glyph, label, value, detail]) => `<section class="panel stat"><div class="stat-top"><small>${esc(label)}</small><span class="stat-icon">${icon(glyph)}</span></div><strong>${esc(value)}</strong><p>${esc(detail)}</p></section>`).join("")}</div>
+  <div class="grid command-grid"><section class="panel command-hero"><div class="hero-copy"><span class="tag good">${icon("lock")} LOCAL AI. DELIBERATE ACTIONS.</span><h2>Build with AI.<br><span>Keep the controls.</span></h2><p>Your context stays in the local workflow. Every proposed repair comes back with a diff and independent test evidence.</p><a class="btn" href="#repairs">Open repair workspace ${icon("arrow")}</a></div><div class="guard-diagram" aria-label="Inspection workflow: input, local checks, review"><div class="diagram-node">${icon("file")}<span>Your context</span><small>Prompt or enrolled source</small></div><div class="diagram-line"></div><div class="diagram-node diagram-core">${icon("shield")}<span>DevGuard gate</span><small>Rules + local Gemma + final scan</small></div><div class="diagram-line"></div><div class="diagram-node">${icon("check")}<span>Your review</span><small>Explicit release of approved text</small></div></div></section>
+  <section class="panel runtime-panel"><div class="panel-head"><div><div class="eyebrow">RUNTIME</div><h2>System readiness</h2></div><span class="runtime-indicator ${rt.model_ready ? 'ready' : ''}">${publicDemo ? 'TOUR' : 'LOCAL'}</span></div><div class="status-row"><span>${icon("activity")} Gemma 4 E4B</span>${badge(rt.model_ready ? "MODEL_READY" : rt.reason_code)}</div><div class="status-row"><span>${icon("shield")} Credential scanner</span>${badge(s.credential_scanner_available ? "READY" : "UNAVAILABLE")}</div><div class="status-row"><span>${icon("code")} Docker repair</span>${badge(r.available ? "READY" : r.reason_code)}</div><div class="status-row"><span>${icon("file")} Audit storage</span><b>${s.audit?.durable ? "Persistent · redacted" : publicDemo ? "Local runtime required" : "Session only"}</b></div><a class="runtime-link" href="#system">System details & coverage ${icon("arrow")}</a></section></div>
+  <div class="section-row"><div><div class="eyebrow">DESIGNED FOR YOUR WORKFLOW</div><h2>Choose where to start</h2></div><span class="caption">YOU SET THE SCOPE</span></div><div class="grid g3 workflows">${[
     [
       "shield",
       "privacy",
@@ -329,11 +403,11 @@ function overview() {
   ]
     .map(
       ([i, v, t, d]) =>
-        `<a class="panel workflow" href="#${v}"><span class="glyph">${icon(i)}</span><span class="arrow">${icon("arrow")}</span><h3>${t}</h3><p>${d}</p></a>`,
+        `<a class="panel workflow" href="#${v}"><div class="workflow-top"><span class="glyph">${icon(i)}</span><span class="workflow-label">${v === "repairs" ? "INVESTIGATE" : "PROTECT"}</span><span class="arrow">${icon("arrow")}</span></div><h3>${t}</h3><p>${d}</p><span class="workflow-open">Open workspace ${icon("arrow")}</span></a>`,
     )
     .join(
       "",
-    )}</div><div class="section-row"><h2>Recent activity</h2><a class="btn text" href="#activity">View audit ${icon("arrow")}</a></div><section class="panel">${eventTable(state.events.slice(-5).reverse())}</section>`;
+    )}</div><div class="section-row"><div><div class="eyebrow">TRACEABLE BY DESIGN</div><h2>Recent activity</h2></div><a class="btn text" href="#activity">View all events ${icon("arrow")}</a></div><section class="panel activity-panel">${publicDemo ? empty("A live timeline belongs to your machine", "This tour does not collect activity. Connect a local workspace to see redacted inspection and repair events.", "activity") : eventTable(state.events.slice(-5).reverse())}</section>`;
 }
 function privacy() {
   const result = state.result,
@@ -640,6 +714,9 @@ async function action(name, element) {
       break;
     case "menu":
       $(".sidebar").classList.toggle("open");
+      break;
+    case "motion":
+      window.DevGuardMotion?.toggle();
       break;
     case "refresh":
       await refresh();

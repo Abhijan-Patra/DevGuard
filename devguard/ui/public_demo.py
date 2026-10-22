@@ -9,6 +9,7 @@ def public_document():
     root = Path(__file__).resolve().parents[1] / 'web'
     css = (root / 'workspace.css').read_text()
     script = (root / 'workspace.js').read_text()
+    motion = (root / 'workspace-motion.js').read_text()
     evidence = json.dumps(json.loads((root / 'evidence.json').read_text())).replace('<', '\\u003c')
     return ('<!doctype html><html lang="en" data-theme="dark"><head>'
             '<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -16,6 +17,7 @@ def public_document():
             '<body data-public-demo="1"><div id="app"></div><div id="notifications" role="status" aria-live="polite"></div>'
             '<dialog id="review-dialog" aria-labelledby="dialog-title"></dialog>'
             '<script>window.DEVGUARD_RECORDED_EVIDENCE=' + evidence + ';</script>'
+            '<script>' + motion.replace('</script', '<\\/script') + '</script>'
             '<script type="module">' + script.replace('</script', '<\\/script') + '</script></body></html>')
 
 

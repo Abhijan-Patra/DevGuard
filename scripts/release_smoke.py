@@ -80,6 +80,7 @@ def main():
                         time.sleep(.2)
                     assert client.get('/app').status_code == 200
                     assert 'display_preview' in client.get('/assets/workspace.js').text
+                    assert 'DevGuardMotion' in client.get('/assets/workspace-motion.js').text
                     assert client.get('/api/v1/status').status_code == 401
                     headers = {'Origin': base, 'X-DevGuard-Workspace': '1'}
                     pairing = client.post('/api/v1/session/connect', headers=headers)

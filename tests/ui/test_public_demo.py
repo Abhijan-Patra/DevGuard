@@ -16,5 +16,7 @@ def test_public_tour_never_reads_local_token_and_keeps_provenance(monkeypatch):
     assert 'data-public-demo="1"' in document
     assert 'PUBLIC READ-ONLY FEATURE TOUR' in document
     assert 'PUBLIC_TOUR_READ_ONLY' in document
+    assert 'window.DevGuardMotion' in document
+    assert document.index('window.DevGuardMotion =') < document.index('function enhanceWorkspace')
     assert 'actual_receiver_matched_preview' in document
     assert 'decision_matches_expectation' in document

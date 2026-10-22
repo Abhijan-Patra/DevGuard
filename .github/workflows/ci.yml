@@ -25,6 +25,8 @@ jobs:
       - run: python -m pytest -q
       - run: python -m pip check
       - run: node --check devguard/web/workspace.js
+      - run: node --check devguard/web/workspace-motion.js
+      - run: node --test tests/ui/workspace-motion.test.cjs
   wheel-install:
     name: Clean wheel (${{ matrix.os }}, Python ${{ matrix.python }})
     runs-on: ${{ matrix.os }}

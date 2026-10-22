@@ -155,4 +155,7 @@ def test_workspace_assets_ship_with_strict_headers(tmp_path):
         assert 'frame-ancestors' in response.headers['content-security-policy']
         assert response.headers['cache-control']=='no-store'
         assert client.get('/assets/workspace.js').status_code==200
+        assert '/assets/workspace-motion.js' in response.text
+        motion = client.get('/assets/workspace-motion.js')
+        assert motion.status_code == 200 and 'DevGuardMotion' in motion.text
         assert client.get('/assets/../config.py').status_code==404
