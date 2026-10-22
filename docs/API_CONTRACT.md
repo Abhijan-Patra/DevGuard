@@ -148,3 +148,7 @@ Project enrollment is startup-only with `--projects-config`. No HTTP/model endpo
 - Adds `PROMPT_INJECTION` as a classification/reason code. Explicit detected policy-override attempts BLOCK regardless of model opinion. Generic credential-shaped baselines remain protected even if a provider detector excludes known example values. Any model-proposed CONFIDENTIAL span requires REVIEW (or preserves stronger BLOCK/LOCAL_ONLY). These are conservative policy rules, not exhaustive detection guarantees.
 
 See [client integration](CLIENT_INTEGRATION.md) and recorded native evidence; the existing five-case privacy baseline remains preserved alongside the calibrated rerun and extra small regression set.
+
+## Native Windows runtime — 22 October 2026
+
+`GET /status` adds `host_platform` (`sys.platform`, such as `win32`, `darwin` or `linux`) so setup commands in the browser match the backend host. No request field or release authority changes. macOS and Windows desktop text adapters use the existing consent/version/copy contract. Windows native reads use bounded CF_UNICODETEXT and a sequence counter; runtime storage validates Windows ACLs rather than POSIX mode bits. Windows scope and measured gates are in [the Windows guide](WINDOWS.md).

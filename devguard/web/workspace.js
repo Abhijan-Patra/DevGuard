@@ -436,6 +436,10 @@ function system() {
   const s = state.status || {},
     r = s.runtime || {},
     repair = s.repair || {};
+  const launcher = s.host_platform === "win32"
+    ? ".\\.venv\\Scripts\\python.exe -m devguard"
+    : "./scripts/devguard-local";
+  const manifest = s.host_platform === "win32" ? "C:/Projects/projects.json" : "/absolute/path/projects.json";
   return `${heading("SYSTEM / COVERAGE", "Know what is actually running.", "Runtime readiness, trusted boundaries and explicit integration limits.")}<div class="grid system-grid"><section class="panel"><div class="panel-head"><h2>Runtime health</h2><span class="tag">THIS LAPTOP</span></div>${[
     ["shield", "Local model", r.model, r.model_ready ? "READY" : r.reason_code],
     [
@@ -469,10 +473,9 @@ function system() {
     )
     .join(
       "",
-    )}<div class="divider"></div><span class="label">Pinned model digest</span><pre>${esc(r.model_digest || "Not available")}</pre><span class="label">Inference queue</span><pre>${esc(JSON.stringify(s.inference_queue || {}, null, 2))}</pre></section><section class="panel"><div class="panel-head"><h2>Single-laptop setup</h2></div><p class="subtitle">Run from the repository root. The launcher checks Docker and the exact Gemma package, inspects the verifier image and starts this local workspace.</p><pre>./scripts/devguard-local start
-./scripts/devguard-local status
-./scripts/devguard-local stop</pre><p class="subtitle">Enrol your own Python backend with independent pytest checks and a prepared image:</p><pre>.venv/bin/python -m devguard \
-  --projects-config /absolute/path/projects.json</pre><div class="notice">The model can propose edits to one approved source file per candidate. It cannot change your policy, trusted tests or original files. Rollback requires explicit review and unchanged applied source.</div>${button("Disconnect this browser", "disconnect", "danger")}</section></div><div class="section-row"><h2>Integration boundaries</h2><span class="caption">IMPLEMENTATION ≠ UNIVERSAL COVERAGE</span></div><div class="grid g2">${state.coverage.map((c) => `<section class="panel"><div class="panel-head"><h2>${esc(c.capability.replaceAll("_", " "))}</h2>${badge(c.status)}</div><p class="subtitle">${esc(c.limitations)}</p></section>`).join("")}</div><div class="notice warn">Recorded Codex and Claude CLI hook/MCP boundaries passed with real Gemma and a local synthetic provider. Isolated profiles require explicit setup and native hook trust; they are not active in every application. The managed server source-read path enforces its own output gate. Arbitrary app pastes, automatic context ingestion and attachments remain outside its boundary. Windows native capture is not available on this computer.</div>`;
+    )}<div class="divider"></div><span class="label">Pinned model digest</span><pre>${esc(r.model_digest || "Not available")}</pre><span class="label">Inference queue</span><pre>${esc(JSON.stringify(s.inference_queue || {}, null, 2))}</pre></section><section class="panel"><div class="panel-head"><h2>Single-laptop setup</h2></div><p class="subtitle">Run from the repository root. The launcher checks Docker and the exact Gemma package, inspects the verifier image and starts this local workspace.</p><pre>${esc(launcher)} start
+${esc(launcher)} status
+${esc(launcher)} stop</pre><p class="subtitle">Enrol your own Python backend with independent pytest checks and a prepared image:</p><pre>${esc(launcher)} start --projects-config "${esc(manifest)}"</pre><div class="notice">The model can propose edits to one approved source file per candidate. It cannot change your policy, trusted tests or original files. Rollback requires explicit review and unchanged applied source.</div>${button("Disconnect this browser", "disconnect", "danger")}</section></div><div class="section-row"><h2>Integration boundaries</h2><span class="caption">IMPLEMENTATION ≠ UNIVERSAL COVERAGE</span></div><div class="grid g2">${state.coverage.map((c) => `<section class="panel"><div class="panel-head"><h2>${esc(c.capability.replaceAll("_", " "))}</h2>${badge(c.status)}</div><p class="subtitle">${esc(c.limitations)}</p></section>`).join("")}</div><div class="notice warn">Recorded Codex and Claude CLI hook/MCP boundaries passed with real Gemma and a local synthetic provider. Isolated profiles require explicit setup and native hook trust; they are not active in every application. The managed server source-read path enforces its own output gate. Arbitrary app pastes, automatic context ingestion and attachments remain outside its boundary. Native text capture requires a supported macOS or Windows desktop session. Windows signed-in coding-client trials remain unverified.</div>`;
 }
 
 function evidence() {

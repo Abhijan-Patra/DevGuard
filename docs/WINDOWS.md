@@ -51,3 +51,5 @@ No setup step changes global coding-client configuration or pretrusts hooks. Man
 | Stale patch/copy | Reinspect the new source/copy. Concurrent changes are deliberately preserved. |
 
 A passing test is evidence for that test only. No perfect detection, universal paste interception, every-bug repair or production certification is claimed.
+
+Startup loads the digest-checked local model without a prompt before accepting private work. This reduces first-request cold-load holds; later resource contention or model eviction can still result in a held inspection. The backend's final scan and source/version checks remain mandatory.

@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import asyncio
 import contextlib
 import secrets
+import sys
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -180,6 +181,7 @@ def create_app(settings: Settings, *, transport=None, scanner=None, inspector=No
     async def status():
         return {
             "phase": "GUARD_AND_CLIPBOARD_IMPLEMENTATION",
+            "host_platform": sys.platform,
             "runtime": await model.inspect(),
             "inference_queue": model.queue.status(),
             "clipboard": {**clipboard.status(), "implemented": True},

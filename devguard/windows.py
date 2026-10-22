@@ -94,7 +94,7 @@ def anchored_directory(path):
                 relative_parts(part)
                 current /= part
             handle = file.CreateFile(str(current), con.GENERIC_READ | con.READ_CONTROL,
-                con.FILE_SHARE_READ, None, con.OPEN_EXISTING,
+                con.FILE_SHARE_READ | con.FILE_SHARE_WRITE, None, con.OPEN_EXISTING,
                 con.FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
             handles.append(handle)
             actual = file.GetFinalPathNameByHandle(handle, 0)
