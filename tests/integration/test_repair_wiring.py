@@ -49,8 +49,8 @@ def test_model_missing_factory_does_not_prevent_privacy_startup():
 def test_real_worker_ports_bridge_audit_and_display_client_without_touching_originals(tmp_path):
     root=tmp_path/'project'
     root.mkdir()
-    (root/'cart.py').write_text('VALUE = 1\n')
-    (root/'main.py').write_text('# independent dependency\n')
+    (root/'cart.py').write_bytes(b'VALUE = 1\n')
+    (root/'main.py').write_bytes(b'# independent dependency\n')
     checks=tmp_path/'checks'
     checks.mkdir()
     spec=ProjectSpec('demo',root.resolve(),('cart.py','main.py'),('cart.py',),checks,

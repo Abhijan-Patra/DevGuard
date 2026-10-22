@@ -130,3 +130,23 @@ def test_release_failure_report_preserves_dependency_hold_without_exception_payl
     data = json.loads(output.read_text())
     assert data['passed'] is False and data['repair_reason'] == 'BASELINE_UNAVAILABLE'
     assert 'synthetic-private-exception-detail' not in output.read_text()
+
+
+def test_startup_warmup_never_sends_private_input_or_uses_an_unpinned_model():
+    requests = []
+    def respond(request):
+        requests.append(request)
+        if request.method == 'GET':
+            return httpx.Response(200, json={'models':[{'name':MODEL,'digest':MODEL_DIGEST}]})
+        body = json.loads(request.content)
+        assert request.url.path == '/api/generate'
+        assert body == {'model':MODEL,'stream':False,'keep_alive':'5m','options':{'num_ctx':4096}}
+        assert 'prompt' not in body and 'messages' not in body
+        return httpx.Response(200, json={'done':True})
+    local.warm_model(transport=httpx.MockTransport(respond))
+    assert [r.method for r in requests] == ['GET','POST']
+    def mismatch(request):
+        assert request.method == 'GET'
+        return httpx.Response(200, json={'models':[{'name':MODEL,'digest':'wrong'}]})
+    with pytest.raises(RuntimeError, match='digest mismatch'):
+        local.warm_model(transport=httpx.MockTransport(mismatch))

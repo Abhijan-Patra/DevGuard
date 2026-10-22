@@ -106,6 +106,7 @@ def main():
                     synthetic = 'Debug login: password=synthetic-release-credential-437295; ValueError at auth.py:42'
                     result = api('POST', '/guard/evaluate', {'surface': 'explicit_prompt', 'destination_id': 'local-composer',
                         'content_version': 1, 'task': None, 'text': synthetic})
+                    report['privacy'] = {key: result.get(key) for key in ('decision', 'status', 'reason_codes')}
                     assert 'synthetic-release-credential' not in json.dumps(result)
                     if args.live:
                         assert health.json()['model_ready']

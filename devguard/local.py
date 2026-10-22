@@ -86,7 +86,7 @@ def owned(record):
 
 def ready(url):
     try:
-        with httpx.Client(trust_env=False, timeout=2) as client:
+        with httpx.Client(trust_env=False, timeout=7) as client:
             return client.get(url).status_code == 200
     except httpx.HTTPError:
         return False
@@ -99,6 +99,21 @@ def wait_until(check, seconds, label):
             return
         time.sleep(1)
     raise RuntimeError(label + ' did not become ready; inspect its application status')
+
+
+def warm_model(*, transport=None):
+    """Load only the pinned model with no prompt, before accepting private work."""
+    with httpx.Client(base_url='http://127.0.0.1:11434', trust_env=False,
+                      timeout=120, follow_redirects=False, transport=transport) as client:
+        response = client.get('/api/tags');response.raise_for_status()
+        if not any(m.get('name') == MODEL and m.get('digest') == MODEL_DIGEST
+                   for m in response.json().get('models', []) if isinstance(m, dict)):
+            raise RuntimeError('Gemma digest mismatch. Startup remains held')
+        response = client.post('/api/generate', json={'model': MODEL, 'stream': False,
+            'keep_alive': '5m', 'options': {'num_ctx': 4096}})
+        response.raise_for_status()
+        if response.json().get('done') is not True:
+            raise RuntimeError('Gemma warm-up did not finish; startup remains held')
 
 
 def ensure_dependencies(*, privacy_only=False):
@@ -150,12 +165,16 @@ def ensure_dependencies(*, privacy_only=False):
     if selected is None or selected.get('digest') != MODEL_DIGEST:
         raise RuntimeError('Gemma digest mismatch. No substitute model will be used')
     if privacy_only:
+        print("Loading the pinned local model (no user input)…", flush=True)
+        warm_model()
         return None
     inspected = subprocess.run([docker, 'image', 'inspect', RUNNER_TAG, '--format', '{{.Id}}'], capture_output=True, text=True)
     if inspected.returncode != 0:
         print('Building the restricted verifier with a minimal public build context…', flush=True)
         build_runner(docker)
         inspected = command([docker, 'image', 'inspect', RUNNER_TAG, '--format', '{{.Id}}'], capture_output=True, text=True)
+    print("Loading the pinned local model (no user input)…", flush=True)
+    warm_model()
     return inspected.stdout.strip()
 
 
