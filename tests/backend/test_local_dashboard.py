@@ -27,7 +27,7 @@ def test_launcher_reuses_token_in_session_memory_without_printing(monkeypatch, c
     assert state["app_mode"] == "Live Mode (FastAPI Backend)"
     assert state["backend_url"] == "http://127.0.0.1:8766/api/v1"
     assert state["session_token"] == "synthetic-launcher-unit-token-long-enough"
-    assert calls[0][0].endswith("devguard/ui/app.py")
+    assert local_dashboard.Path(calls[0][0]).as_posix().endswith("devguard/ui/app.py")
     assert not capsys.readouterr().out
 
 

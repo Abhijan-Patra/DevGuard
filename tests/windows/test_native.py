@@ -133,3 +133,28 @@ def test_unicode_clipboard_stale_copy_non_text_and_bounded_reads():
     try:win32clipboard.EmptyClipboard()
     finally:win32clipboard.CloseClipboard()
     assert adapter.read_text(4096) == ('NON_TEXT',None)
+
+
+def test_managed_backend_start_status_duplicate_refusal_and_graceful_stop(tmp_path):
+    """Actual backend/lifecycle; external dependency check is a declared double."""
+    import socket
+    env = os.environ.copy()
+    env['DEVGUARD_HOME'] = str(tmp_path / 'disposable installed home')
+    for key in ('DEVGUARD_SESSION_TOKEN','DEVGUARD_ADAPTER_TOKEN','DEVGUARD_SHUTDOWN_EVENT'):
+        env.pop(key, None)
+    with socket.socket() as probe:
+        probe.bind(('127.0.0.1',0));port = probe.getsockname()[1]
+    code = ('from devguard import local\nlocal.ensure_dependencies=lambda **kw: None\n'
+            f'raise SystemExit(local.main(["start","--privacy-only","--no-open","--port","{port}"]))')
+    def run(args):
+        return subprocess.run([sys.executable, *args], env=env, capture_output=True, text=True, timeout=90, check=True)
+    try:
+        started = run(['-c',code])
+        assert 'Ready:' in started.stdout
+        state = json.loads(run(['-m','devguard','status']).stdout)
+        assert state['running'] and state['healthy'] and state['port'] == port
+        assert 'already running' in run(['-c',code]).stdout
+        assert 'stopped gracefully' in run(['-m','devguard','stop']).stdout
+        assert json.loads(run(['-m','devguard','status']).stdout)['running'] is False
+    finally:
+        subprocess.run([sys.executable,'-m','devguard','stop'],env=env,capture_output=True,timeout=90)

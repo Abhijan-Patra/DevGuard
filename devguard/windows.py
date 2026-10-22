@@ -27,8 +27,11 @@ def _api():
 
 def user_sid():
     api, con, _, security, _ = _api()
-    with security.OpenProcessToken(api.GetCurrentProcess(), con.TOKEN_QUERY) as token:
+    token = security.OpenProcessToken(api.GetCurrentProcess(), con.TOKEN_QUERY)
+    try:
         return security.GetTokenInformation(token, security.TokenUser)[0]
+    finally:
+        token.Close()
 
 
 def private_attributes():
@@ -82,7 +85,7 @@ def anchored_directory(path):
             if part:
                 relative_parts(part)
                 current /= part
-            handle = file.CreateFile(str(current), con.FILE_READ_ATTRIBUTES | con.READ_CONTROL,
+            handle = file.CreateFile(str(current), 0x80 | con.READ_CONTROL,
                 con.FILE_SHARE_READ | con.FILE_SHARE_WRITE, None, con.OPEN_EXISTING,
                 con.FILE_FLAG_BACKUP_SEMANTICS | con.FILE_FLAG_OPEN_REPARSE_POINT, None)
             handles.append(handle)
@@ -226,8 +229,11 @@ def graceful_server(server, name):
 
 def signal_shutdown(name):
     import win32event
-    with win32event.OpenEvent(2, False, name) as event:  # EVENT_MODIFY_STATE
+    event = win32event.OpenEvent(2, False, name)  # EVENT_MODIFY_STATE
+    try:
         win32event.SetEvent(event)
+    finally:
+        event.Close()
 
 
 # PyWin32 exceptions are not OSError. Normalize at the native boundary without

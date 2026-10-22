@@ -416,6 +416,7 @@ def test_shutdown_cancels_pending_work_and_prevents_reopening(spec, tmp_path):
         service.queue(incident["incident_id"])
 
 
+@pytest.mark.skipif(__import__("os").name == "nt", reason="POSIX permits parent rename; Windows holds directory handles and rejects it in tests/windows")
 def test_atomic_write_does_not_follow_a_parent_symlink_swapped_at_rename(tmp_path,monkeypatch):
     from devguard.repair.workspace import atomic_replace_source
     import os

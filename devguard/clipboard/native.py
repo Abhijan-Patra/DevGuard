@@ -171,8 +171,8 @@ class _WindowsClipboardAPI:
                     return None
                 self.clip.EmptyClipboard()
                 self.clip.SetClipboardData(13, text)
-                return self.counter()
             finally:
                 self.clip.CloseClipboard()
         finally:
             self.gui.DestroyWindow(window)
+        return self.counter()
