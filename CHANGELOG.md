@@ -1,3 +1,8 @@
+## 0.3.2 — Installed demo verifier mount
+
+- Prepare exact bundled independent demo checks in the private runtime outside model-writable source, so Docker Desktop can mount them without sharing a package/virtualenv directory.
+- Refuse modified copies; preserve bundled/repository oracles and all existing sandbox/review/source-hash checks.
+
 ## 0.3.1 — Windows verifier environment
 
 - Preserve required Windows OS/temp variables case-insensitively in the restricted Docker child environment; continue excluding unrelated/private application variables.

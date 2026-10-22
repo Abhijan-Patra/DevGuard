@@ -189,9 +189,37 @@ def demo_manifest(image_id):
             raise RuntimeError('Demo source cannot be a symlink')
         if not target.exists():
             private_write(target, (ASSETS / 'demo' / name).read_text())
+    # Docker Desktop may not share the installed package/virtualenv path. Export
+    # only the bundled independent oracle into the private runtime, never source.
+    # A pre-existing edited copy is held, not overwritten or silently trusted.
+    from devguard.repair.workspace import read_source
+    from devguard.repair.contracts import RepairError
+    checks = RUNTIME / 'local-demo-checks'
+    if checks.is_symlink() or checks.resolve() != checks:
+        raise RuntimeError('Independent demo checks directory must be canonical')
+    if checks.exists() and (not checks.is_dir() or any(p.name != 'test_cart.py' for p in checks.iterdir())):
+        raise RuntimeError('Independent demo checks contain unexpected files; startup remains held')
+    if not checks.exists():
+        if os.name == 'nt':
+            private_directory(checks)
+        else:
+            checks.mkdir(mode=0o755)
+    if os.name != 'nt':
+        checks.chmod(0o755)  # Public oracle; its containing runtime stays 0700.
+    expected = (ASSETS / 'checks/test_cart.py').read_bytes()
+    target = checks / 'test_cart.py'
+    if not target.exists() and not target.is_symlink():
+        private_write(target, expected.decode('utf-8'))
+        if os.name != 'nt':
+            target.chmod(0o644)
+    try:
+        if read_source(checks, 'test_cart.py') != expected:
+            raise RuntimeError('Independent demo checks changed; startup remains held')
+    except RepairError:
+        raise RuntimeError('Independent demo checks are unavailable; startup remains held') from None
     config = {'projects': [{'project_id': 'demo-cart', 'root': str(directory),
                             'source_files': ['cart.py', 'main.py'], 'writable_files': ['cart.py'],
-                            'trusted_tests': str(ASSETS / 'checks'), 'test_names': ['cart'], 'image_id': image_id}]}
+                            'trusted_tests': str(checks), 'test_names': ['cart'], 'image_id': image_id}]}
     path = RUNTIME / 'local-projects.json'
     private_write(path, json.dumps(config, indent=2))
     return path
