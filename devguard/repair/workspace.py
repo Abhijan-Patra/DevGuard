@@ -47,7 +47,11 @@ def checked_file(root: Path, name: str) -> Path:
     current = root
     for part in PurePosixPath(name).parts:
         current = current / part
-        if current.is_symlink() or (getattr(current.stat(follow_symlinks=False), "st_file_attributes", 0) & 0x400):
+        try:
+            info = current.lstat()
+        except OSError:
+            raise RepairError('SOURCE_UNAVAILABLE') from None
+        if stat.S_ISLNK(info.st_mode) or getattr(info, 'st_file_attributes', 0) & 0x400:
             raise RepairError("SYMLINK_DENIED")
     try:
         info = current.stat()

@@ -17,7 +17,7 @@ class ProjectFiles:
 
     def __init__(self, root):
         root = Path(root).resolve(strict=True)
-        if root in {Path("/"), Path.home()}:
+        if root in {Path("/"), Path.home(), Path(root.anchor)}:
             raise GuardError("PROJECT_ROOT_TOO_BROAD", 403)
         self._windows_anchor = None
         if os.name == 'nt':

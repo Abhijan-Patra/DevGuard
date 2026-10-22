@@ -92,6 +92,10 @@ class WindowsClipboard:
     def read_text(self, limit):
         return self.api.read_text(limit)
 
+    def close(self):
+        if hasattr(self.api, 'close'):
+            self.api.close()
+
     def write_text(self, expected_counter, text):
         if '\0' in text:
             return None
@@ -105,6 +109,7 @@ class _WindowsClipboardAPI:
         import win32clipboard, win32gui
         self.clip, self.gui = win32clipboard, win32gui
         self.ctypes = ctypes
+        self.window = None
         self.user = ctypes.WinDLL('user32', use_last_error=True)
         self.kernel = ctypes.WinDLL('kernel32', use_last_error=True)
         self.user.GetClipboardData.argtypes = [wintypes.UINT]
@@ -160,19 +165,27 @@ class _WindowsClipboardAPI:
             self.clip.CloseClipboard()
 
     def write_text(self, expected_counter, text):
-        # A real owner window is required: OpenClipboard(NULL)+EmptyClipboard
-        # makes SetClipboardData fail. The message-only window is thread-local.
-        window = self.gui.CreateWindowEx(0, 'STATIC', 'DevGuard clipboard owner',
-            0, 0, 0, 0, 0, -3, 0, 0, None)
+        # Keep one owner window on the event-loop thread. Destroying the owner
+        # immediately can itself change the sequence number on Windows.
+        if self.window is None:
+            self.window = self.gui.CreateWindowEx(0, 'STATIC', 'DevGuard clipboard owner',
+                0, 0, 0, 0, 0, -3, 0, 0, None)
+        self._open(self.window)
         try:
-            self._open(window)
-            try:
-                if self.counter() != expected_counter:
-                    return None
-                self.clip.EmptyClipboard()
-                self.clip.SetClipboardData(13, text)
-            finally:
-                self.clip.CloseClipboard()
+            if self.counter() != expected_counter:
+                return None
+            self.clip.EmptyClipboard()
+            self.clip.SetClipboardData(13, text)
         finally:
-            self.gui.DestroyWindow(window)
-        return self.counter()
+            self.clip.CloseClipboard()
+        # Windows commits the sequence at CloseClipboard. Do not accidentally
+        # suppress another app's newer copy as our own write.
+        after = self.counter()
+        if self.clip.GetClipboardOwner() != self.window or self.counter() != after:
+            return None
+        return after
+
+    def close(self):
+        if self.window is not None:
+            self.gui.DestroyWindow(self.window)
+            self.window = None

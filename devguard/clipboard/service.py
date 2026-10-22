@@ -231,3 +231,6 @@ class ClipboardService:
                 await asyncio.sleep(0.75)
         finally:
             await self.disable()
+            close = getattr(self.adapter, "close", None)
+            if close:
+                close()

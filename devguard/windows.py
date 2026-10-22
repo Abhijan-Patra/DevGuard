@@ -70,6 +70,9 @@ def local_path(path):
     path = Path(path).absolute()
     if not path.drive or path.drive.startswith('\\\\') or str(path).startswith('\\\\'):
         raise OSError('LOCAL_WINDOWS_VOLUME_REQUIRED')
+    api, _, file, _, _ = _api()
+    if file.GetDriveType(path.anchor) != 3 or api.GetVolumeInformation(path.anchor)[4].upper() != 'NTFS':
+        raise OSError('LOCAL_NTFS_VOLUME_REQUIRED')
     return path
 
 
@@ -175,6 +178,24 @@ def replace_source(root, name, data, originals, read):
                 output.write(data)
                 output.flush()
                 os.fsync(output.fileno())
+            # Preserve the original file's access restrictions, rather than
+            # replacing a private source ACL with the directory's broader ACL.
+            _, con, file, security, _ = _api()
+            handle = file.CreateFile(str(path), con.READ_CONTROL, con.FILE_SHARE_READ,
+                None, con.OPEN_EXISTING, con.FILE_FLAG_OPEN_REPARSE_POINT, None)
+            try:
+                info = file.GetFileInformationByHandle(handle)
+                if info[0] & (con.FILE_ATTRIBUTE_DIRECTORY | con.FILE_ATTRIBUTE_REPARSE_POINT) or info[7] != 1:
+                    raise OSError('REGULAR_SOURCE_REQUIRED')
+                sd = security.GetSecurityInfo(handle, security.SE_FILE_OBJECT, security.DACL_SECURITY_INFORMATION)
+                acl = sd.GetSecurityDescriptorDacl()
+                if acl is None:
+                    raise OSError('SOURCE_ACL_REQUIRED')
+                security.SetNamedSecurityInfo(str(temporary), security.SE_FILE_OBJECT,
+                    security.DACL_SECURITY_INFORMATION | security.PROTECTED_DACL_SECURITY_INFORMATION,
+                    None, None, acl, None)
+            finally:
+                handle.Close()
             if any(read(root, n) != content for n, content in originals.items()):
                 raise OSError('STALE_SOURCE')
             os.replace(temporary, path)
