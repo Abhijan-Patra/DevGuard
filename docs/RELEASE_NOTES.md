@@ -1,3 +1,9 @@
+# DevGuard v0.3.1 — Windows verifier compatibility
+
+Preserve Windows `SYSTEMROOT` regardless of environment-key casing, plus the user temporary directories, in the Docker CLI's restricted child environment. Private assistant tokens and unrelated variables remain excluded. This avoids losing OS variables required by Windows child processes. Native Windows checks and six clean-wheel platform/version checks remain required for publication.
+
+The published v0.3.0 download matched its checksum and passed real local privacy delivery, but its repair trial held at Docker baseline ERROR before model investigation. That failed trial is retained separately; a direct synthetic Docker diagnostic returned the expected failing test. No Docker engine root cause or universally successful repair is claimed.
+
 # DevGuard v0.3.0 — Windows native support
 
 Windows source setup, local lifecycle, Unicode clipboard capture, private ACL storage and junction-safe source access now share the browser workspace with macOS. See the [Windows guide](https://github.com/Abhijan-Patra/DevGuard/blob/main/docs/WINDOWS.md). Capture/watchers start OFF and repairs start paused. No model/policy/test authority is expanded.
