@@ -8,6 +8,11 @@ import contextlib
 import os
 from pathlib import Path, PurePosixPath
 
+# Win32 FILE_READ_ATTRIBUTES and FILE_FLAG_OPEN_REPARSE_POINT. The pinned
+# pywin32 win32con module does not export these two SDK constants.
+FILE_READ_ATTRIBUTES = 0x80
+FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000
+
 
 def relative_parts(name):
     parts = name.split('/')
@@ -88,9 +93,9 @@ def anchored_directory(path):
             if part:
                 relative_parts(part)
                 current /= part
-            handle = file.CreateFile(str(current), 0x80 | con.READ_CONTROL,
+            handle = file.CreateFile(str(current), FILE_READ_ATTRIBUTES | con.READ_CONTROL,
                 con.FILE_SHARE_READ | con.FILE_SHARE_WRITE, None, con.OPEN_EXISTING,
-                con.FILE_FLAG_BACKUP_SEMANTICS | con.FILE_FLAG_OPEN_REPARSE_POINT, None)
+                con.FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, None)
             handles.append(handle)
             info = file.GetFileInformationByHandle(handle)
             if info[0] & con.FILE_ATTRIBUTE_REPARSE_POINT or not info[0] & con.FILE_ATTRIBUTE_DIRECTORY:
@@ -129,7 +134,7 @@ def private_open(path, flags, mode=0o600):
         check_private(parent)
         handle = file.CreateFile(str(path), access | con.READ_CONTROL,
             con.FILE_SHARE_READ | con.FILE_SHARE_WRITE, private_attributes(), creation,
-            con.FILE_FLAG_OPEN_REPARSE_POINT, None)
+            FILE_FLAG_OPEN_REPARSE_POINT, None)
         try:
             check_private(handle)
             fd = msvcrt.open_osfhandle(handle.Detach(), flags & ~os.O_CREAT & ~os.O_EXCL | os.O_BINARY)
@@ -149,7 +154,7 @@ def read_source(root, name, limit):
     path = local_path(root).joinpath(*parts)
     with anchored_directory(path.parent):
         handle = file.CreateFile(str(path), con.GENERIC_READ, con.FILE_SHARE_READ, None,
-            con.OPEN_EXISTING, con.FILE_FLAG_OPEN_REPARSE_POINT | con.FILE_FLAG_SEQUENTIAL_SCAN, None)
+            con.OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | con.FILE_FLAG_SEQUENTIAL_SCAN, None)
         try:
             info = file.GetFileInformationByHandle(handle)
             if info[0] & (con.FILE_ATTRIBUTE_DIRECTORY | con.FILE_ATTRIBUTE_REPARSE_POINT) or info[7] != 1:
@@ -182,7 +187,7 @@ def replace_source(root, name, data, originals, read):
             # replacing a private source ACL with the directory's broader ACL.
             _, con, file, security, _ = _api()
             handle = file.CreateFile(str(path), con.READ_CONTROL, con.FILE_SHARE_READ,
-                None, con.OPEN_EXISTING, con.FILE_FLAG_OPEN_REPARSE_POINT, None)
+                None, con.OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, None)
             try:
                 info = file.GetFileInformationByHandle(handle)
                 if info[0] & (con.FILE_ATTRIBUTE_DIRECTORY | con.FILE_ATTRIBUTE_REPARSE_POINT) or info[7] != 1:

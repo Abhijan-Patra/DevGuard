@@ -10,4 +10,4 @@ def render_fixture_banner(is_fixture):
 
 
 def render_windows_capture_notice():
-    st.caption('Native text capture runs on the enrolled Mac. Windows-native capture and universal paste blocking are unsupported.')
+    st.caption('Native text capture runs on the enrolled macOS/Windows desktop with explicit consent. Universal paste blocking is unsupported.')

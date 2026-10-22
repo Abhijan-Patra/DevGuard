@@ -2,6 +2,8 @@
 
 DevGuard 0.3.0 is a local **public preview**, not a hosted protection service. The public website is a read-only tour. To inspect your own text, clipboard or project, run the application on your machine.
 
+Windows users: follow the [PowerShell guide](WINDOWS.md). The shell commands below target macOS/Linux.
+
 ## Before installation
 
 | Requirement | Purpose |
