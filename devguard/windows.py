@@ -118,6 +118,13 @@ def anchored_directory(path):
             handle.Close()
 
 
+def validate_directory_handle(handle, expected):
+    _, _, file, _, _ = _api()
+    actual = file.GetFinalPathNameByHandle(handle, 0)
+    if os.path.normcase(actual.removeprefix('\\\\?\\')) != os.path.normcase(str(expected)):
+        raise OSError('DIRECTORY_CHANGED')
+
+
 def private_directory(path):
     _, con, file, _, _ = _api()
     path = local_path(path)
@@ -291,5 +298,5 @@ def _normalize_errors(function):
     return wrapped
 
 for _name in ('private_directory', 'private_open', 'check_private', 'read_source',
-              'replace_source', 'signal_shutdown'):
+              'replace_source', 'signal_shutdown', 'validate_directory_handle'):
     globals()[_name] = _normalize_errors(globals()[_name])

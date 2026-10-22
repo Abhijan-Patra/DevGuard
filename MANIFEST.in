@@ -1,5 +1,5 @@
 include LICENSE THIRD_PARTY_NOTICES.md README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md SUPPORT.md
-include AGENTS.md .gitignore
+include AGENTS.md .gitignore .gitattributes
 include .streamlit/config.toml
 include requirements*.txt
 recursive-include devguard/resources *

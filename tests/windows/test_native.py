@@ -71,9 +71,19 @@ def test_junction_parent_escape_and_locked_root_replacement_are_refused(tmp_path
     try:
         assert files.read_text('source.py') == 'INSIDE = True\n'
         with pytest.raises(GuardError):files.read_text('jump/source.py')
-        with pytest.raises(OSError):root.rename(tmp_path / 'moved')
+        moved = tmp_path / 'moved'
+        try:
+            root.rename(moved)
+        except OSError:
+            assert files.read_text('source.py') == 'INSIDE = True\n'
+        else:
+            root.mkdir()
+            (root / 'source.py').write_bytes(b'REPLACEMENT = True\n')
+            with pytest.raises(GuardError):files.read_text('source.py')
     finally:
-        files.close();junction.rmdir()
+        files.close()
+        for candidate in (root / 'jump', tmp_path / 'moved' / 'jump'):
+            if candidate.exists():candidate.rmdir()
 
 
 def test_launcher_lock_excludes_another_process(tmp_path):

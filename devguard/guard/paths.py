@@ -24,7 +24,7 @@ class ProjectFiles:
             from devguard.windows import anchored_directory
             self._windows_anchor = anchored_directory(root)
             try:
-                self._windows_anchor.__enter__()
+                self._windows_handle = self._windows_anchor.__enter__()
             except OSError:
                 raise GuardError('SOURCE_READ_DENIED', 403) from None
             self._root_fd = root
@@ -57,8 +57,9 @@ class ProjectFiles:
         except OSError:
             raise GuardError('PATH_DENIED', 403) from None
         if os.name == 'nt':
-            from devguard.windows import read_source
+            from devguard.windows import read_source, validate_directory_handle
             try:
+                validate_directory_handle(self._windows_handle, self._root_fd)
                 return read_source(self._root_fd, relative, MAX_TEXT_BYTES).decode('utf-8', errors='strict')
             except (OSError, UnicodeError):
                 raise GuardError('SOURCE_READ_DENIED', 403) from None

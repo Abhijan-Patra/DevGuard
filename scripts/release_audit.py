@@ -21,7 +21,10 @@ for artifact in (wheel, source):
         assert not set(path.parts).intersection({'.git', '.devguard', '.venv', 'private-inputs', 'clipboard-history', 'snapshots', 'sandboxes', '__pycache__'}), 'Private/runtime directory included'
         assert not any(part.startswith('.env') and part != '.env.example' for part in path.parts), 'Private environment file included'
         assert path.suffix not in {'.log', '.db', '.sqlite', '.sqlite3', '.gguf', '.safetensors', '.pem', '.key', '.pyc'}, 'Private/runtime artifact included'
-    for required in ('devguard/web/workspace.js', 'devguard/resources/demo/cart.py',
+    for required in ('devguard/windows.py', 'devguard/platform_io.py', 'devguard/web/workspace.js', 'devguard/resources/demo/cart.py',
                      'devguard/resources/checks/test_cart.py', 'devguard/resources/demo/Dockerfile'):
         assert any(name.endswith(required) for name in names), 'Required runtime asset missing'
+    if artifact.suffix != '.whl':
+        assert any(name.endswith('scripts/setup.ps1') for name in names), 'Windows installer missing'
+        assert any(name.endswith('scripts/devguard-local.ps1') for name in names), 'Windows launcher missing'
     print(artifact.name + ': required assets present; no excluded runtime files or unsafe archive paths')
